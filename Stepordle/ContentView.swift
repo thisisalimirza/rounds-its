@@ -284,7 +284,7 @@ struct FeedbackSheet: View {
     @State private var message = ""
 
     private var mailtoURL: URL? {
-        let to = "support@stepordle.app"
+        let to = "ali@braskgroup.com"
         let subject = "Stepordle Feedback"
         let body = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let urlString = "mailto:\\(to)?subject=\\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? \"\")&body=\\(body)"
