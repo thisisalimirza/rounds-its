@@ -118,28 +118,43 @@ final class GameSession {
     func makeGuess(_ guess: String, isCorrect: Bool) {
         guard gameState == .playing else { return }
         guard !guess.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        
+
         // Avoid duplicate guesses
         let normalizedGuess = guess.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         let isDuplicate = guesses.contains { existingGuess in
             existingGuess.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == normalizedGuess
         }
-        
+
         guard !isDuplicate else { return }
-        
+
+        // Determine whether we're already at the final phase BEFORE this guess
+        let wasAtMaxHints = hintsRevealed >= maxHints
+
+        // Record the guess
         guesses.append(guess)
-        
+
         if isCorrect {
             gameState = .won
             calculateScore()
-        } else if guesses.count >= maxGuesses {
+            return
+        }
+
+        // If all hints were already revealed before this guess, this was the final chance
+        if wasAtMaxHints {
             gameState = .lost
             score = 0
-        } else {
-            // Reveal next hint after incorrect guess
-            if hintsRevealed < maxHints {
-                hintsRevealed += 1
-            }
+            return
+        }
+
+        // Otherwise, reveal the next hint (progressive hint system)
+        if hintsRevealed < maxHints {
+            hintsRevealed += 1
+        }
+
+        // Fallback: if we hit the max guesses limit, end the game as lost
+        if guesses.count >= maxGuesses {
+            gameState = .lost
+            score = 0
         }
     }
     
@@ -231,3 +246,4 @@ final class PlayerStats {
         return totalScore / gamesWon
     }
 }
+

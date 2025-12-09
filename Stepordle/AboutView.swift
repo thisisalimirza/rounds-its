@@ -57,7 +57,13 @@ struct AboutView: View {
                         InstructionRow(
                             icon: "3.circle.fill",
                             title: "Progressive Hints",
-                            description: "After each wrong guess, a new clinical clue is revealed automatically. You can also manually reveal hints."
+                            description: "After each wrong guess, a new clinical clue is revealed automatically. Once all clues are revealed, your next guess is your final chance."
+                        )
+                        
+                        InstructionRow(
+                            icon: "exclamationmark.circle.fill",
+                            title: "Final Guess",
+                            description: "When all hints are revealed, you get one last attempt. If it's wrong, the answer is revealed and the round ends."
                         )
                         
                         InstructionRow(

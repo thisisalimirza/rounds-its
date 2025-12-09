@@ -137,6 +137,19 @@ struct GameView: View {
                         .cornerRadius(10)
                 }
             }
+            
+            if gameSession.hintsRevealed >= gameSession.maxHints && gameSession.gameState == .playing {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                    Text("All clues revealed — your next guess is your final chance.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(10)
+                .background(Color.orange.opacity(0.12))
+                .cornerRadius(10)
+            }
         }
     }
     
@@ -209,7 +222,7 @@ struct GameView: View {
             Button {
                 submitGuess()
             } label: {
-                Text("Submit Diagnosis")
+                Text(gameSession.hintsRevealed >= gameSession.maxHints ? "Submit Final Guess" : "Submit Diagnosis")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -344,6 +357,8 @@ struct GameView: View {
         let isCorrect = currentCase.isCorrectDiagnosis(trimmedGuess)
         let previousGuessCount = gameSession.guesses.count
         
+        let isFinalChance = gameSession.hintsRevealed >= gameSession.maxHints && gameSession.gameState == .playing
+        
         withAnimation {
             gameSession.makeGuess(trimmedGuess, isCorrect: isCorrect)
         }
@@ -357,6 +372,10 @@ struct GameView: View {
                 resultMessage = "Game Over! The correct diagnosis was \(currentCase.diagnosis)."
                 updateStats(won: false)
             }
+        }
+        
+        if !isCorrect && isFinalChance {
+            resultMessage = "Final guess incorrect. The correct diagnosis was \(currentCase.diagnosis)."
         }
         
         currentGuess = ""
