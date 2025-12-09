@@ -16,18 +16,37 @@ struct StepordleApp: App {
             GameSession.self,
             PlayerStats.self
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
-        do {
-            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
-            
-            // Seed initial data if needed
+        // Use a stable URL so we can remove incompatible stores and retry
+        let storeURL = FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Stepordle.store")
+
+        // Ensure directory exists
+        try? FileManager.default.createDirectory(
+            at: storeURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+
+        let persistentConfig = ModelConfiguration(schema: schema, url: storeURL)
+
+        // 1) Try persistent store
+        if let container = try? ModelContainer(for: schema, configurations: [persistentConfig]) {
             seedDataIfNeeded(container: container)
-            
             return container
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
         }
+
+        // 2) Remove incompatible/corrupted store and retry once
+        try? FileManager.default.removeItem(at: storeURL)
+        if let container = try? ModelContainer(for: schema, configurations: [persistentConfig]) {
+            seedDataIfNeeded(container: container)
+            return container
+        }
+
+        // 3) Final fallback: in-memory store so the app can launch
+        let memoryConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let fallback = try! ModelContainer(for: schema, configurations: [memoryConfig])
+        return fallback
     }()
 
     var body: some Scene {
