@@ -139,6 +139,8 @@ App information and instructions:
 
 ## Adding New Cases
 
+All playable cases are hard-coded in `CaseLibrary.swift`. The app no longer autogenerates placeholder cases (e.g., those with hints like “Clinical scenario suggests …”). If you want to add or edit cases, do it directly in `CaseLibrary.swift`.
+
 Edit `CaseLibrary.swift` and add cases using this format:
 
 ```swift
@@ -155,46 +157,3 @@ MedicalCase(
     category: "Medical Specialty",
     difficulty: 1-5
 )
-```
-
-## Code Structure
-
-```
-Stepordle/
-├── StepordleApp.swift          # App entry point, SwiftData setup
-├── Models/
-│   ├── GameModels.swift        # MedicalCase, GameSession, PlayerStats
-│   └── CaseLibrary.swift       # Sample medical cases
-├── Views/
-│   ├── ContentView.swift       # Main menu
-│   ├── GameView.swift          # Game interface
-│   ├── StatsView.swift         # Statistics display
-│   ├── CaseBrowserView.swift   # Case browsing
-│   └── AboutView.swift         # App info and instructions
-└── Components/
-    ├── HintCard.swift          # Reusable hint display
-    ├── StatCard.swift          # Stats metric card
-    └── CategoryTag.swift       # Category labels
-```
-
-## Contributing
-
-To add cases or features:
-1. Follow the existing code patterns
-2. Ensure medical accuracy (cite sources if possible)
-3. Test thoroughly on iPhone
-4. Consider accessibility
-
-## License
-
-Educational project for USMLE Step 1 preparation.
-
-## Disclaimer
-
-This app is for educational purposes only. Medical cases are simplified for learning. Always consult current medical literature and clinical guidelines for actual patient care.
-
----
-
-**Made with ❤️ for medical students**
-
-Good luck on your Step 1! 🎓

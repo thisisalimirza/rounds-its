@@ -4835,6 +4835,2514 @@ class CaseLibrary {
                 category: "Orthopedics",
                 difficulty: 3
             ),
+            // BIOCHEMISTRY/GENETICS - AMINO ACID DISORDERS (10 cases)
+            MedicalCase(
+                diagnosis: "Phenylketonuria",
+                alternativeNames: ["PKU"],
+                hints: [
+                    "Infant with intellectual disability and musty odor",
+                    "Fair skin, eczema, and seizures",
+                    "Deficiency of phenylalanine hydroxylase",
+                    "Elevated phenylalanine, decreased tyrosine",
+                    "Treated with phenylalanine-restricted diet"
+                ],
+                category: "Biochemistry",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Maple Syrup Urine Disease",
+                alternativeNames: ["MSUD"],
+                hints: [
+                    "Newborn with sweet-smelling urine and lethargy",
+                    "Poor feeding and vomiting",
+                    "Deficiency of branched-chain alpha-ketoacid dehydrogenase",
+                    "Elevated leucine, isoleucine, valine",
+                    "Causes severe neurologic damage if untreated"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Homocystinuria",
+                alternativeNames: [],
+                hints: [
+                    "Child with intellectual disability and lens dislocation (downward)",
+                    "Tall with long limbs (marfanoid habitus)",
+                    "Deficiency of cystathionine synthase",
+                    "Thrombosis and osteoporosis",
+                    "Treated with B6, B12, folate, and methionine restriction"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Alkaptonuria",
+                alternativeNames: ["Ochronosis"],
+                hints: [
+                    "Patient with dark urine that turns black on standing",
+                    "Dark pigmentation of cartilage and sclera",
+                    "Deficiency of homogentisate oxidase",
+                    "Arthritis in later life",
+                    "Benign condition, no treatment needed"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Cystinuria",
+                alternativeNames: [],
+                hints: [
+                    "Young patient with recurrent kidney stones",
+                    "Hexagonal crystals in urine",
+                    "Defect in renal tubular reabsorption of cystine",
+                    "Also affects ornithine, lysine, arginine (COLA)",
+                    "Treated with hydration and urinary alkalinization"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Hartnup Disease",
+                alternativeNames: [],
+                hints: [
+                    "Child with pellagra-like symptoms and cerebellar ataxia",
+                    "Defect in neutral amino acid transporter",
+                    "Decreased tryptophan absorption",
+                    "Niacin deficiency symptoms",
+                    "Treated with high-protein diet and niacin"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Albinism",
+                alternativeNames: ["Oculocutaneous Albinism"],
+                hints: [
+                    "Patient with absent pigmentation in skin, hair, and eyes",
+                    "Photophobia and nystagmus",
+                    "Defect in tyrosinase (inability to make melanin)",
+                    "Increased skin cancer risk",
+                    "Vision problems from lack of retinal pigment"
+                ],
+                category: "Biochemistry",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Tyrosinemia Type I",
+                alternativeNames: [],
+                hints: [
+                    "Infant with liver failure and cabbage-like odor",
+                    "Renal tubular dysfunction (Fanconi syndrome)",
+                    "Deficiency of fumarylacetoacetate hydrolase",
+                    "Elevated succinylacetone",
+                    "High risk of hepatocellular carcinoma"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Methylmalonic Acidemia",
+                alternativeNames: ["MMA"],
+                hints: [
+                    "Infant with poor feeding, vomiting, and lethargy",
+                    "Metabolic acidosis and hyperammonemia",
+                    "Defect in methylmalonyl-CoA mutase",
+                    "Elevated methylmalonic acid",
+                    "Treated with B12 supplementation and protein restriction"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Propionic Acidemia",
+                alternativeNames: [],
+                hints: [
+                    "Newborn with vomiting and severe ketoacidosis",
+                    "Odd-smelling sweat",
+                    "Deficiency of propionyl-CoA carboxylase",
+                    "Elevated propionic acid and glycine",
+                    "Can cause cardiomyopathy and pancreatitis"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            // BIOCHEMISTRY/GENETICS - CARBOHYDRATE DISORDERS (8 cases)
+            MedicalCase(
+                diagnosis: "Galactosemia",
+                alternativeNames: [],
+                hints: [
+                    "Newborn with jaundice, vomiting after milk feeds",
+                    "Hepatomegaly and cataracts",
+                    "Deficiency of galactose-1-phosphate uridyltransferase",
+                    "E. coli sepsis in neonates",
+                    "Treated with galactose and lactose-free diet"
+                ],
+                category: "Biochemistry",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Hereditary Fructose Intolerance",
+                alternativeNames: [],
+                hints: [
+                    "Infant with hypoglycemia and vomiting after fruit introduction",
+                    "Aversion to sweet foods",
+                    "Deficiency of aldolase B",
+                    "Accumulation of fructose-1-phosphate inhibits gluconeogenesis",
+                    "Treated by avoiding fructose and sucrose"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Essential Fructosuria",
+                alternativeNames: [],
+                hints: [
+                    "Asymptomatic patient with fructose in urine",
+                    "Deficiency of fructokinase",
+                    "Benign condition",
+                    "No treatment needed",
+                    "Distinguished from hereditary fructose intolerance by being benign"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Von Gierke Disease",
+                alternativeNames: ["Glycogen Storage Disease Type I"],
+                hints: [
+                    "Infant with severe fasting hypoglycemia and hepatomegaly",
+                    "Doll-like face and protuberant abdomen",
+                    "Deficiency of glucose-6-phosphatase",
+                    "Elevated lactate, uric acid, and triglycerides",
+                    "Frequent feeding required"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Pompe Disease",
+                alternativeNames: ["Glycogen Storage Disease Type II"],
+                hints: [
+                    "Infant with cardiomegaly and hypotonia",
+                    "Exercise intolerance and muscle weakness",
+                    "Deficiency of acid maltase (alpha-1,4-glucosidase)",
+                    "Glycogen accumulation in lysosomes",
+                    "Fatal in infantile form without enzyme replacement"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Cori Disease",
+                alternativeNames: ["Glycogen Storage Disease Type III"],
+                hints: [
+                    "Child with hepatomegaly and fasting hypoglycemia",
+                    "Milder than Von Gierke disease",
+                    "Deficiency of debranching enzyme",
+                    "Normal lactate levels (unlike Von Gierke)",
+                    "Better prognosis than Type I"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "McArdle Disease",
+                alternativeNames: ["Glycogen Storage Disease Type V"],
+                hints: [
+                    "Young adult with muscle cramps and myoglobinuria with exercise",
+                    "Second wind phenomenon (improvement with continued exercise)",
+                    "Deficiency of muscle phosphorylase",
+                    "Flat venous lactate curve during exercise",
+                    "Increased CK at rest"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Lactase Deficiency",
+                alternativeNames: ["Lactose Intolerance"],
+                hints: [
+                    "Patient with bloating and diarrhea after dairy consumption",
+                    "Osmotic diarrhea from undigested lactose",
+                    "Most common in African, Asian, Native American populations",
+                    "Positive hydrogen breath test",
+                    "Treated with lactose avoidance or lactase supplements"
+                ],
+                category: "Biochemistry",
+                difficulty: 2
+            ),
+
+            // BIOCHEMISTRY/GENETICS - LIPID DISORDERS (8 cases)
+            MedicalCase(
+                diagnosis: "Familial Hypercholesterolemia",
+                alternativeNames: ["FH"],
+                hints: [
+                    "Young patient with xanthomas and early MI",
+                    "Corneal arcus before age 45",
+                    "Defective or absent LDL receptors",
+                    "LDL cholesterol >190 mg/dL",
+                    "Autosomal dominant, heterozygotes common"
+                ],
+                category: "Biochemistry",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Familial Dysbetalipoproteinemia",
+                alternativeNames: ["Type III Hyperlipoproteinemia"],
+                hints: [
+                    "Patient with palmar xanthomas and tuberoeruptive xanthomas",
+                    "Elevated cholesterol and triglycerides",
+                    "ApoE2/E2 genotype",
+                    "Premature atherosclerosis",
+                    "Treated with fibrates"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Tangier Disease",
+                alternativeNames: [],
+                hints: [
+                    "Patient with orange tonsils and hepatosplenomegaly",
+                    "Very low or absent HDL",
+                    "Defective ABCA1 transporter",
+                    "Peripheral neuropathy",
+                    "Cholesterol accumulation in macrophages"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Gaucher Disease",
+                alternativeNames: [],
+                hints: [
+                    "Patient with hepatosplenomegaly and bone pain",
+                    "Gaucher cells (wrinkled paper appearance)",
+                    "Deficiency of glucocerebrosidase",
+                    "Most common lysosomal storage disease",
+                    "Treated with enzyme replacement therapy"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Niemann-Pick Disease",
+                alternativeNames: [],
+                hints: [
+                    "Infant with hepatosplenomegaly and cherry-red spot",
+                    "Progressive neurodegeneration",
+                    "Deficiency of sphingomyelinase",
+                    "Foam cells (lipid-laden macrophages)",
+                    "Type A most severe, fatal in childhood"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Tay-Sachs Disease",
+                alternativeNames: [],
+                hints: [
+                    "Ashkenazi Jewish infant with developmental regression",
+                    "Cherry-red spot on macula",
+                    "Deficiency of hexosaminidase A",
+                    "GM2 ganglioside accumulation",
+                    "Fatal by age 4-5"
+                ],
+                category: "Biochemistry",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Fabry Disease",
+                alternativeNames: [],
+                hints: [
+                    "Male with angiokeratomas and acroparesthesias",
+                    "Renal failure and cardiac disease",
+                    "Deficiency of alpha-galactosidase A",
+                    "X-linked recessive",
+                    "Treated with enzyme replacement"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Krabbe Disease",
+                alternativeNames: ["Globoid Cell Leukodystrophy"],
+                hints: [
+                    "Infant with developmental delay and peripheral neuropathy",
+                    "Optic atrophy and demyelination",
+                    "Deficiency of galactocerebrosidase",
+                    "Globoid cells in white matter",
+                    "Progressive and fatal"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            // BIOCHEMISTRY/GENETICS - PURINE/PYRIMIDINE DISORDERS (4 cases)
+            MedicalCase(
+                diagnosis: "Lesch-Nyhan Syndrome",
+                alternativeNames: [],
+                hints: [
+                    "Boy with self-mutilation and intellectual disability",
+                    "Dystonia and gouty arthritis",
+                    "Deficiency of HGPRT",
+                    "Elevated uric acid",
+                    "Orange crystal diaper in infancy"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Orotic Aciduria",
+                alternativeNames: [],
+                hints: [
+                    "Child with megaloblastic anemia that doesn't respond to B12/folate",
+                    "Growth retardation",
+                    "Deficiency of UMP synthase",
+                    "Elevated orotic acid in urine",
+                    "Treated with oral uridine"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Adenosine Deaminase Deficiency",
+                alternativeNames: ["ADA Deficiency"],
+                hints: [
+                    "Infant with recurrent severe infections",
+                    "Toxic accumulation of dATP inhibits ribonucleotide reductase",
+                    "T and B cell deficiency (SCID)",
+                    "Absence of thymic shadow",
+                    "First gene therapy success"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Xeroderma Pigmentosum",
+                alternativeNames: ["XP"],
+                hints: [
+                    "Child with severe sunburn and freckling in infancy",
+                    "Multiple skin cancers at young age",
+                    "Defect in nucleotide excision repair",
+                    "Unable to repair UV-induced thymine dimers",
+                    "Must avoid all sun exposure"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            // BIOCHEMISTRY/GENETICS - MITOCHONDRIAL/OTHER (5 cases)
+            MedicalCase(
+                diagnosis: "MELAS Syndrome",
+                alternativeNames: ["Mitochondrial Encephalomyopathy"],
+                hints: [
+                    "Patient with stroke-like episodes and lactic acidosis",
+                    "Seizures and dementia",
+                    "Mitochondrial DNA mutation",
+                    "Maternal inheritance",
+                    "Ragged red fibers on muscle biopsy"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Kartagener Syndrome Ciliary Defect",
+                alternativeNames: ["Primary Ciliary Dyskinesia"],
+                hints: [
+                    "Patient with chronic sinusitis and bronchiectasis",
+                    "Situs inversus and male infertility",
+                    "Dynein arm defect",
+                    "Immotile cilia and sperm",
+                    "Autosomal recessive"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Chediak-Higashi Syndrome",
+                alternativeNames: [],
+                hints: [
+                    "Child with recurrent pyogenic infections and albinism",
+                    "Progressive neurologic dysfunction",
+                    "Giant granules in neutrophils and lysosomes",
+                    "Defect in lysosomal trafficking regulator",
+                    "Increased risk of lymphoma"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Menkes Disease",
+                alternativeNames: ["Kinky Hair Disease"],
+                hints: [
+                    "Infant with kinky hair and hypotonia",
+                    "Seizures and developmental delay",
+                    "Defect in ATP7A copper transporter",
+                    "Low serum copper and ceruloplasmin",
+                    "X-linked, fatal in early childhood"
+                ],
+                category: "Biochemistry",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Mucopolysaccharidosis Type I",
+                alternativeNames: ["Hurler Syndrome"],
+                hints: [
+                    "Child with coarse facial features and corneal clouding",
+                    "Hepatosplenomegaly and developmental delay",
+                    "Deficiency of alpha-L-iduronidase",
+                    "Dermatan and heparan sulfate accumulation",
+                    "Gargoyle-like appearance"
+                ],
+                category: "Biochemistry",
+                difficulty: 3
+            ),
+
+            // IMMUNODEFICIENCIES (12 cases)
+            MedicalCase(
+                diagnosis: "Severe Combined Immunodeficiency",
+                alternativeNames: ["SCID", "Bubble Boy Disease"],
+                hints: [
+                    "Infant with severe recurrent infections by 3 months",
+                    "Absent T and B cells",
+                    "Absent thymic shadow on chest X-ray",
+                    "Fatal without bone marrow transplant",
+                    "Multiple genetic causes (IL-2R, ADA deficiency)"
+                ],
+                category: "Immunology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "X-Linked Agammaglobulinemia",
+                alternativeNames: ["Bruton Agammaglobulinemia"],
+                hints: [
+                    "Boy with recurrent sinopulmonary infections after 6 months",
+                    "Absent or low B cells, absent immunoglobulins",
+                    "Defect in BTK tyrosine kinase",
+                    "Absent tonsils and lymph nodes",
+                    "Treated with IVIG replacement"
+                ],
+                category: "Immunology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Common Variable Immunodeficiency",
+                alternativeNames: ["CVID"],
+                hints: [
+                    "Adult with recurrent sinopulmonary infections",
+                    "Low IgG, IgA, and/or IgM",
+                    "Normal or low B cell count with poor function",
+                    "Increased risk of autoimmune disease and lymphoma",
+                    "Treated with IVIG"
+                ],
+                category: "Immunology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Selective IgA Deficiency",
+                alternativeNames: [],
+                hints: [
+                    "Patient with recurrent sinopulmonary and GI infections",
+                    "Most common primary immunodeficiency",
+                    "IgA <7 mg/dL with normal IgG and IgM",
+                    "Often asymptomatic",
+                    "Anaphylaxis risk with blood transfusions"
+                ],
+                category: "Immunology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Hyper-IgM Syndrome",
+                alternativeNames: [],
+                hints: [
+                    "Boy with recurrent sinopulmonary infections",
+                    "Elevated IgM, low IgG, IgA, IgE",
+                    "Defect in CD40L (X-linked form)",
+                    "Cannot class switch from IgM",
+                    "Opportunistic infections including Pneumocystis"
+                ],
+                category: "Immunology",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Chronic Granulomatous Disease",
+                alternativeNames: ["CGD"],
+                hints: [
+                    "Child with recurrent catalase-positive organism infections",
+                    "Staph aureus, Aspergillus, Burkholderia, Serratia, Nocardia",
+                    "Defect in NADPH oxidase",
+                    "Negative nitroblue tetrazolium test",
+                    "Granulomas in multiple organs"
+                ],
+                category: "Immunology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Leukocyte Adhesion Deficiency",
+                alternativeNames: ["LAD"],
+                hints: [
+                    "Infant with delayed umbilical cord separation",
+                    "Recurrent bacterial infections without pus",
+                    "Defect in CD18 (integrin)",
+                    "Neutrophils cannot adhere to endothelium",
+                    "Severe periodontitis"
+                ],
+                category: "Immunology",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Job Syndrome",
+                alternativeNames: ["Hyper-IgE Syndrome"],
+                hints: [
+                    "Patient with cold (non-inflamed) abscesses",
+                    "Eczema and retained primary teeth",
+                    "Very high IgE levels (>2000)",
+                    "Recurrent Staph aureus infections",
+                    "Coarse facial features"
+                ],
+                category: "Immunology",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Ataxia-Telangiectasia",
+                alternativeNames: [],
+                hints: [
+                    "Child with progressive cerebellar ataxia",
+                    "Telangiectasias on conjunctiva and skin",
+                    "Defect in ATM gene (DNA repair)",
+                    "Low IgA, IgG, and IgE",
+                    "Increased risk of lymphoma and leukemia"
+                ],
+                category: "Immunology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Complement C5-C9 Deficiency",
+                alternativeNames: ["Terminal Complement Deficiency"],
+                hints: [
+                    "Patient with recurrent Neisseria infections",
+                    "Deficiency in membrane attack complex",
+                    "Meningococcal meningitis risk",
+                    "CH50 low or absent",
+                    "Vaccinate against encapsulated organisms"
+                ],
+                category: "Immunology",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Hereditary Angioedema",
+                alternativeNames: ["C1 Esterase Inhibitor Deficiency"],
+                hints: [
+                    "Patient with recurrent episodes of angioedema without urticaria",
+                    "Abdominal pain from bowel wall edema",
+                    "Low C4 levels",
+                    "Airway compromise risk",
+                    "Treated with C1 inhibitor concentrate or bradykinin antagonist"
+                ],
+                category: "Immunology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "IL-12 Receptor Deficiency",
+                alternativeNames: [],
+                hints: [
+                    "Patient with disseminated mycobacterial infections",
+                    "Poor Th1 response",
+                    "Cannot form granulomas",
+                    "Susceptible to atypical mycobacteria and Salmonella",
+                    "Low IFN-gamma production"
+                ],
+                category: "Immunology",
+                difficulty: 4
+            ),
+
+            // INFECTIOUS DISEASE - STIs (10 cases)
+            MedicalCase(
+                diagnosis: "Primary Syphilis",
+                alternativeNames: ["Syphilis Stage 1"],
+                hints: [
+                    "Patient with painless chancre on genitals",
+                    "Firm, indurated ulcer with clean base",
+                    "Resolves spontaneously in 3-6 weeks",
+                    "Treponema pallidum on dark-field microscopy",
+                    "Treated with benzathine penicillin G"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Secondary Syphilis",
+                alternativeNames: ["Syphilis Stage 2"],
+                hints: [
+                    "Patient with diffuse maculopapular rash including palms and soles",
+                    "Condylomata lata (flat wart-like lesions)",
+                    "Patchy alopecia and mucous patches",
+                    "Constitutional symptoms and lymphadenopathy",
+                    "Highly contagious"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Tertiary Syphilis",
+                alternativeNames: ["Syphilis Stage 3"],
+                hints: [
+                    "Patient with aortitis and aortic regurgitation",
+                    "Gummas (granulomatous lesions)",
+                    "Tabes dorsalis (posterior column damage)",
+                    "Argyll Robertson pupil (accommodates but doesn't react)",
+                    "Occurs years after initial infection"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Gonorrhea",
+                alternativeNames: ["Neisseria Gonorrhoeae"],
+                hints: [
+                    "Male with purulent urethral discharge and dysuria",
+                    "Gram-negative intracellular diplococci",
+                    "Can cause disseminated infection with arthritis and tenosynovitis",
+                    "Fitz-Hugh-Curtis syndrome (perihepatitis) in women",
+                    "Treated with ceftriaxone plus azithromycin"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Chlamydia Trachomatis",
+                alternativeNames: ["Chlamydia"],
+                hints: [
+                    "Most common bacterial STI in US",
+                    "Often asymptomatic or mild symptoms",
+                    "Can cause PID, ectopic pregnancy, infertility",
+                    "Lymphogranuloma venereum (L serovars)",
+                    "Treated with azithromycin or doxycycline"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Chancroid",
+                alternativeNames: ["Haemophilus Ducreyi"],
+                hints: [
+                    "Patient with painful genital ulcer with ragged edges",
+                    "School of fish appearance on Gram stain",
+                    "Painful inguinal lymphadenopathy (buboes)",
+                    "Rare in US, more common in developing countries",
+                    "Treated with azithromycin or ceftriaxone"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Lymphogranuloma Venereum",
+                alternativeNames: ["LGV"],
+                hints: [
+                    "Patient with painless genital ulcer followed by painful inguinal lymphadenopathy",
+                    "Groove sign (lymph nodes above and below inguinal ligament)",
+                    "Caused by Chlamydia trachomatis L1, L2, L3",
+                    "Can cause proctocolitis in MSM",
+                    "Treated with doxycycline for 3 weeks"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Granuloma Inguinale",
+                alternativeNames: ["Donovanosis"],
+                hints: [
+                    "Patient with painless, beefy red ulcer that bleeds easily",
+                    "Donovan bodies (bipolar staining) on biopsy",
+                    "Caused by Klebsiella granulomatis",
+                    "Rare, seen in tropical regions",
+                    "Treated with azithromycin or doxycycline"
+                ],
+                category: "Infectious Disease",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Genital Herpes",
+                alternativeNames: ["HSV-2"],
+                hints: [
+                    "Patient with painful grouped vesicles on erythematous base",
+                    "Recurrent outbreaks with prodrome of tingling",
+                    "Tzanck smear shows multinucleated giant cells",
+                    "Can cause aseptic meningitis",
+                    "Treated with acyclovir or valacyclovir"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Human Papillomavirus",
+                alternativeNames: ["HPV", "Genital Warts"],
+                hints: [
+                    "Patient with cauliflower-like lesions on genitals",
+                    "Types 6 and 11 cause condyloma acuminata",
+                    "Types 16 and 18 cause cervical cancer",
+                    "Koilocytes on Pap smear",
+                    "Treated with cryotherapy, imiquimod, or podophyllin"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            // INFECTIOUS DISEASE - HEPATITIS (8 cases)
+            MedicalCase(
+                diagnosis: "Hepatitis A",
+                alternativeNames: ["HAV"],
+                hints: [
+                    "Patient with jaundice after travel or contaminated food",
+                    "Fecal-oral transmission",
+                    "Self-limited, no chronic infection",
+                    "IgM anti-HAV positive in acute infection",
+                    "Prevented by vaccine"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Hepatitis B - Acute",
+                alternativeNames: ["HBV"],
+                hints: [
+                    "Patient with jaundice and elevated transaminases",
+                    "HBsAg and anti-HBc IgM positive",
+                    "Transmitted through blood and sexual contact",
+                    "Most adults clear infection spontaneously",
+                    "Window period: anti-HBc IgM only marker"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Hepatitis B - Chronic",
+                alternativeNames: ["Chronic HBV"],
+                hints: [
+                    "Patient with persistent HBsAg >6 months",
+                    "Risk of cirrhosis and hepatocellular carcinoma",
+                    "HBeAg positive indicates high infectivity",
+                    "90% of neonates become chronic carriers",
+                    "Treated with tenofovir or entecavir"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Hepatitis C",
+                alternativeNames: ["HCV"],
+                hints: [
+                    "Patient with asymptomatic elevated transaminases",
+                    "Most common chronic bloodborne infection in US",
+                    "80% develop chronic infection",
+                    "Leading indication for liver transplant",
+                    "Cured with direct-acting antivirals"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Hepatitis D",
+                alternativeNames: ["HDV", "Delta Hepatitis"],
+                hints: [
+                    "HBV patient with acute worsening of hepatitis",
+                    "Requires HBV for replication (defective virus)",
+                    "Coinfection or superinfection patterns",
+                    "Increases risk of fulminant hepatitis",
+                    "Prevented by HBV vaccination"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Hepatitis E",
+                alternativeNames: ["HEV"],
+                hints: [
+                    "Pregnant woman with acute hepatitis after travel",
+                    "Fecal-oral transmission",
+                    "Self-limited except in pregnancy",
+                    "High mortality in pregnant women (20%)",
+                    "Endemic in developing countries"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Fulminant Hepatic Failure",
+                alternativeNames: ["Acute Liver Failure"],
+                hints: [
+                    "Patient with jaundice, encephalopathy, and coagulopathy",
+                    "Occurs within 8 weeks of initial liver injury",
+                    "Causes: acetaminophen, viral hepatitis, Wilson disease",
+                    "Elevated ammonia and prolonged PT/INR",
+                    "Requires urgent liver transplant evaluation"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Autoimmune Hepatitis",
+                alternativeNames: [],
+                hints: [
+                    "Young woman with elevated transaminases and hypergammaglobulinemia",
+                    "Type 1: ANA and anti-smooth muscle antibodies",
+                    "Type 2: anti-LKM1 antibodies",
+                    "Interface hepatitis on biopsy",
+                    "Treated with corticosteroids and azathioprine"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            // TOXICOLOGY (15 cases)
+            MedicalCase(
+                diagnosis: "Acetaminophen Toxicity",
+                alternativeNames: ["Tylenol Overdose"],
+                hints: [
+                    "Patient with nausea and vomiting 24 hours post-ingestion",
+                    "Elevated transaminases at 24-72 hours",
+                    "Acute liver failure risk",
+                    "Rumack-Matthew nomogram guides treatment",
+                    "Treated with N-acetylcysteine"
+                ],
+                category: "Toxicology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Salicylate Toxicity",
+                alternativeNames: ["Aspirin Overdose"],
+                hints: [
+                    "Patient with tinnitus, hyperventilation, and altered mental status",
+                    "Mixed respiratory alkalosis and metabolic acidosis",
+                    "Hyperthermia and hypoglycemia",
+                    "Treated with sodium bicarbonate and hemodialysis",
+                    "Ferric chloride test turns urine purple"
+                ],
+                category: "Toxicology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Opioid Overdose",
+                alternativeNames: ["Heroin Overdose"],
+                hints: [
+                    "Unresponsive patient with respiratory depression",
+                    "Pinpoint pupils (miosis)",
+                    "Decreased bowel sounds",
+                    "Treated with naloxone (Narcan)",
+                    "Pulmonary edema can occur"
+                ],
+                category: "Toxicology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Benzodiazepine Overdose",
+                alternativeNames: [],
+                hints: [
+                    "Patient with sedation and respiratory depression",
+                    "Ataxia and slurred speech",
+                    "Synergistic effect with alcohol",
+                    "Treated with flumazenil (caution: seizure risk)",
+                    "Generally supportive care"
+                ],
+                category: "Toxicology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Tricyclic Antidepressant Toxicity",
+                alternativeNames: ["TCA Overdose"],
+                hints: [
+                    "Patient with anticholinergic symptoms and cardiac arrhythmias",
+                    "Wide QRS complex and prolonged QT",
+                    "Seizures and hypotension",
+                    "Treated with sodium bicarbonate",
+                    "3 C's: Convulsions, Coma, Cardiotoxicity"
+                ],
+                category: "Toxicology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Organophosphate Poisoning",
+                alternativeNames: ["Insecticide Toxicity"],
+                hints: [
+                    "Farmer with excessive salivation, lacrimation, urination",
+                    "SLUDGE: Salivation, Lacrimation, Urination, Defecation, GI upset, Emesis",
+                    "Miosis and bronchospasm",
+                    "Inhibits acetylcholinesterase",
+                    "Treated with atropine and pralidoxime"
+                ],
+                category: "Toxicology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Carbon Monoxide Poisoning",
+                alternativeNames: ["CO Poisoning"],
+                hints: [
+                    "Patient with headache and cherry-red skin",
+                    "Exposure to smoke, car exhaust, or faulty heater",
+                    "Carboxyhemoglobin levels elevated",
+                    "Pulse oximetry falsely normal",
+                    "Treated with 100% oxygen or hyperbaric oxygen"
+                ],
+                category: "Toxicology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Cyanide Poisoning",
+                alternativeNames: [],
+                hints: [
+                    "Patient with altered mental status and bitter almond breath",
+                    "Severe lactic acidosis",
+                    "Inhibits cytochrome c oxidase",
+                    "Exposure to smoke, nitroprusside, or cassava",
+                    "Treated with hydroxocobalamin or sodium thiosulfate"
+                ],
+                category: "Toxicology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Methanol Toxicity",
+                alternativeNames: [],
+                hints: [
+                    "Patient with vision changes (snowstorm vision) and abdominal pain",
+                    "Metabolized to formic acid causing optic neuritis",
+                    "Elevated anion gap metabolic acidosis",
+                    "Exposure from moonshine or antifreeze",
+                    "Treated with fomepizole and hemodialysis"
+                ],
+                category: "Toxicology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Ethylene Glycol Toxicity",
+                alternativeNames: ["Antifreeze Poisoning"],
+                hints: [
+                    "Patient with altered mental status and flank pain",
+                    "Metabolized to oxalic acid causing calcium oxalate crystals",
+                    "Envelope-shaped crystals in urine",
+                    "Acute kidney injury",
+                    "Treated with fomepizole and hemodialysis"
+                ],
+                category: "Toxicology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Lead Poisoning",
+                alternativeNames: ["Plumbism"],
+                hints: [
+                    "Child with developmental delay and abdominal pain",
+                    "Microcytic anemia with basophilic stippling",
+                    "Lead lines on X-ray and gingiva",
+                    "Wrist drop and foot drop (peripheral neuropathy)",
+                    "Treated with EDTA or succimer"
+                ],
+                category: "Toxicology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Mercury Poisoning",
+                alternativeNames: [],
+                hints: [
+                    "Patient with tremor, gingivitis, and erethism",
+                    "Mad hatter syndrome (neuropsychiatric changes)",
+                    "Acrodynia (pink disease) in children",
+                    "Acute exposure causes GI and renal toxicity",
+                    "Treated with dimercaprol or succimer"
+                ],
+                category: "Toxicology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Arsenic Poisoning",
+                alternativeNames: [],
+                hints: [
+                    "Patient with garlic breath and painful neuropathy",
+                    "GI symptoms: rice water stools",
+                    "Mees lines (transverse white lines on nails)",
+                    "QT prolongation and torsades de pointes",
+                    "Treated with dimercaprol"
+                ],
+                category: "Toxicology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Iron Toxicity",
+                alternativeNames: ["Iron Overdose"],
+                hints: [
+                    "Child with bloody diarrhea and shock after ingesting pills",
+                    "Five stages: GI, latent, shock, hepatotoxicity, scarring",
+                    "Radiopaque pills on X-ray",
+                    "High anion gap metabolic acidosis",
+                    "Treated with deferoxamine"
+                ],
+                category: "Toxicology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Isoniazid Toxicity",
+                alternativeNames: ["INH Overdose"],
+                hints: [
+                    "TB patient with refractory seizures",
+                    "Depletes pyridoxine (B6)",
+                    "Elevated anion gap metabolic acidosis",
+                    "Seizures, coma, and lactic acidosis",
+                    "Treated with pyridoxine (vitamin B6)"
+                ],
+                category: "Toxicology",
+                difficulty: 3
+            ),
+
+            // VITAMIN/MINERAL DEFICIENCIES (15 cases)
+            MedicalCase(
+                diagnosis: "Vitamin A Deficiency",
+                alternativeNames: ["Retinol Deficiency"],
+                hints: [
+                    "Child with night blindness and dry eyes",
+                    "Bitot spots (foamy patches on conjunctiva)",
+                    "Xerophthalmia and keratomalacia",
+                    "Leading cause of preventable blindness worldwide",
+                    "Follicular hyperkeratosis"
+                ],
+                category: "Nutrition",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Vitamin B1 Deficiency",
+                alternativeNames: ["Thiamine Deficiency", "Beriberi"],
+                hints: [
+                    "Patient with peripheral neuropathy and heart failure",
+                    "Wet beriberi: high-output heart failure",
+                    "Dry beriberi: peripheral neuropathy",
+                    "Common in alcoholics",
+                    "Wernicke-Korsakoff if CNS involvement"
+                ],
+                category: "Nutrition",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Vitamin B2 Deficiency",
+                alternativeNames: ["Riboflavin Deficiency"],
+                hints: [
+                    "Patient with angular cheilitis and glossitis",
+                    "Magenta tongue",
+                    "Seborrheic dermatitis",
+                    "Corneal vascularization",
+                    "Rare in developed countries"
+                ],
+                category: "Nutrition",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Vitamin B3 Deficiency",
+                alternativeNames: ["Niacin Deficiency", "Pellagra"],
+                hints: [
+                    "Patient with 3 D's: Diarrhea, Dermatitis, Dementia",
+                    "Casal necklace (hyperpigmented rash on neck)",
+                    "Broad collar distribution of rash",
+                    "Associated with carcinoid syndrome and Hartnup disease",
+                    "Can lead to death if untreated"
+                ],
+                category: "Nutrition",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Vitamin B5 Deficiency",
+                alternativeNames: ["Pantothenic Acid Deficiency"],
+                hints: [
+                    "Patient with burning feet syndrome",
+                    "Adrenal insufficiency symptoms",
+                    "Extremely rare",
+                    "Dermatitis and enteritis",
+                    "Part of CoA and fatty acid synthase"
+                ],
+                category: "Nutrition",
+                difficulty: 4
+            ),
+
+            MedicalCase(
+                diagnosis: "Vitamin B6 Deficiency",
+                alternativeNames: ["Pyridoxine Deficiency"],
+                hints: [
+                    "Patient with peripheral neuropathy and seizures",
+                    "Sideroblastic anemia",
+                    "Caused by isoniazid use",
+                    "Seborrheic dermatitis and glossitis",
+                    "Supplemented with INH therapy"
+                ],
+                category: "Nutrition",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Vitamin B7 Deficiency",
+                alternativeNames: ["Biotin Deficiency"],
+                hints: [
+                    "Patient with alopecia and dermatitis",
+                    "Caused by eating raw egg whites (avidin)",
+                    "Lactic acidosis and organic aciduria",
+                    "Neurologic symptoms",
+                    "Rare except in specific conditions"
+                ],
+                category: "Nutrition",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Vitamin B9 Deficiency",
+                alternativeNames: ["Folate Deficiency"],
+                hints: [
+                    "Patient with macrocytic anemia",
+                    "Hypersegmented neutrophils",
+                    "Glossitis but no neurologic symptoms",
+                    "Causes neural tube defects in pregnancy",
+                    "Seen in alcoholics and pregnancy"
+                ],
+                category: "Nutrition",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Vitamin C Deficiency",
+                alternativeNames: ["Scurvy"],
+                hints: [
+                    "Patient with poor wound healing and bleeding gums",
+                    "Perifollicular hemorrhages",
+                    "Corkscrew hairs",
+                    "Swollen, bleeding gums",
+                    "Required for collagen synthesis (hydroxylation)"
+                ],
+                category: "Nutrition",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Vitamin D Deficiency",
+                alternativeNames: ["Rickets", "Osteomalacia"],
+                hints: [
+                    "Child with bowed legs and rachitic rosary",
+                    "Hypocalcemia and elevated alkaline phosphatase",
+                    "Craniotabes (soft skull)",
+                    "Adults: osteomalacia with bone pain",
+                    "Treated with vitamin D supplementation"
+                ],
+                category: "Nutrition",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Vitamin E Deficiency",
+                alternativeNames: ["Tocopherol Deficiency"],
+                hints: [
+                    "Patient with hemolytic anemia and peripheral neuropathy",
+                    "Posterior column and spinocerebellar tract degeneration",
+                    "Acanthocytosis",
+                    "Seen in fat malabsorption syndromes",
+                    "Antioxidant, protects RBC membranes"
+                ],
+                category: "Nutrition",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Vitamin K Deficiency",
+                alternativeNames: [],
+                hints: [
+                    "Newborn with bleeding or patient with elevated PT/INR",
+                    "Easy bruising and GI bleeding",
+                    "Seen in newborns, malabsorption, or antibiotic use",
+                    "Required for factors II, VII, IX, X",
+                    "Treated with vitamin K (phytonadione)"
+                ],
+                category: "Nutrition",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Zinc Deficiency",
+                alternativeNames: [],
+                hints: [
+                    "Patient with delayed wound healing and hypogeusia",
+                    "Acrodermatitis enteropathica (periorificial dermatitis)",
+                    "Alopecia and diarrhea",
+                    "Impaired immune function",
+                    "Seen in TPN, malabsorption, or acrodermatitis enteropathica"
+                ],
+                category: "Nutrition",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Copper Deficiency",
+                alternativeNames: [],
+                hints: [
+                    "Patient with anemia and neutropenia",
+                    "Sideroblastic anemia (looks like iron deficiency)",
+                    "Myelopathy and neuropathy",
+                    "Seen in gastric bypass or excessive zinc",
+                    "Required for ceruloplasmin and cytochrome c oxidase"
+                ],
+                category: "Nutrition",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Selenium Deficiency",
+                alternativeNames: ["Keshan Disease"],
+                hints: [
+                    "Patient with cardiomyopathy and muscle pain",
+                    "Keshan disease (endemic cardiomyopathy in China)",
+                    "Kashin-Beck disease (osteoarthropathy)",
+                    "Part of glutathione peroxidase",
+                    "Rare in US except in TPN"
+                ],
+                category: "Nutrition",
+                difficulty: 4
+            ),
+            // PARASITOLOGY (15 cases)
+            MedicalCase(
+                diagnosis: "Giardiasis",
+                alternativeNames: ["Giardia Lamblia"],
+                hints: [
+                    "Hiker with foul-smelling, greasy diarrhea after drinking stream water",
+                    "Bloating and flatulence",
+                    "Trophozoites with falling leaf motility",
+                    "Pear-shaped flagellated protozoa",
+                    "Treated with metronidazole or tinidazole"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Cryptosporidiosis",
+                alternativeNames: ["Cryptosporidium"],
+                hints: [
+                    "HIV patient with severe watery diarrhea",
+                    "Acid-fast oocysts in stool",
+                    "Resistant to chlorination",
+                    "Self-limited in immunocompetent",
+                    "No effective treatment in AIDS patients"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Amebiasis",
+                alternativeNames: ["Entamoeba Histolytica"],
+                hints: [
+                    "Traveler with bloody diarrhea and RUQ pain",
+                    "Flask-shaped ulcers in colon",
+                    "Trophozoites with ingested RBCs",
+                    "Can cause liver abscess (anchovy paste pus)",
+                    "Treated with metronidazole plus paromomycin"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Trichomoniasis",
+                alternativeNames: ["Trichomonas Vaginalis"],
+                hints: [
+                    "Woman with frothy, yellow-green vaginal discharge",
+                    "Strawberry cervix on exam",
+                    "Motile flagellated protozoa on wet mount",
+                    "Fishy odor",
+                    "Treated with metronidazole (treat partner)"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Pinworm Infection",
+                alternativeNames: ["Enterobiasis", "Enterobius Vermicularis"],
+                hints: [
+                    "Child with perianal itching, worse at night",
+                    "Scotch tape test shows eggs",
+                    "Female worm migrates to perianal area at night",
+                    "Most common helminth in US",
+                    "Treated with albendazole or pyrantel pamoate"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Ascariasis",
+                alternativeNames: ["Ascaris Lumbricoides"],
+                hints: [
+                    "Child with abdominal pain and intestinal obstruction",
+                    "Loeffler syndrome (pulmonary eosinophilia)",
+                    "Large roundworm visible in stool or vomitus",
+                    "Can migrate to bile duct causing obstruction",
+                    "Treated with albendazole or mebendazole"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Hookworm Infection",
+                alternativeNames: ["Ancylostoma", "Necator"],
+                hints: [
+                    "Patient with iron deficiency anemia and abdominal pain",
+                    "Ground itch at site of skin penetration",
+                    "Larvae migrate through lungs causing cough",
+                    "Adult worms attach to intestinal mucosa",
+                    "Treated with albendazole or mebendazole"
+                ],
+                category: "Infectious Disease",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Neurocysticercosis",
+                alternativeNames: ["Taenia Solium", "Cysticercosis"],
+                hints: [
+                    "Patient with new-onset seizures and multiple brain cysts",
+                    "Pork tapeworm larval infection",
+                    "CT shows calcified cysts with scolex (swiss cheese brain)",
+                    "Most common parasitic CNS infection worldwide",
+                    "Treated with albendazole plus steroids"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Schistosomiasis",
+                alternativeNames: ["Bilharzia"],
+                hints: [
+                    "Traveler with hematuria after swimming in African lake",
+                    "Swimmer's itch after cercariae penetration",
+                    "Eggs with terminal spine (S. haematobium) in urine",
+                    "Can cause portal hypertension and bladder cancer",
+                    "Treated with praziquantel"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Leishmaniasis - Visceral",
+                alternativeNames: ["Kala-azar"],
+                hints: [
+                    "Patient with fever, hepatosplenomegaly, and pancytopenia",
+                    "Gray-brown skin pigmentation (kala-azar means black fever)",
+                    "Sandfly vector transmission",
+                    "Amastigotes within macrophages",
+                    "Treated with liposomal amphotericin B"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Cutaneous Leishmaniasis",
+                alternativeNames: [],
+                hints: [
+                    "Traveler with painless skin ulcer at sandfly bite site",
+                    "Ulcer with raised borders",
+                    "Amastigotes in macrophages on biopsy",
+                    "Self-healing but leaves scar",
+                    "Treated with pentavalent antimony compounds"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Chagas Disease",
+                alternativeNames: ["American Trypanosomiasis"],
+                hints: [
+                    "Patient from South America with dilated cardiomyopathy",
+                    "Romana sign (unilateral periorbital edema) in acute phase",
+                    "Megacolon and megaesophagus in chronic phase",
+                    "Trypomastigotes in blood, reduviid bug vector",
+                    "Treated with benznidazole in acute phase"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "African Sleeping Sickness",
+                alternativeNames: ["African Trypanosomiasis"],
+                hints: [
+                    "African traveler with somnolence and neurologic symptoms",
+                    "Painful chancre at tsetse fly bite site",
+                    "Posterior cervical lymphadenopathy (Winterbottom sign)",
+                    "Trypomastigotes in blood or CSF",
+                    "Treated with suramin (early) or melarsoprol (CNS)"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Strongyloidiasis",
+                alternativeNames: ["Strongyloides Stercoralis"],
+                hints: [
+                    "Immunosuppressed patient with severe diarrhea and sepsis",
+                    "Hyperinfection syndrome in immunocompromised",
+                    "Larva currens (rapidly migrating urticarial rash)",
+                    "Rhabditiform larvae in stool",
+                    "Treated with ivermectin"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Trichinellosis",
+                alternativeNames: ["Trichinella Spiralis"],
+                hints: [
+                    "Patient with periorbital edema after eating undercooked pork",
+                    "Muscle pain, fever, and eosinophilia",
+                    "Larvae encyst in muscle",
+                    "Splinter hemorrhages under nails",
+                    "Treated with albendazole plus steroids"
+                ],
+                category: "Infectious Disease",
+                difficulty: 3
+            ),
+
+            // GENETIC SYNDROMES (10 cases)
+            MedicalCase(
+                diagnosis: "Fragile X Syndrome",
+                alternativeNames: [],
+                hints: [
+                    "Boy with intellectual disability and large testicles (macroorchidism)",
+                    "Long face with prominent jaw and ears",
+                    "Autism spectrum features",
+                    "CGG repeat expansion in FMR1 gene",
+                    "Most common inherited cause of intellectual disability"
+                ],
+                category: "Genetics",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Prader-Willi Syndrome",
+                alternativeNames: [],
+                hints: [
+                    "Child with hyperphagia and obesity",
+                    "Hypotonia in infancy",
+                    "Hypogonadism and intellectual disability",
+                    "Deletion of paternal chromosome 15q11-13",
+                    "Almond-shaped eyes"
+                ],
+                category: "Genetics",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Angelman Syndrome",
+                alternativeNames: ["Happy Puppet Syndrome"],
+                hints: [
+                    "Child with inappropriate laughter and ataxic gait",
+                    "Severe intellectual disability",
+                    "Hand-flapping movements",
+                    "Deletion of maternal chromosome 15q11-13",
+                    "Same region as Prader-Willi but maternal origin"
+                ],
+                category: "Genetics",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Achondroplasia",
+                alternativeNames: [],
+                hints: [
+                    "Child with short stature and disproportionately short limbs",
+                    "Frontal bossing and midface hypoplasia",
+                    "Trident hand configuration",
+                    "FGFR3 gain-of-function mutation",
+                    "Most common skeletal dysplasia"
+                ],
+                category: "Genetics",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Marfan Syndrome",
+                alternativeNames: [],
+                hints: [
+                    "Tall patient with long limbs and arachnodactyly",
+                    "Lens dislocation (upward, ectopia lentis)",
+                    "Aortic root dilatation and mitral valve prolapse",
+                    "Fibrillin-1 mutation",
+                    "Positive thumb and wrist signs"
+                ],
+                category: "Genetics",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Ehlers-Danlos Syndrome",
+                alternativeNames: ["EDS"],
+                hints: [
+                    "Patient with hyperextensible skin and hypermobile joints",
+                    "Easy bruising and poor wound healing",
+                    "Cigarette paper scars",
+                    "Defect in collagen synthesis or structure",
+                    "Vascular type can cause arterial rupture"
+                ],
+                category: "Genetics",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Osteogenesis Imperfecta",
+                alternativeNames: ["Brittle Bone Disease"],
+                hints: [
+                    "Child with multiple fractures from minimal trauma",
+                    "Blue sclerae and hearing loss",
+                    "Dentinogenesis imperfecta",
+                    "Type I collagen defect",
+                    "Types I-IV vary in severity"
+                ],
+                category: "Genetics",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Duchenne Muscular Dystrophy",
+                alternativeNames: ["DMD"],
+                hints: [
+                    "Boy with proximal muscle weakness by age 5",
+                    "Gower sign (uses arms to stand up)",
+                    "Calf pseudohypertrophy",
+                    "Deleted or mutated dystrophin gene",
+                    "Elevated CK, wheelchair-bound by teens"
+                ],
+                category: "Genetics",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Becker Muscular Dystrophy",
+                alternativeNames: ["BMD"],
+                hints: [
+                    "Male with muscle weakness in teens or 20s",
+                    "Milder than Duchenne, later onset",
+                    "Partially functional dystrophin",
+                    "X-linked recessive",
+                    "Can walk into adulthood"
+                ],
+                category: "Genetics",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Myotonic Dystrophy",
+                alternativeNames: [],
+                hints: [
+                    "Patient with myotonia (delayed muscle relaxation)",
+                    "Cannot release handshake quickly",
+                    "Frontal balding and cataracts",
+                    "CTG repeat expansion",
+                    "Autosomal dominant with anticipation"
+                ],
+                category: "Genetics",
+                difficulty: 3
+            ),
+
+            // REPRODUCTIVE/UROLOGY (12 cases)
+            MedicalCase(
+                diagnosis: "Benign Prostatic Hyperplasia",
+                alternativeNames: ["BPH"],
+                hints: [
+                    "Elderly male with difficulty initiating urination",
+                    "Nocturia and incomplete bladder emptying",
+                    "Enlarged, smooth prostate on DRE",
+                    "Elevated post-void residual volume",
+                    "Treated with alpha-blockers or 5-alpha-reductase inhibitors"
+                ],
+                category: "Urology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Prostate Cancer",
+                alternativeNames: ["Prostate Adenocarcinoma"],
+                hints: [
+                    "Elderly male with elevated PSA",
+                    "Hard, irregular nodule on DRE",
+                    "Most common cancer in men",
+                    "Bone metastases (osteoblastic)",
+                    "Gleason score determines prognosis"
+                ],
+                category: "Urology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Testicular Seminoma",
+                alternativeNames: [],
+                hints: [
+                    "Young male with painless testicular mass",
+                    "Most common testicular cancer",
+                    "Homogeneous, radiosensitive",
+                    "Elevated hCG in some cases",
+                    "Excellent prognosis"
+                ],
+                category: "Urology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Testicular Non-Seminomatous Germ Cell Tumor",
+                alternativeNames: ["NSGCT"],
+                hints: [
+                    "Young male with testicular mass",
+                    "Includes embryonal, yolk sac, choriocarcinoma, teratoma",
+                    "Elevated AFP and/or hCG",
+                    "More aggressive than seminoma",
+                    "Yolk sac most common in children"
+                ],
+                category: "Urology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Ovarian Cancer",
+                alternativeNames: ["Epithelial Ovarian Cancer"],
+                hints: [
+                    "Postmenopausal woman with abdominal distension and bloating",
+                    "Pelvic mass and ascites",
+                    "Elevated CA-125",
+                    "Often presents at advanced stage",
+                    "BRCA1/2 mutations increase risk"
+                ],
+                category: "Gynecology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Cervical Intraepithelial Neoplasia",
+                alternativeNames: ["CIN", "Cervical Dysplasia"],
+                hints: [
+                    "Woman with abnormal Pap smear",
+                    "HPV infection (types 16, 18)",
+                    "CIN I, II, III progression",
+                    "Koilocytes on cytology",
+                    "Colposcopy and biopsy for diagnosis"
+                ],
+                category: "Gynecology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Invasive Cervical Cancer",
+                alternativeNames: ["Cervical Squamous Cell Carcinoma"],
+                hints: [
+                    "Woman with post-coital bleeding",
+                    "HPV types 16 and 18 most common",
+                    "Squamous cell (80%) or adenocarcinoma",
+                    "Can be prevented with HPV vaccine",
+                    "Staging based on clinical exam"
+                ],
+                category: "Gynecology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Breast Cancer",
+                alternativeNames: ["Invasive Ductal Carcinoma"],
+                hints: [
+                    "Woman with palpable breast mass or mammographic abnormality",
+                    "Peau d'orange if dermal lymphatic invasion",
+                    "Nipple retraction or discharge",
+                    "Sentinel lymph node biopsy for staging",
+                    "HER2, ER, PR status guide treatment"
+                ],
+                category: "Oncology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Epididymitis",
+                alternativeNames: [],
+                hints: [
+                    "Young male with scrotal pain and fever",
+                    "Positive Prehn sign (relief with elevation)",
+                    "Urethral discharge if STI-related",
+                    "Chlamydia/gonorrhea in <35 years, E. coli in older",
+                    "Treated with antibiotics"
+                ],
+                category: "Urology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Testicular Torsion",
+                alternativeNames: [],
+                hints: [
+                    "Adolescent with sudden severe testicular pain",
+                    "Absent cremasteric reflex",
+                    "Negative Prehn sign (no relief with elevation)",
+                    "Bell-clapper deformity",
+                    "Surgical emergency within 6 hours"
+                ],
+                category: "Urology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Varicocele",
+                alternativeNames: [],
+                hints: [
+                    "Male with scrotal swelling described as bag of worms",
+                    "More common on left side",
+                    "Increases in size with Valsalva",
+                    "Can cause infertility",
+                    "Sudden right-sided varicocele suggests renal mass"
+                ],
+                category: "Urology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Hydrocele",
+                alternativeNames: [],
+                hints: [
+                    "Male with painless scrotal swelling",
+                    "Transilluminates with light",
+                    "Fluid accumulation in tunica vaginalis",
+                    "Congenital or acquired",
+                    "Usually benign"
+                ],
+                category: "Urology",
+                difficulty: 2
+            ),
+
+            // ENT (6 cases)
+            MedicalCase(
+                diagnosis: "Meniere Disease",
+                alternativeNames: [],
+                hints: [
+                    "Patient with episodic vertigo lasting hours",
+                    "Fluctuating hearing loss and tinnitus",
+                    "Aural fullness",
+                    "Endolymphatic hydrops",
+                    "Treated with diuretics and low-salt diet"
+                ],
+                category: "ENT",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Vestibular Schwannoma",
+                alternativeNames: ["Acoustic Neuroma"],
+                hints: [
+                    "Patient with unilateral hearing loss and tinnitus",
+                    "Loss of corneal reflex (CN V involvement)",
+                    "Mass at cerebellopontine angle",
+                    "Associated with neurofibromatosis type 2",
+                    "Treated with surgery or radiation"
+                ],
+                category: "ENT",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Acute Otitis Media",
+                alternativeNames: ["AOM"],
+                hints: [
+                    "Child with ear pain and fever",
+                    "Bulging, erythematous tympanic membrane",
+                    "Most common: S. pneumoniae, H. influenzae, Moraxella",
+                    "Can lead to mastoiditis if untreated",
+                    "Treated with amoxicillin"
+                ],
+                category: "ENT",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Otitis Externa",
+                alternativeNames: ["Swimmer's Ear"],
+                hints: [
+                    "Patient with ear pain worse with tragal manipulation",
+                    "Recent swimming or water exposure",
+                    "Pseudomonas most common organism",
+                    "External auditory canal erythema and discharge",
+                    "Treated with topical fluoroquinolone drops"
+                ],
+                category: "ENT",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Acute Bacterial Sinusitis",
+                alternativeNames: [],
+                hints: [
+                    "Patient with facial pain and purulent nasal discharge",
+                    "Symptoms >7-10 days or worsening after initial improvement",
+                    "Maxillary tooth pain",
+                    "S. pneumoniae, H. influenzae, Moraxella",
+                    "Treated with amoxicillin-clavulanate"
+                ],
+                category: "ENT",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Allergic Rhinitis",
+                alternativeNames: ["Hay Fever"],
+                hints: [
+                    "Patient with seasonal sneezing and nasal congestion",
+                    "Clear rhinorrhea and itchy nose/eyes",
+                    "Pale, boggy nasal turbinates",
+                    "Allergic shiners (dark circles under eyes)",
+                    "Treated with antihistamines and nasal steroids"
+                ],
+                category: "ENT",
+                difficulty: 2
+            ),
+
+            // PHARMACOLOGY (20 cases)
+            MedicalCase(
+                diagnosis: "Warfarin Therapy",
+                alternativeNames: ["Coumadin"],
+                hints: [
+                    "Patient on anticoagulation with elevated INR",
+                    "Inhibits vitamin K epoxide reductase",
+                    "Factors II, VII, IX, X affected",
+                    "Reversed with vitamin K or fresh frozen plasma",
+                    "Many drug-drug and drug-food interactions"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Heparin-Induced Thrombocytopenia",
+                alternativeNames: ["HIT"],
+                hints: [
+                    "Patient on heparin with platelet count drop >50%",
+                    "Paradoxical thrombosis risk",
+                    "Antibodies against heparin-PF4 complex",
+                    "Stop heparin, use direct thrombin inhibitor",
+                    "4 T's score helps diagnosis"
+                ],
+                category: "Pharmacology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Statin-Induced Myopathy",
+                alternativeNames: [],
+                hints: [
+                    "Patient on statin with muscle pain and weakness",
+                    "Elevated CK levels",
+                    "Risk of rhabdomyolysis if severe",
+                    "Inhibits HMG-CoA reductase",
+                    "More common with fibrate combination"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "ACE Inhibitor Side Effects",
+                alternativeNames: [],
+                hints: [
+                    "Patient on lisinopril with dry cough",
+                    "Can cause angioedema (contraindicated in pregnancy)",
+                    "Hyperkalemia risk",
+                    "Increased bradykinin causes cough",
+                    "Switch to ARB if cough intolerable"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Beta-Blocker Toxicity",
+                alternativeNames: [],
+                hints: [
+                    "Patient with bradycardia, hypotension, and bronchospasm",
+                    "Masks hypoglycemia symptoms in diabetics",
+                    "Contraindicated in asthma and cocaine use",
+                    "Can cause sexual dysfunction",
+                    "Treated with glucagon if overdose"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Digoxin Toxicity",
+                alternativeNames: [],
+                hints: [
+                    "Elderly patient with nausea and yellow vision",
+                    "Increased automaticity and AV block",
+                    "Bidirectional ventricular tachycardia classic",
+                    "Narrow therapeutic window",
+                    "Treated with digoxin-specific antibody fragments"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Lithium Toxicity",
+                alternativeNames: [],
+                hints: [
+                    "Bipolar patient with tremor, confusion, and seizures",
+                    "Nephrogenic diabetes insipidus",
+                    "Hypothyroidism with chronic use",
+                    "Narrow therapeutic window (0.6-1.2 mEq/L)",
+                    "Treated with hemodialysis if severe"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Phenytoin Side Effects",
+                alternativeNames: ["Dilantin"],
+                hints: [
+                    "Epileptic patient with gingival hyperplasia",
+                    "Hirsutism and coarse facial features",
+                    "Megaloblastic anemia (inhibits folate absorption)",
+                    "Teratogenic (fetal hydantoin syndrome)",
+                    "CYP450 inducer"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Methotrexate Toxicity",
+                alternativeNames: [],
+                hints: [
+                    "Cancer patient with mucositis and pancytopenia",
+                    "Inhibits dihydrofolate reductase",
+                    "Hepatotoxicity and pulmonary fibrosis",
+                    "Teratogenic",
+                    "Leucovorin (folinic acid) rescue"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Aminoglycoside Toxicity",
+                alternativeNames: ["Gentamicin", "Tobramycin"],
+                hints: [
+                    "Patient with hearing loss and acute kidney injury",
+                    "Ototoxicity (vestibular and cochlear)",
+                    "Nephrotoxicity (dose-dependent)",
+                    "Monitor trough levels",
+                    "Can cause neuromuscular blockade"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Vancomycin Red Man Syndrome",
+                alternativeNames: [],
+                hints: [
+                    "Patient with flushing and pruritus during IV infusion",
+                    "Non-IgE mediated histamine release",
+                    "Not true allergic reaction",
+                    "Prevented by slow infusion rate",
+                    "Can also cause nephrotoxicity and ototoxicity"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Rifampin Side Effects",
+                alternativeNames: [],
+                hints: [
+                    "TB patient with orange-red discoloration of secretions",
+                    "Potent CYP450 inducer (many drug interactions)",
+                    "Decreases effectiveness of oral contraceptives",
+                    "Hepatotoxicity",
+                    "Colors tears, urine, sweat orange"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Fluoroquinolone Side Effects",
+                alternativeNames: ["Ciprofloxacin", "Levofloxacin"],
+                hints: [
+                    "Patient with Achilles tendon pain after antibiotic",
+                    "Tendon rupture risk (especially in elderly and steroid users)",
+                    "Can prolong QT interval",
+                    "Contraindicated in pregnancy and children",
+                    "Can cause C. difficile colitis"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Sulfonamide Hypersensitivity",
+                alternativeNames: ["Sulfa Allergy"],
+                hints: [
+                    "Patient with rash after starting TMP-SMX",
+                    "Stevens-Johnson syndrome risk",
+                    "Kernicterus in neonates (displaces bilirubin)",
+                    "Hemolysis in G6PD deficiency",
+                    "Cross-reactivity with other sulfa drugs variable"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Amphotericin B Toxicity",
+                alternativeNames: ["Ampho-terrible"],
+                hints: [
+                    "Patient with rigors and fever during infusion",
+                    "Nephrotoxicity and hypokalemia/hypomagnesemia",
+                    "Premedicate with acetaminophen and diphenhydramine",
+                    "Liposomal formulation less toxic",
+                    "Monitor renal function and electrolytes"
+                ],
+                category: "Pharmacology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Bleomycin Pulmonary Toxicity",
+                alternativeNames: [],
+                hints: [
+                    "Cancer patient with progressive dyspnea",
+                    "Pulmonary fibrosis on imaging",
+                    "Dose-dependent toxicity",
+                    "Monitor with pulmonary function tests",
+                    "Avoid supplemental oxygen if possible"
+                ],
+                category: "Pharmacology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Doxorubicin Cardiotoxicity",
+                alternativeNames: ["Adriamycin"],
+                hints: [
+                    "Cancer patient with dilated cardiomyopathy",
+                    "Dose-dependent cardiotoxicity",
+                    "Free radical damage to myocytes",
+                    "Monitor with echocardiogram",
+                    "Dexrazoxane cardioprotective"
+                ],
+                category: "Pharmacology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Vincristine Neurotoxicity",
+                alternativeNames: [],
+                hints: [
+                    "Leukemia patient with peripheral neuropathy",
+                    "Foot drop and loss of reflexes",
+                    "Inhibits microtubule polymerization",
+                    "Constipation common (autonomic neuropathy)",
+                    "Dose-limiting toxicity"
+                ],
+                category: "Pharmacology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Cisplatin Toxicity",
+                alternativeNames: [],
+                hints: [
+                    "Cancer patient with hearing loss and neuropathy",
+                    "Nephrotoxicity (dose-limiting)",
+                    "Ototoxicity and peripheral neuropathy",
+                    "Severe nausea and vomiting",
+                    "Aggressive hydration prevents nephrotoxicity"
+                ],
+                category: "Pharmacology",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Cyclophosphamide Toxicity",
+                alternativeNames: [],
+                hints: [
+                    "Patient with hemorrhagic cystitis",
+                    "Acrolein metabolite damages bladder",
+                    "Prevented with mesna and hydration",
+                    "Myelosuppression and SIADH",
+                    "Increased risk of bladder cancer"
+                ],
+                category: "Pharmacology",
+                difficulty: 3
+            ),
+
+            // PSYCHIATRY/BEHAVIORAL (6 cases)
+            MedicalCase(
+                diagnosis: "Alcohol Withdrawal",
+                alternativeNames: ["Delirium Tremens"],
+                hints: [
+                    "Hospitalized alcoholic with tremor and hallucinations",
+                    "Autonomic hyperactivity: tachycardia, hypertension, diaphoresis",
+                    "Seizures possible within 48 hours",
+                    "Delirium tremens (DTs) at 48-96 hours",
+                    "Treated with benzodiazepines (CIWA protocol)"
+                ],
+                category: "Psychiatry",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Bulimia Nervosa",
+                alternativeNames: [],
+                hints: [
+                    "Young woman with binge eating and compensatory behaviors",
+                    "Dental erosion from vomiting",
+                    "Russell sign (calluses on knuckles)",
+                    "Parotid gland hypertrophy",
+                    "Hypokalemic hypochloremic metabolic alkalosis"
+                ],
+                category: "Psychiatry",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Attention-Deficit Hyperactivity Disorder",
+                alternativeNames: ["ADHD"],
+                hints: [
+                    "Child with inattention and hyperactivity",
+                    "Difficulty completing tasks and sitting still",
+                    "Symptoms present before age 12",
+                    "Impairs academic and social functioning",
+                    "Treated with stimulants (methylphenidate, amphetamines)"
+                ],
+                category: "Psychiatry",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Autism Spectrum Disorder",
+                alternativeNames: ["ASD"],
+                hints: [
+                    "Child with impaired social communication",
+                    "Repetitive behaviors and restricted interests",
+                    "Symptoms present in early development",
+                    "Variable intellectual functioning",
+                    "Behavioral therapy is mainstay of treatment"
+                ],
+                category: "Psychiatry",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Neuroleptic Malignant Syndrome",
+                alternativeNames: ["NMS"],
+                hints: [
+                    "Patient on antipsychotic with fever and rigidity",
+                    "Lead-pipe rigidity and altered mental status",
+                    "Elevated CK and myoglobinuria",
+                    "Autonomic instability",
+                    "Treated with dantrolene and bromocriptine"
+                ],
+                category: "Psychiatry",
+                difficulty: 3
+            ),
+
+            MedicalCase(
+                diagnosis: "Serotonin Syndrome",
+                alternativeNames: [],
+                hints: [
+                    "Patient on SSRIs with agitation and hyperthermia",
+                    "Hyperreflexia and clonus",
+                    "Tremor and diaphoresis",
+                    "Mydriasis and flushing",
+                    "Treated with cyproheptadine and supportive care"
+                ],
+                category: "Psychiatry",
+                difficulty: 3
+            ),
+
+            // VASCULAR (8 cases)
+            MedicalCase(
+                diagnosis: "Deep Vein Thrombosis",
+                alternativeNames: ["DVT"],
+                hints: [
+                    "Patient with unilateral leg swelling and pain",
+                    "Positive Homan sign (calf pain with dorsiflexion)",
+                    "Risk factors: immobility, surgery, malignancy, hypercoagulable state",
+                    "Duplex ultrasound for diagnosis",
+                    "Treated with anticoagulation"
+                ],
+                category: "Vascular",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Peripheral Arterial Disease",
+                alternativeNames: ["PAD"],
+                hints: [
+                    "Patient with claudication (calf pain with walking)",
+                    "Decreased or absent pulses",
+                    "Low ankle-brachial index (<0.9)",
+                    "Hair loss and shiny skin on legs",
+                    "Risk factors: smoking, diabetes, hyperlipidemia"
+                ],
+                category: "Vascular",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Abdominal Aortic Aneurysm",
+                alternativeNames: ["AAA"],
+                hints: [
+                    "Elderly male with pulsatile abdominal mass",
+                    "Often asymptomatic until rupture",
+                    "Rupture triad: hypotension, back pain, pulsatile mass",
+                    "Screen men 65-75 who have smoked",
+                    "Repair if >5.5 cm or symptomatic"
+                ],
+                category: "Vascular",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Varicose Veins",
+                alternativeNames: [],
+                hints: [
+                    "Patient with dilated, tortuous superficial veins",
+                    "Leg pain and heaviness worse at end of day",
+                    "Risk factors: pregnancy, prolonged standing, obesity",
+                    "Incompetent venous valves",
+                    "Can lead to venous stasis ulcers"
+                ],
+                category: "Vascular",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Hypovolemic Shock",
+                alternativeNames: [],
+                hints: [
+                    "Patient with hypotension and tachycardia after trauma",
+                    "Cold, clammy skin",
+                    "Decreased urine output",
+                    "Narrow pulse pressure",
+                    "Treated with fluid resuscitation"
+                ],
+                category: "Critical Care",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Cardiogenic Shock",
+                alternativeNames: [],
+                hints: [
+                    "Patient with hypotension and pulmonary edema after MI",
+                    "Elevated JVP and S3 gallop",
+                    "Decreased cardiac output",
+                    "Cool extremities",
+                    "Requires inotropic support"
+                ],
+                category: "Critical Care",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Septic Shock",
+                alternativeNames: ["Distributive Shock"],
+                hints: [
+                    "Febrile patient with hypotension refractory to fluids",
+                    "Warm extremities initially (high cardiac output)",
+                    "Elevated lactate",
+                    "Requires vasopressors (norepinephrine)",
+                    "Source control and broad-spectrum antibiotics"
+                ],
+                category: "Critical Care",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Obstructive Shock",
+                alternativeNames: [],
+                hints: [
+                    "Patient with hypotension and elevated JVP",
+                    "Causes: tension pneumothorax, PE, tamponade",
+                    "Muffled heart sounds if tamponade",
+                    "Decreased cardiac output from obstruction",
+                    "Requires relief of obstruction"
+                ],
+                category: "Critical Care",
+                difficulty: 2
+            ),
+
+            // EMBRYOLOGY (6 cases)
+            MedicalCase(
+                diagnosis: "Patent Foramen Ovale",
+                alternativeNames: ["PFO"],
+                hints: [
+                    "Young patient with stroke without risk factors",
+                    "Paradoxical embolism through atrial defect",
+                    "Present in 25% of population",
+                    "Usually asymptomatic",
+                    "Bubble study on echocardiogram"
+                ],
+                category: "Cardiology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Meckel Diverticulum",
+                alternativeNames: [],
+                hints: [
+                    "Child with painless rectal bleeding",
+                    "Rule of 2's: 2 feet from ileocecal valve, 2 inches long, 2% population",
+                    "Contains ectopic gastric mucosa",
+                    "Technetium-99m scan (Meckel scan)",
+                    "Most common congenital GI anomaly"
+                ],
+                category: "Gastroenterology",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Omphalocele",
+                alternativeNames: [],
+                hints: [
+                    "Newborn with abdominal contents in sac at umbilicus",
+                    "Covered by peritoneum and amnion",
+                    "Associated with chromosomal abnormalities",
+                    "Liver may be in sac",
+                    "Better prognosis than gastroschisis"
+                ],
+                category: "Pediatrics",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Gastroschisis",
+                alternativeNames: [],
+                hints: [
+                    "Newborn with intestines protruding through abdominal wall",
+                    "No covering membrane",
+                    "Lateral to umbilicus (usually right)",
+                    "Not associated with chromosomal abnormalities",
+                    "Requires surgical repair"
+                ],
+                category: "Pediatrics",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Duodenal Atresia",
+                alternativeNames: [],
+                hints: [
+                    "Newborn with bilious vomiting",
+                    "Double bubble sign on X-ray",
+                    "Associated with Down syndrome",
+                    "Polyhydramnios during pregnancy",
+                    "Requires surgical correction"
+                ],
+                category: "Pediatrics",
+                difficulty: 2
+            ),
+
+            MedicalCase(
+                diagnosis: "Biliary Atresia",
+                alternativeNames: [],
+                hints: [
+                    "Infant with prolonged jaundice and acholic stools",
+                    "Progressive cholestatic jaundice after 2 weeks",
+                    "Direct hyperbilirubinemia",
+                    "Leads to cirrhosis if untreated",
+                    "Kasai procedure (hepatoportoenterostomy)"
+                ],
+                category: "Pediatrics",
+                difficulty: 3
+            ),
             MedicalCase(
                 diagnosis: "Botulism",
                 alternativeNames: [],

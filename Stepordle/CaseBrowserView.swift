@@ -10,19 +10,20 @@ import SwiftData
 
 struct CaseBrowserView: View {
     @Environment(\.dismiss) private var dismiss
-    @Query private var medicalCases: [MedicalCase]
     @State private var selectedCategory: String = "All"
     @State private var searchText = ""
     @State private var selectedCase: MedicalCase?
     @State private var showingGame = false
     
+    private let allCases: [MedicalCase] = CaseLibrary.getSampleCases()
+    
     private var categories: [String] {
-        let allCategories = Set(medicalCases.map { $0.category })
+        let allCategories = Set(allCases.map { $0.category })
         return ["All"] + allCategories.sorted()
     }
     
     private var filteredCases: [MedicalCase] {
-        var cases = medicalCases
+        var cases = allCases
         
         // Filter by category
         if selectedCategory != "All" {
