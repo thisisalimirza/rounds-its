@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var showingFeedback = false
     
     var body: some View {
         NavigationStack {
@@ -126,6 +127,18 @@ struct AboutView: View {
                     .background(Color(.systemGray6))
                     .cornerRadius(16)
                     
+                    Button {
+                        showingFeedback = true
+                    } label: {
+                        Label("Send Feedback", systemImage: "paperplane.fill")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color(.systemGray5))
+                            .foregroundStyle(.primary)
+                            .cornerRadius(12)
+                    }
+                    
                     // Footer
                     VStack(spacing: 8) {
                         Text("Made with ❤️ for medical students")
@@ -149,6 +162,9 @@ struct AboutView: View {
                     }
                 }
             }
+        }
+        .sheet(isPresented: $showingFeedback) {
+            FeedbackSheet()
         }
     }
 }

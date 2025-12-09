@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import UserNotifications
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
@@ -15,6 +16,8 @@ struct ContentView: View {
     @State private var showingStats = false
     @State private var showingAbout = false
     @State private var showingCaseBrowser = false
+    @State private var notificationsEnabled = false
+    @State private var showingFeedback = false
     @Query private var playerStats: [PlayerStats]
     
     private var stats: PlayerStats? {
@@ -60,6 +63,45 @@ struct ContentView: View {
                         Text("Master USMLE Step 1")
                             .font(.title3)
                             .foregroundStyle(.secondary)
+                    }
+                    
+                    if let stats = stats {
+                        HStack(spacing: 12) {
+                            Image(systemName: stats.currentStreak > 0 ? "flame.fill" : "flame")
+                                .foregroundStyle(stats.currentStreak > 0 ? .orange : .gray)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(stats.currentStreak > 0 ? "Streak: \(stats.currentStreak)" : "Start your streak")
+                                    .font(.headline)
+                                Text(stats.currentStreak > 0 ? "Keep it going — play today to maintain your streak." : "Play today to begin your streak.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button(action: {
+                                if notificationsEnabled {
+                                    NotificationManager.cancelAll()
+                                    notificationsEnabled = false
+                                } else {
+                                    NotificationManager.requestAuthorization { granted in
+                                        if granted {
+                                            NotificationManager.scheduleDailyReminder()
+                                            notificationsEnabled = true
+                                        }
+                                    }
+                                }
+                            }) {
+                                Label(notificationsEnabled ? "On" : "Remind Me", systemImage: notificationsEnabled ? "bell.fill" : "bell")
+                                    .font(.caption)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color(.systemGray5))
+                                    .cornerRadius(8)
+                            }
+                        }
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(16)
+                        .shadow(radius: 1)
                     }
                     
                     // Stats Summary (if available)
@@ -115,7 +157,7 @@ struct ContentView: View {
                                 .cornerRadius(12)
                         }
                         
-                        HStack(spacing: 16) {
+                        HStack(spacing: 12) {
                             Button {
                                 showingStats = true
                             } label: {
@@ -132,6 +174,18 @@ struct ContentView: View {
                                 showingAbout = true
                             } label: {
                                 Label("About", systemImage: "info.circle.fill")
+                                    .font(.subheadline)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color(.systemGray5))
+                                    .foregroundStyle(.primary)
+                                    .cornerRadius(12)
+                            }
+                            
+                            Button {
+                                showingFeedback = true
+                            } label: {
+                                Label("Feedback", systemImage: "paperplane.fill")
                                     .font(.subheadline)
                                     .frame(maxWidth: .infinity)
                                     .padding()
@@ -160,6 +214,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingCaseBrowser) {
                 CaseBrowserView()
+            }
+            .sheet(isPresented: $showingFeedback) {
+                FeedbackSheet()
             }
         }
     }
@@ -218,4 +275,55 @@ struct SeededRandomNumberGenerator: RandomNumberGenerator {
 #Preview {
     ContentView()
         .modelContainer(for: [PlayerStats.self], inMemory: true)
+}
+
+import MessageUI
+
+struct FeedbackSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var message = ""
+
+    private var mailtoURL: URL? {
+        let to = "support@stepordle.app"
+        let subject = "Stepordle Feedback"
+        let body = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let urlString = "mailto:\\(to)?subject=\\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? \"\")&body=\\(body)"
+        return URL(string: urlString)
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Tell us what you think")
+                    .font(.headline)
+
+                TextEditor(text: $message)
+                    .frame(height: 180)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.systemGray4)))
+
+                Button {
+                    if let url = mailtoURL {
+                        UIApplication.shared.open(url)
+                    }
+                    dismiss()
+                } label: {
+                    Label("Send via Mail", systemImage: "paperplane.fill")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundStyle(.white)
+                        .cornerRadius(10)
+                }
+
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Feedback")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
 }

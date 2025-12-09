@@ -18,6 +18,7 @@ struct GameView: View {
     @State private var showingStats = false
     @State private var suggestions: [String] = []
     @State private var showingSuggestions = false
+    @State private var showingReport = false
     
     init(medicalCase: MedicalCase) {
         _currentCase = State(initialValue: medicalCase)
@@ -57,9 +58,19 @@ struct GameView: View {
                     Image(systemName: "chart.bar.fill")
                 }
             }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showingReport = true
+                } label: {
+                    Image(systemName: "flag")
+                }
+            }
         }
         .sheet(isPresented: $showingStats) {
             StatsView()
+        }
+        .sheet(isPresented: $showingReport) {
+            ReportCaseSheet(caseTitle: currentCase.diagnosis)
         }
         .alert("Result", isPresented: $showingResult) {
             Button("OK") { }
@@ -452,3 +463,52 @@ struct HintCard: View {
     }
 }
 
+struct ReportCaseSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let caseTitle: String
+    @State private var message: String = ""
+
+    private var mailtoURL: URL? {
+        let to = "support@stepordle.app"
+        let subject = "Case Report: \(caseTitle)"
+        let body = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let urlString = "mailto:\(to)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body)"
+        return URL(string: urlString)
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Report an issue with this case")
+                    .font(.headline)
+
+                TextEditor(text: $message)
+                    .frame(height: 160)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.systemGray4)))
+
+                Button {
+                    if let url = mailtoURL {
+                        UIApplication.shared.open(url)
+                    }
+                    dismiss()
+                } label: {
+                    Label("Send via Mail", systemImage: "envelope")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.red)
+                        .foregroundStyle(.white)
+                        .cornerRadius(10)
+                }
+
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Report Case")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+}
