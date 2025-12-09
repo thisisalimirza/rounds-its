@@ -364,34 +364,14 @@ struct GameView: View {
     }
     
     private func updateSuggestions(for text: String) {
-        guard !text.isEmpty else {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
             suggestions = []
             showingSuggestions = false
             return
         }
-        
-        // Simple suggestion system - in a real app, you'd have a comprehensive diagnosis database
-        let commonDiagnoses = [
-            "Myocardial Infarction", "Stroke", "Pneumonia", "Diabetes Mellitus",
-            "Hypertension", "Heart Failure", "Asthma", "COPD", "Multiple Sclerosis",
-            "Parkinson's Disease", "Alzheimer's Disease", "Epilepsy", "Migraine",
-            "Gastroesophageal Reflux Disease", "Peptic Ulcer", "Crohn's Disease",
-            "Ulcerative Colitis", "Cirrhosis", "Hepatitis", "Pancreatitis",
-            "Appendicitis", "Cholecystitis", "Acute Kidney Injury", "Chronic Kidney Disease",
-            "Urinary Tract Infection", "Pyelonephritis", "Pneumothorax", "Pulmonary Embolism",
-            "Deep Vein Thrombosis", "Atrial Fibrillation", "Ventricular Tachycardia",
-            "Diabetic Ketoacidosis", "Hyperthyroidism", "Hypothyroidism", "Cushing's Syndrome",
-            "Addison's Disease", "Rheumatoid Arthritis", "Osteoarthritis", "Gout",
-            "Systemic Lupus Erythematosus", "Scleroderma", "Anemia", "Leukemia",
-            "Lymphoma", "Sickle Cell Disease", "Hemophilia", "Bacterial Meningitis",
-            "Viral Meningitis", "Encephalitis", "Cellulitis", "Sepsis",
-            "Major Depressive Disorder", "Bipolar Disorder", "Schizophrenia", "Anxiety Disorder"
-        ]
-        
-        suggestions = commonDiagnoses.filter { diagnosis in
-            diagnosis.lowercased().contains(text.lowercased())
-        }.prefix(5).map { $0 }
-        
+        // Use centralized lexicon for autocomplete
+        suggestions = DiagnosisLexicon.suggestions(matching: trimmed)
         showingSuggestions = !suggestions.isEmpty
     }
     
@@ -452,3 +432,4 @@ struct HintCard: View {
             .modelContainer(for: [GameSession.self, PlayerStats.self], inMemory: true)
     }
 }
+

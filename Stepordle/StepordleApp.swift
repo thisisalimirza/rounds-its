@@ -54,6 +54,16 @@ struct StepordleApp: App {
             
             try? context.save()
         }
+        else {
+            // Merge new cases by diagnosis name (case-insensitive) without duplicating
+            let existingDiagnoses = Set(existingCases.map { $0.diagnosis.lowercased() })
+            let libraryCases = CaseLibrary.getSampleCases()
+            let newOnes = libraryCases.filter { !existingDiagnoses.contains($0.diagnosis.lowercased()) }
+            if !newOnes.isEmpty {
+                for c in newOnes { context.insert(c) }
+                try? context.save()
+            }
+        }
         
         // Initialize player stats if needed
         let statsDescriptor = FetchDescriptor<PlayerStats>()
@@ -66,3 +76,4 @@ struct StepordleApp: App {
         }
     }
 }
+
