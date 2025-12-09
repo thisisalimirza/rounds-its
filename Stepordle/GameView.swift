@@ -99,25 +99,30 @@ struct GameView: View {
             Text("Clinical Clues")
                 .font(.headline)
             
-            ForEach(0..<gameSession.hintsRevealed, id: \.self) { index in
-                HintCard(
-                    number: index + 1,
-                    hint: currentCase.hints[index],
-                    isRevealed: true
-                )
+            // Show revealed hints with bounds checking
+            ForEach(0..<min(gameSession.hintsRevealed, currentCase.hints.count), id: \.self) { index in
+                if index < currentCase.hints.count {
+                    HintCard(
+                        number: index + 1,
+                        hint: currentCase.hints[index],
+                        isRevealed: true
+                    )
+                }
             }
             
-            // Show locked hints
+            // Show locked hints with bounds checking
             ForEach(gameSession.hintsRevealed..<currentCase.hints.count, id: \.self) { index in
-                HintCard(
-                    number: index + 1,
-                    hint: "",
-                    isRevealed: false
-                )
+                if index < currentCase.hints.count {
+                    HintCard(
+                        number: index + 1,
+                        hint: "",
+                        isRevealed: false
+                    )
+                }
             }
             
             // Manual reveal button
-            if gameSession.canRevealHint() {
+            if gameSession.canRevealHint() && gameSession.hintsRevealed < currentCase.hints.count {
                 Button {
                     withAnimation {
                         gameSession.revealNextHint()
@@ -142,15 +147,18 @@ struct GameView: View {
                 .font(.headline)
             
             ForEach(Array(gameSession.guesses.enumerated()), id: \.offset) { index, guess in
+                let isLastGuess = index == gameSession.guesses.count - 1
+                let isCorrectGuess = gameSession.gameState == .won && isLastGuess
+                
                 HStack {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.red)
+                    Image(systemName: isCorrectGuess ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundStyle(isCorrectGuess ? .green : .red)
                     Text(guess)
                         .font(.body)
                     Spacer()
                 }
                 .padding()
-                .background(Color.red.opacity(0.1))
+                .background(isCorrectGuess ? Color.green.opacity(0.1) : Color.red.opacity(0.1))
                 .cornerRadius(10)
             }
         }
@@ -226,13 +234,43 @@ struct GameView: View {
                         .font(.title2)
                         .bold()
                     
-                    Text("Score: \(gameSession.score)")
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
+                    Text(currentCase.diagnosis)
+                        .font(.title3)
+                        .bold()
+                        .foregroundStyle(.green)
+                        .padding(.horizontal)
                     
-                    Text("Guesses: \(gameSession.guesses.count)")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    Divider()
+                        .padding(.vertical, 4)
+                    
+                    HStack(spacing: 32) {
+                        VStack(spacing: 4) {
+                            Text("\(gameSession.score)")
+                                .font(.title)
+                                .bold()
+                            Text("Score")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        VStack(spacing: 4) {
+                            Text("\(gameSession.guesses.count)")
+                                .font(.title)
+                                .bold()
+                            Text("Guesses")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        VStack(spacing: 4) {
+                            Text("\(gameSession.hintsRevealed)")
+                                .font(.title)
+                                .bold()
+                            Text("Hints Used")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
             } else {
                 VStack(spacing: 12) {
@@ -244,7 +282,7 @@ struct GameView: View {
                         .font(.title2)
                         .bold()
                     
-                    Text("The diagnosis was:")
+                    Text("The correct diagnosis was:")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     
@@ -252,6 +290,20 @@ struct GameView: View {
                         .font(.title3)
                         .bold()
                         .foregroundStyle(.blue)
+                        .padding(.horizontal)
+                    
+                    if !currentCase.alternativeNames.isEmpty {
+                        VStack(spacing: 4) {
+                            Text("Also accepted:")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(currentCase.alternativeNames.joined(separator: ", "))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding(.top, 4)
+                    }
                 }
             }
             
@@ -274,21 +326,37 @@ struct GameView: View {
     
     // MARK: - Helper Methods
     private func submitGuess() {
-        let trimmedGuess = currentGuess.trimmingCharacters(in: .whitespaces)
+        let trimmedGuess = currentGuess.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedGuess.isEmpty else { return }
         
+        // Check for duplicate guess
+        let normalizedGuess = trimmedGuess.lowercased()
+        let isDuplicate = gameSession.guesses.contains { existingGuess in
+            existingGuess.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == normalizedGuess
+        }
+        
+        if isDuplicate {
+            resultMessage = "You've already guessed '\(trimmedGuess)'. Try a different diagnosis."
+            showingResult = true
+            return
+        }
+        
         let isCorrect = currentCase.isCorrectDiagnosis(trimmedGuess)
+        let previousGuessCount = gameSession.guesses.count
         
         withAnimation {
             gameSession.makeGuess(trimmedGuess, isCorrect: isCorrect)
         }
         
-        if isCorrect {
-            resultMessage = "Correct! You diagnosed \(currentCase.diagnosis) in \(gameSession.guesses.count) guess(es)!"
-            updateStats(won: true)
-        } else if gameSession.gameState == .lost {
-            resultMessage = "Game Over! The correct diagnosis was \(currentCase.diagnosis)."
-            updateStats(won: false)
+        // Only update stats if the guess was actually added (not a duplicate)
+        if gameSession.guesses.count > previousGuessCount {
+            if isCorrect {
+                resultMessage = "Correct! You diagnosed \(currentCase.diagnosis) in \(gameSession.guesses.count) guess(es)!"
+                updateStats(won: true)
+            } else if gameSession.gameState == .lost {
+                resultMessage = "Game Over! The correct diagnosis was \(currentCase.diagnosis)."
+                updateStats(won: false)
+            }
         }
         
         currentGuess = ""

@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A34522152EE87434009BD6EA /* POLISH_IMPROVEMENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = A34522142EE87434009BD6EA /* POLISH_IMPROVEMENTS.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		A34521E92EE86FB2009BD6EA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		A34521D72EE86FB0009BD6EA /* Stepordle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stepordle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A34521E82EE86FB2009BD6EA /* StepordleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StepordleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A34521F22EE86FB2009BD6EA /* StepordleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StepordleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A34522142EE87434009BD6EA /* POLISH_IMPROVEMENTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = POLISH_IMPROVEMENTS.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -92,6 +97,7 @@
 				A34521EB2EE86FB2009BD6EA /* StepordleTests */,
 				A34521F52EE86FB2009BD6EA /* StepordleUITests */,
 				A34521D82EE86FB0009BD6EA /* Products */,
+				A34522142EE87434009BD6EA /* POLISH_IMPROVEMENTS.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -225,6 +231,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A34522152EE87434009BD6EA /* POLISH_IMPROVEMENTS.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -23,23 +23,43 @@ final class MedicalCase {
         self.id = UUID()
         self.diagnosis = diagnosis
         self.alternativeNames = alternativeNames
-        self.hints = hints
+        
+        // Ensure we have exactly 5 hints (pad with empty strings or truncate if needed)
+        if hints.count < 5 {
+            self.hints = hints + Array(repeating: "Additional clue coming soon", count: 5 - hints.count)
+        } else if hints.count > 5 {
+            self.hints = Array(hints.prefix(5))
+        } else {
+            self.hints = hints
+        }
+        
         self.category = category
-        self.difficulty = difficulty
+        self.difficulty = max(1, min(5, difficulty)) // Clamp difficulty between 1-5
         self.dateAdded = Date()
     }
     
     func isCorrectDiagnosis(_ guess: String) -> Bool {
-        let normalizedGuess = guess.lowercased().trimmingCharacters(in: .whitespaces)
+        // Normalize: lowercase, trim whitespace, remove extra spaces
+        let normalizedGuess = guess.lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+        
+        guard !normalizedGuess.isEmpty else { return false }
+        
         let normalizedDiagnosis = diagnosis.lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
         
         if normalizedGuess == normalizedDiagnosis {
             return true
         }
         
-        // Check alternative names
+        // Check alternative names with same normalization
         return alternativeNames.contains { alt in
-            alt.lowercased() == normalizedGuess
+            let normalizedAlt = alt.lowercased()
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            return normalizedAlt == normalizedGuess
         }
     }
 }
@@ -97,6 +117,15 @@ final class GameSession {
     
     func makeGuess(_ guess: String, isCorrect: Bool) {
         guard gameState == .playing else { return }
+        guard !guess.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        
+        // Avoid duplicate guesses
+        let normalizedGuess = guess.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let isDuplicate = guesses.contains { existingGuess in
+            existingGuess.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == normalizedGuess
+        }
+        
+        guard !isDuplicate else { return }
         
         guesses.append(guess)
         
@@ -160,18 +189,32 @@ final class PlayerStats {
             gamesWon += 1
             totalScore += score
             
-            if let lastPlayed = lastPlayedDate, Calendar.current.isDateInYesterday(lastPlayed) {
-                currentStreak += 1
-            } else if lastPlayedDate == nil || (lastPlayedDate != nil && !Calendar.current.isDateInToday(lastPlayedDate!)) {
+            // Update streak logic with proper edge case handling
+            if let lastPlayed = lastPlayedDate {
+                let calendar = Calendar.current
+                if calendar.isDateInYesterday(lastPlayed) {
+                    // Continuing streak from yesterday
+                    currentStreak += 1
+                } else if calendar.isDateInToday(lastPlayed) {
+                    // Already played today, streak stays same (don't increment)
+                    // This handles multiple games in one day
+                } else {
+                    // More than one day gap, reset streak
+                    currentStreak = 1
+                }
+            } else {
+                // First game ever
                 currentStreak = 1
             }
             
             maxStreak = max(maxStreak, currentStreak)
             
-            if guessCount > 0 && guessCount <= 5 {
+            // Record guess distribution with bounds checking
+            if guessCount > 0 && guessCount <= guessDistribution.count {
                 guessDistribution[guessCount - 1] += 1
             }
         } else {
+            // Lost game breaks the streak
             currentStreak = 0
         }
         
