@@ -139,15 +139,96 @@ struct AboutView: View {
                             .cornerRadius(12)
                     }
                     
+                    // Medical Disclaimer
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("Important Disclaimer", systemImage: "exclamationmark.triangle.fill")
+                            .font(.headline)
+                            .foregroundStyle(.orange)
+                        
+                        Text("Stepordle is for educational and study purposes only. It is not intended to diagnose, treat, cure, or prevent any disease or medical condition. The content provided should not be used as a substitute for professional medical advice, diagnosis, or treatment.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        Text("Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition. Never disregard professional medical advice or delay in seeking it because of something you have learned in this app.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .background(Color.orange.opacity(0.1))
+                    .cornerRadius(12)
+                    
+                    // Support Links
+                    VStack(spacing: 12) {
+                        Link(destination: URL(string: "https://braskgroup.com/stepordle/privacy")!) {
+                            HStack {
+                                Image(systemName: "hand.raised.fill")
+                                Text("Privacy Policy")
+                                Spacer()
+                                Image(systemName: "arrow.up.right")
+                                    .font(.caption)
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .foregroundStyle(.primary)
+                            .cornerRadius(10)
+                        }
+                        
+                        Link(destination: URL(string: "https://braskgroup.com/stepordle/terms")!) {
+                            HStack {
+                                Image(systemName: "doc.text.fill")
+                                Text("Terms of Service")
+                                Spacer()
+                                Image(systemName: "arrow.up.right")
+                                    .font(.caption)
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .foregroundStyle(.primary)
+                            .cornerRadius(10)
+                        }
+                        
+                        Link(destination: URL(string: "mailto:support@braskgroup.com?subject=Stepordle%20Support")!) {
+                            HStack {
+                                Image(systemName: "envelope.fill")
+                                Text("Contact Support")
+                                Spacer()
+                                Image(systemName: "arrow.up.right")
+                                    .font(.caption)
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .foregroundStyle(.primary)
+                            .cornerRadius(10)
+                        }
+                        
+                        Link(destination: URL(string: "https://braskgroup.com")!) {
+                            HStack {
+                                Image(systemName: "building.2.fill")
+                                Text("More from Brask Group")
+                                Spacer()
+                                Image(systemName: "arrow.up.right")
+                                    .font(.caption)
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .foregroundStyle(.primary)
+                            .cornerRadius(10)
+                        }
+                    }
+                    
                     // Footer
                     VStack(spacing: 8) {
                         Text("Made with ❤️ for medical students")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         
-                        Text("© 2025 Stepordle")
+                        Text("© 2025 Brask Group LLC")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                        
+                        Text("Brask Group LLC dba Stepordle")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
                     }
                     .padding(.vertical)
                 }

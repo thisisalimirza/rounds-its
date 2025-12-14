@@ -25,6 +25,12 @@ struct GameView: View {
         _currentCase = State(initialValue: medicalCase)
         _gameSession = State(initialValue: GameSession(caseID: medicalCase.id))
         self.isDailyCase = isDailyCase
+        
+        // Track case started
+        AnalyticsManager.shared.trackCaseStarted(
+            caseID: medicalCase.id.uuidString,
+            isDaily: isDailyCase
+        )
     }
     
     var body: some View {
@@ -396,6 +402,12 @@ struct GameView: View {
             if isDailyCase {
                 stats.markDailyCaseCompleted()
             }
+            
+            // Check for streak milestones
+            if stats.currentStreak % 7 == 0 && stats.currentStreak > 0 {
+                AnalyticsManager.shared.trackStreakMilestone(streak: stats.currentStreak)
+                AppStoreReviewManager.shared.streakAchieved(stats.currentStreak)
+            }
         } else {
             let newStats = PlayerStats()
             newStats.recordGame(won: won, guessCount: gameSession.guesses.count, score: gameSession.score)
@@ -409,6 +421,19 @@ struct GameView: View {
         }
         
         try? modelContext.save()
+        
+        // Track completion analytics
+        AnalyticsManager.shared.trackCaseCompleted(
+            caseID: currentCase.id.uuidString,
+            won: won,
+            guesses: gameSession.guesses.count,
+            hints: gameSession.hintsRevealed,
+            score: gameSession.score,
+            isDaily: isDailyCase
+        )
+        
+        // Request review after wins
+        AppStoreReviewManager.shared.gameCompleted(won: won)
     }
 }
 
@@ -503,8 +528,8 @@ struct ReportCaseSheet: View {
     @State private var message: String = ""
 
     private var mailtoURL: URL? {
-        let to = "support@stepordle.app"
-        let subject = "Case Report: \(caseTitle)"
+        let to = "support@braskgroup.com"
+        let subject = "Stepordle - Case Report: \(caseTitle)"
         let body = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let urlString = "mailto:\(to)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body)"
         return URL(string: urlString)

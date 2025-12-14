@@ -10,7 +10,8 @@ import SwiftData
 
 @main
 struct StepordleApp: App {
-    @State private var hasRequestedNotifications = UserDefaults.standard.bool(forKey: "hasRequestedNotifications")
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var showOnboarding = false
     
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -55,22 +56,20 @@ struct StepordleApp: App {
         WindowGroup {
             ContentView()
                 .onAppear {
-                    requestNotificationsOnFirstLaunch()
+                    // Track app launch
+                    AnalyticsManager.shared.trackAppLaunch()
+                    SessionTracker.shared.startSession()
+                    
+                    // Show onboarding for first-time users
+                    if !hasCompletedOnboarding {
+                        showOnboarding = true
+                    }
+                }
+                .sheet(isPresented: $showOnboarding) {
+                    OnboardingView()
                 }
         }
         .modelContainer(sharedModelContainer)
-    }
-    
-    private func requestNotificationsOnFirstLaunch() {
-        guard !hasRequestedNotifications else { return }
-        
-        NotificationManager.requestAuthorization { granted in
-            if granted {
-                NotificationManager.scheduleDailyReminder()
-            }
-            hasRequestedNotifications = true
-            UserDefaults.standard.set(true, forKey: "hasRequestedNotifications")
-        }
     }
     
     // MARK: - Seed Data
