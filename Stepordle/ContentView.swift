@@ -12,15 +12,21 @@ import UserNotifications
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var currentCase: MedicalCase?
+    @State private var isDailyCase = false
     @State private var showingGame = false
     @State private var showingStats = false
     @State private var showingAbout = false
     @State private var showingCaseBrowser = false
     @State private var showingFeedback = false
+    @State private var showingDailyCompleteAlert = false
     @Query private var playerStats: [PlayerStats]
     
     private var stats: PlayerStats? {
         playerStats.first
+    }
+    
+    private var hasPlayedDailyToday: Bool {
+        stats?.hasPlayedDailyCaseToday() ?? false
     }
     
     var body: some View {
@@ -79,15 +85,35 @@ struct ContentView: View {
                     // Main Menu Buttons
                     VStack(spacing: 12) {
                         Button {
-                            startNewGame()
+                            if hasPlayedDailyToday {
+                                showingDailyCompleteAlert = true
+                            } else {
+                                startNewGame()
+                            }
                         } label: {
-                            Label("Play Daily Case", systemImage: "play.fill")
+                            if hasPlayedDailyToday {
+                                // Completed state
+                                HStack(spacing: 8) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.title3)
+                                    Text("Daily Case Complete")
+                                }
                                 .font(.headline)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
-                                .background(Color.blue)
-                                .foregroundStyle(.white)
+                                .background(Color.green.opacity(0.15))
+                                .foregroundStyle(.green)
                                 .cornerRadius(12)
+                            } else {
+                                // Play state
+                                Label("Play Daily Case", systemImage: "play.fill")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 16)
+                                    .background(Color.blue)
+                                    .foregroundStyle(.white)
+                                    .cornerRadius(12)
+                            }
                         }
                         
                         Button {
@@ -164,7 +190,7 @@ struct ContentView: View {
             }
             .navigationDestination(isPresented: $showingGame) {
                 if let currentCase = currentCase {
-                    GameView(medicalCase: currentCase)
+                    GameView(medicalCase: currentCase, isDailyCase: isDailyCase)
                 }
             }
             .sheet(isPresented: $showingStats) {
@@ -179,6 +205,17 @@ struct ContentView: View {
             .sheet(isPresented: $showingFeedback) {
                 FeedbackSheet()
             }
+            .alert("Daily Case Complete! ✅", isPresented: $showingDailyCompleteAlert) {
+                Button("View Stats") {
+                    showingStats = true
+                }
+                Button("Play Random Case") {
+                    startRandomGame()
+                }
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("You've already completed today's daily case! Come back tomorrow for a new challenge, or play a random case now.")
+            }
         }
     }
     
@@ -190,6 +227,7 @@ struct ContentView: View {
         let cases = CaseLibrary.getSampleCases()
         if let randomCase = cases.randomElement(using: &generator) {
             currentCase = randomCase
+            isDailyCase = true
             showingGame = true
         }
     }
@@ -197,6 +235,7 @@ struct ContentView: View {
     private func startRandomGame() {
         if let randomCase = CaseLibrary.getRandomCase() {
             currentCase = randomCase
+            isDailyCase = false
             showingGame = true
         }
     }

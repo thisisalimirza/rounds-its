@@ -186,6 +186,7 @@ final class PlayerStats {
     var totalScore: Int
     var guessDistribution: [Int] // Index = number of guesses (0-4 for 1-5 guesses)
     var lastPlayedDate: Date?
+    var lastDailyCasePlayed: String? // Store date string like "2025-12-13"
     
     init() {
         self.gamesPlayed = 0
@@ -195,6 +196,7 @@ final class PlayerStats {
         self.totalScore = 0
         self.guessDistribution = [0, 0, 0, 0, 0]
         self.lastPlayedDate = nil
+        self.lastDailyCasePlayed = nil
     }
     
     func recordGame(won: Bool, guessCount: Int, score: Int) {
@@ -244,6 +246,21 @@ final class PlayerStats {
     var averageScore: Int {
         guard gamesWon > 0 else { return 0 }
         return totalScore / gamesWon
+    }
+    
+    // MARK: - Daily Case Tracking
+    func markDailyCaseCompleted() {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        lastDailyCasePlayed = formatter.string(from: Date())
+    }
+    
+    func hasPlayedDailyCaseToday() -> Bool {
+        guard let lastDaily = lastDailyCasePlayed else { return false }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let todayString = formatter.string(from: Date())
+        return lastDaily == todayString
     }
 }
 

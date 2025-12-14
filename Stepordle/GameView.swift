@@ -19,10 +19,12 @@ struct GameView: View {
     @State private var suggestions: [String] = []
     @State private var showingSuggestions = false
     @State private var showingReport = false
+    let isDailyCase: Bool
     
-    init(medicalCase: MedicalCase) {
+    init(medicalCase: MedicalCase, isDailyCase: Bool = false) {
         _currentCase = State(initialValue: medicalCase)
         _gameSession = State(initialValue: GameSession(caseID: medicalCase.id))
+        self.isDailyCase = isDailyCase
     }
     
     var body: some View {
@@ -148,23 +150,7 @@ struct GameView: View {
                 }
             }
             
-            // Manual reveal button
-            if gameSession.canRevealHint() && gameSession.hintsRevealed < currentCase.hints.count {
-                Button {
-                    withAnimation {
-                        gameSession.revealNextHint()
-                    }
-                } label: {
-                    Label("Reveal Next Hint", systemImage: "eye.fill")
-                        .font(.subheadline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(Color.orange.opacity(0.2))
-                        .foregroundStyle(.orange)
-                        .cornerRadius(10)
-                }
-            }
-            
+            // Final hint warning
             if gameSession.hintsRevealed >= gameSession.maxHints && gameSession.gameState == .playing {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
@@ -405,9 +391,20 @@ struct GameView: View {
         let descriptor = FetchDescriptor<PlayerStats>()
         if let stats = try? modelContext.fetch(descriptor).first {
             stats.recordGame(won: won, guessCount: gameSession.guesses.count, score: gameSession.score)
+            
+            // Mark daily case as completed
+            if isDailyCase {
+                stats.markDailyCaseCompleted()
+            }
         } else {
             let newStats = PlayerStats()
             newStats.recordGame(won: won, guessCount: gameSession.guesses.count, score: gameSession.score)
+            
+            // Mark daily case as completed
+            if isDailyCase {
+                newStats.markDailyCaseCompleted()
+            }
+            
             modelContext.insert(newStats)
         }
         

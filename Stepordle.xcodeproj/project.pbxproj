@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		A34522152EE87434009BD6EA /* POLISH_IMPROVEMENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = A34522142EE87434009BD6EA /* POLISH_IMPROVEMENTS.md */; };
 		A3DFA9FB2EEE3FC200620718 /* UI_IMPROVEMENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = A3DFA9FA2EEE3FC200620718 /* UI_IMPROVEMENTS.md */; };
+		A3DFA9FD2EEE45F600620718 /* DAILY_CASE_TRACKING.md in Resources */ = {isa = PBXBuildFile; fileRef = A3DFA9FC2EEE45F600620718 /* DAILY_CASE_TRACKING.md */; };
+		A3DFA9FF2EEE47FF00620718 /* UI_REFINEMENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = A3DFA9FE2EEE47FF00620718 /* UI_REFINEMENTS.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,6 +36,8 @@
 		A34521F22EE86FB2009BD6EA /* StepordleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StepordleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A34522142EE87434009BD6EA /* POLISH_IMPROVEMENTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = POLISH_IMPROVEMENTS.md; sourceTree = "<group>"; };
 		A3DFA9FA2EEE3FC200620718 /* UI_IMPROVEMENTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = UI_IMPROVEMENTS.md; sourceTree = "<group>"; };
+		A3DFA9FC2EEE45F600620718 /* DAILY_CASE_TRACKING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = DAILY_CASE_TRACKING.md; sourceTree = "<group>"; };
+		A3DFA9FE2EEE47FF00620718 /* UI_REFINEMENTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = UI_REFINEMENTS.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -101,6 +105,8 @@
 				A34521D82EE86FB0009BD6EA /* Products */,
 				A34522142EE87434009BD6EA /* POLISH_IMPROVEMENTS.md */,
 				A3DFA9FA2EEE3FC200620718 /* UI_IMPROVEMENTS.md */,
+				A3DFA9FC2EEE45F600620718 /* DAILY_CASE_TRACKING.md */,
+				A3DFA9FE2EEE47FF00620718 /* UI_REFINEMENTS.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -236,6 +242,8 @@
 			files = (
 				A34522152EE87434009BD6EA /* POLISH_IMPROVEMENTS.md in Resources */,
 				A3DFA9FB2EEE3FC200620718 /* UI_IMPROVEMENTS.md in Resources */,
+				A3DFA9FD2EEE45F600620718 /* DAILY_CASE_TRACKING.md in Resources */,
+				A3DFA9FF2EEE47FF00620718 /* UI_REFINEMENTS.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
