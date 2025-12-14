@@ -10,6 +10,8 @@ import SwiftData
 
 @main
 struct StepordleApp: App {
+    @State private var hasRequestedNotifications = UserDefaults.standard.bool(forKey: "hasRequestedNotifications")
+    
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             MedicalCase.self,
@@ -52,8 +54,23 @@ struct StepordleApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onAppear {
+                    requestNotificationsOnFirstLaunch()
+                }
         }
         .modelContainer(sharedModelContainer)
+    }
+    
+    private func requestNotificationsOnFirstLaunch() {
+        guard !hasRequestedNotifications else { return }
+        
+        NotificationManager.requestAuthorization { granted in
+            if granted {
+                NotificationManager.scheduleDailyReminder()
+            }
+            hasRequestedNotifications = true
+            UserDefaults.standard.set(true, forKey: "hasRequestedNotifications")
+        }
     }
     
     // MARK: - Seed Data

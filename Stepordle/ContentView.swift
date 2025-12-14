@@ -16,7 +16,6 @@ struct ContentView: View {
     @State private var showingStats = false
     @State private var showingAbout = false
     @State private var showingCaseBrowser = false
-    @State private var notificationsEnabled = false
     @State private var showingFeedback = false
     @Query private var playerStats: [PlayerStats]
     
@@ -35,13 +34,13 @@ struct ContentView: View {
                 )
                 .ignoresSafeArea()
                 
-                VStack(spacing: 32) {
+                VStack(spacing: 0) {
                     Spacer()
                     
                     // Logo and Title
-                    VStack(spacing: 16) {
+                    VStack(spacing: 6) {
                         Image(systemName: "cross.case.fill")
-                            .font(.system(size: 80))
+                            .font(.system(size: 52))
                             .foregroundStyle(
                                 LinearGradient(
                                     colors: [.blue, .purple],
@@ -51,7 +50,7 @@ struct ContentView: View {
                             )
                         
                         Text("Stepordle")
-                            .font(.system(size: 48, weight: .bold, design: .rounded))
+                            .font(.system(size: 38, weight: .bold, design: .rounded))
                             .foregroundStyle(
                                 LinearGradient(
                                     colors: [.blue, .purple],
@@ -61,73 +60,31 @@ struct ContentView: View {
                             )
                         
                         Text("Master USMLE Step 1")
-                            .font(.title3)
+                            .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                     
-                    if let stats = stats {
-                        HStack(spacing: 12) {
-                            Image(systemName: stats.currentStreak > 0 ? "flame.fill" : "flame")
-                                .foregroundStyle(stats.currentStreak > 0 ? .orange : .gray)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(stats.currentStreak > 0 ? "Streak: \(stats.currentStreak)" : "Start your streak")
-                                    .font(.headline)
-                                Text(stats.currentStreak > 0 ? "Keep it going — play today to maintain your streak." : "Play today to begin your streak.")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Button(action: {
-                                if notificationsEnabled {
-                                    NotificationManager.cancelAll()
-                                    notificationsEnabled = false
-                                } else {
-                                    NotificationManager.requestAuthorization { granted in
-                                        if granted {
-                                            NotificationManager.scheduleDailyReminder()
-                                            notificationsEnabled = true
-                                        }
-                                    }
-                                }
-                            }) {
-                                Label(notificationsEnabled ? "On" : "Remind Me", systemImage: notificationsEnabled ? "bell.fill" : "bell")
-                                    .font(.caption)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
-                                    .background(Color(.systemGray5))
-                                    .cornerRadius(8)
-                            }
-                        }
-                        .padding()
-                        .background(Color(.systemBackground))
-                        .cornerRadius(16)
-                        .shadow(radius: 1)
-                    }
+                    Spacer()
+                        .frame(height: 24)
                     
-                    // Stats Summary (if available)
-                    if let stats = stats, stats.gamesPlayed > 0 {
-                        HStack(spacing: 24) {
-                            QuickStat(label: "Played", value: "\(stats.gamesPlayed)")
-                            QuickStat(label: "Win Rate", value: "\(stats.winPercentage)%")
-                            QuickStat(label: "Streak", value: "\(stats.currentStreak)")
-                        }
-                        .padding()
-                        .background(Color(.systemBackground))
-                        .cornerRadius(16)
-                        .shadow(radius: 2)
+                    // Combined Streak & Stats Card
+                    if let stats = stats {
+                        CompactStreakStatsView(stats: stats)
+                            .padding(.horizontal)
                     }
                     
                     Spacer()
+                        .frame(height: 20)
                     
                     // Main Menu Buttons
-                    VStack(spacing: 16) {
+                    VStack(spacing: 12) {
                         Button {
                             startNewGame()
                         } label: {
                             Label("Play Daily Case", systemImage: "play.fill")
                                 .font(.headline)
                                 .frame(maxWidth: .infinity)
-                                .padding()
+                                .padding(.vertical, 16)
                                 .background(Color.blue)
                                 .foregroundStyle(.white)
                                 .cornerRadius(12)
@@ -139,7 +96,7 @@ struct ContentView: View {
                             Label("Random Case", systemImage: "shuffle")
                                 .font(.headline)
                                 .frame(maxWidth: .infinity)
-                                .padding()
+                                .padding(.vertical, 16)
                                 .background(Color.purple)
                                 .foregroundStyle(.white)
                                 .cornerRadius(12)
@@ -151,55 +108,59 @@ struct ContentView: View {
                             Label("Browse Cases", systemImage: "list.bullet.clipboard")
                                 .font(.headline)
                                 .frame(maxWidth: .infinity)
-                                .padding()
+                                .padding(.vertical, 16)
                                 .background(Color.green)
                                 .foregroundStyle(.white)
                                 .cornerRadius(12)
                         }
+                    }
+                    .padding(.horizontal)
+                    
+                    Spacer()
+                        .frame(height: 16)
+                    
+                    // Bottom Action Buttons
+                    HStack(spacing: 12) {
+                        Button {
+                            showingStats = true
+                        } label: {
+                            Label("Stats", systemImage: "chart.bar.fill")
+                                .font(.subheadline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Color(.systemGray6))
+                                .foregroundStyle(.primary)
+                                .cornerRadius(10)
+                        }
                         
-                        HStack(spacing: 12) {
-                            Button {
-                                showingStats = true
-                            } label: {
-                                Label("Stats", systemImage: "chart.bar.fill")
-                                    .font(.subheadline)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color(.systemGray5))
-                                    .foregroundStyle(.primary)
-                                    .cornerRadius(12)
-                            }
-                            
-                            Button {
-                                showingAbout = true
-                            } label: {
-                                Label("About", systemImage: "info.circle.fill")
-                                    .font(.subheadline)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color(.systemGray5))
-                                    .foregroundStyle(.primary)
-                                    .cornerRadius(12)
-                            }
-                            
-                            Button {
-                                showingFeedback = true
-                            } label: {
-                                Label("Feedback", systemImage: "paperplane.fill")
-                                    .font(.subheadline)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color(.systemGray5))
-                                    .foregroundStyle(.primary)
-                                    .cornerRadius(12)
-                            }
+                        Button {
+                            showingAbout = true
+                        } label: {
+                            Label("About", systemImage: "info.circle.fill")
+                                .font(.subheadline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Color(.systemGray6))
+                                .foregroundStyle(.primary)
+                                .cornerRadius(10)
+                        }
+                        
+                        Button {
+                            showingFeedback = true
+                        } label: {
+                            Label("Feedback", systemImage: "paperplane.fill")
+                                .font(.subheadline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Color(.systemGray6))
+                                .foregroundStyle(.primary)
+                                .cornerRadius(10)
                         }
                     }
                     .padding(.horizontal)
                     
                     Spacer()
                 }
-                .padding()
             }
             .navigationDestination(isPresented: $showingGame) {
                 if let currentCase = currentCase {
@@ -247,14 +208,179 @@ struct QuickStat: View {
     let value: String
     
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 2) {
             Text(value)
-                .font(.title2)
+                .font(.title3)
                 .bold()
             Text(label)
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
         }
+    }
+}
+
+// MARK: - Compact Streak & Stats View
+struct CompactStreakStatsView: View {
+    let stats: PlayerStats
+    
+    var body: some View {
+        VStack(spacing: 10) {
+            // Streak Section - Compact
+            HStack(spacing: 10) {
+                // Fire emoji
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [.orange.opacity(0.3), .red.opacity(0.3)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 50, height: 50)
+                    
+                    Text("🔥")
+                        .font(.system(size: 30))
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text("\(stats.currentStreak)")
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.orange, .red],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                        Text("Day Streak")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    Text(streakMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                
+                Spacer()
+            }
+            
+            // Compact Heatmap
+            if stats.gamesPlayed > 0 {
+                HStack(spacing: 4) {
+                    ForEach(0..<7, id: \.self) { dayIndex in
+                        VStack(spacing: 2) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(colorForDay(dayIndex, stats: stats))
+                                .frame(width: 36, height: 36)
+                            
+                            Text(dayLabel(for: dayIndex))
+                                .font(.system(size: 8))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            
+            // Stats Row - Compact
+            HStack(spacing: 0) {
+                QuickStat(label: "Played", value: "\(stats.gamesPlayed)")
+                    .frame(maxWidth: .infinity)
+                
+                Divider()
+                    .frame(height: 30)
+                
+                QuickStat(label: "Win Rate", value: "\(stats.winPercentage)%")
+                    .frame(maxWidth: .infinity)
+                
+                Divider()
+                    .frame(height: 30)
+                
+                QuickStat(label: "Best", value: "\(stats.maxStreak)")
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+        )
+    }
+    
+    private var streakMessage: String {
+        if stats.currentStreak == 0 {
+            return "Start today! 💪"
+        } else if stats.currentStreak == 1 {
+            return "Great start! 🌟"
+        } else if stats.currentStreak < 7 {
+            return "On fire! 🚀"
+        } else if stats.currentStreak < 30 {
+            return "Amazing! 🎯"
+        } else {
+            return "Legendary! 👑"
+        }
+    }
+    
+    private func colorForDay(_ dayIndex: Int, stats: PlayerStats) -> Color {
+        let daysAgo = dayIndex
+        
+        if let lastPlayed = stats.lastPlayedDate {
+            let calendar = Calendar.current
+            let today = calendar.startOfDay(for: Date())
+            let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
+            let daysSinceLastPlayed = calendar.dateComponents([.day], from: lastPlayedDay, to: today).day ?? 0
+            
+            if stats.currentStreak > 0 {
+                if daysAgo < stats.currentStreak && daysAgo <= daysSinceLastPlayed {
+                    let intensity = 1.0 - (Double(daysAgo) * 0.1)
+                    return Color.orange.opacity(max(0.6, intensity))
+                }
+            }
+            
+            if daysAgo == daysSinceLastPlayed {
+                return Color.orange.opacity(0.8)
+            }
+        }
+        
+        return Color(.systemGray5)
+    }
+    
+    private func dayLabel(for index: Int) -> String {
+        let calendar = Calendar.current
+        let date = calendar.date(byAdding: .day, value: -index, to: Date()) ?? Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE"
+        return formatter.string(from: date).prefix(1).uppercased()
+    }
+}
+
+// MARK: - Gamified Streak Card (Keep for backwards compatibility)
+struct StreakCardView: View {
+    let stats: PlayerStats
+    
+    var body: some View {
+        CompactStreakStatsView(stats: stats)
+    }
+}
+
+// MARK: - Stats Card (Keep for backwards compatibility)
+struct StatsCardView: View {
+    let stats: PlayerStats
+    
+    var body: some View {
+        EmptyView()
+    }
+}
+
+// MARK: - Activity Heatmap (Keep for backwards compatibility)
+struct ActivityHeatmapView: View {
+    let stats: PlayerStats
+    
+    var body: some View {
+        EmptyView()
     }
 }
 

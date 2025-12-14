@@ -26,27 +26,43 @@ struct GameView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Header
-                headerView
-                
-                // Hints Section
-                hintsSection
-                
-                // Previous Guesses
-                if !gameSession.guesses.isEmpty {
-                    previousGuessesSection
-                }
-                
-                // Input Section
-                if gameSession.gameState == .playing {
-                    inputSection
-                } else {
-                    resultSection
+        VStack(spacing: 0) {
+            // Scrollable hints section
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Header
+                    headerView
+                        .padding(.horizontal)
+                        .padding(.top, 12)
+                    
+                    // Hints Section
+                    hintsSection
+                        .padding(.horizontal)
+                    
+                    // Previous Guesses
+                    if !gameSession.guesses.isEmpty && gameSession.gameState == .playing {
+                        previousGuessesSection
+                            .padding(.horizontal)
+                    }
+                    
+                    // Add bottom padding to ensure content doesn't hide behind input
+                    Spacer()
+                        .frame(height: 20)
                 }
             }
-            .padding()
+            
+            // Fixed input/result section at bottom
+            Divider()
+            
+            if gameSession.gameState == .playing {
+                inputSection
+                    .padding()
+                    .background(Color(.systemBackground))
+            } else {
+                resultSection
+                    .padding()
+                    .background(Color(.systemBackground))
+            }
         }
         .navigationTitle("Stepordle")
         .navigationBarTitleDisplayMode(.inline)
@@ -81,32 +97,32 @@ struct GameView: View {
     
     // MARK: - Header View
     private var headerView: some View {
-        VStack(spacing: 8) {
-            HStack {
-                Label("\(gameSession.guesses.count)/\(gameSession.maxGuesses)", systemImage: "brain.head.profile")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                
-                Spacer()
-                
-                Label("\(gameSession.hintsRevealed)/\(gameSession.maxHints)", systemImage: "lightbulb.fill")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+        HStack {
+            Label("\(gameSession.guesses.count)/\(gameSession.maxGuesses)", systemImage: "brain.head.profile")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            
+            Spacer()
             
             Text(currentCase.category)
                 .font(.caption)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 10)
                 .padding(.vertical, 4)
                 .background(Color.blue.opacity(0.2))
                 .foregroundStyle(.blue)
                 .cornerRadius(8)
+            
+            Spacer()
+            
+            Label("\(gameSession.hintsRevealed)/\(gameSession.maxHints)", systemImage: "lightbulb.fill")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
     }
     
     // MARK: - Hints Section
     private var hintsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("Clinical Clues")
                 .font(.headline)
             
@@ -142,7 +158,7 @@ struct GameView: View {
                     Label("Reveal Next Hint", systemImage: "eye.fill")
                         .font(.subheadline)
                         .frame(maxWidth: .infinity)
-                        .padding()
+                        .padding(.vertical, 10)
                         .background(Color.orange.opacity(0.2))
                         .foregroundStyle(.orange)
                         .cornerRadius(10)
@@ -152,48 +168,46 @@ struct GameView: View {
             if gameSession.hintsRevealed >= gameSession.maxHints && gameSession.gameState == .playing {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption)
                         .foregroundStyle(.orange)
-                    Text("All clues revealed — your next guess is your final chance.")
-                        .font(.subheadline)
+                    Text("All hints revealed — next guess is your last!")
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 .padding(10)
                 .background(Color.orange.opacity(0.12))
-                .cornerRadius(10)
+                .cornerRadius(8)
             }
         }
     }
     
     // MARK: - Previous Guesses Section
     private var previousGuessesSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Previous Guesses")
-                .font(.headline)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
             
             ForEach(Array(gameSession.guesses.enumerated()), id: \.offset) { index, guess in
-                let isLastGuess = index == gameSession.guesses.count - 1
-                let isCorrectGuess = gameSession.gameState == .won && isLastGuess
-                
-                HStack {
-                    Image(systemName: isCorrectGuess ? "checkmark.circle.fill" : "xmark.circle.fill")
-                        .foregroundStyle(isCorrectGuess ? .green : .red)
+                HStack(spacing: 8) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.red)
                     Text(guess)
-                        .font(.body)
+                        .font(.subheadline)
                     Spacer()
                 }
-                .padding()
-                .background(isCorrectGuess ? Color.green.opacity(0.1) : Color.red.opacity(0.1))
-                .cornerRadius(10)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
+                .background(Color.red.opacity(0.08))
+                .cornerRadius(8)
             }
         }
     }
     
     // MARK: - Input Section
     private var inputSection: some View {
-        VStack(spacing: 16) {
-            Text("What's your diagnosis?")
-                .font(.headline)
-            
+        VStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 TextField("Enter diagnosis", text: $currentGuess)
                     .textFieldStyle(.roundedBorder)
@@ -203,30 +217,33 @@ struct GameView: View {
                         updateSuggestions(for: newValue)
                     }
                 
-                // Suggestions
+                // Suggestions - overlay style
                 if showingSuggestions && !suggestions.isEmpty {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(suggestions, id: \.self) { suggestion in
-                            Button {
-                                currentGuess = suggestion
-                                showingSuggestions = false
-                            } label: {
-                                Text(suggestion)
-                                    .font(.body)
-                                    .foregroundStyle(.primary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                            }
-                            
-                            if suggestion != suggestions.last {
-                                Divider()
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(suggestions.prefix(3), id: \.self) { suggestion in
+                                Button {
+                                    currentGuess = suggestion
+                                    showingSuggestions = false
+                                } label: {
+                                    Text(suggestion)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.primary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                }
+                                
+                                if suggestion != suggestions.prefix(3).last {
+                                    Divider()
+                                }
                             }
                         }
                     }
+                    .frame(maxHeight: 100)
                     .background(Color(.systemBackground))
-                    .cornerRadius(8)
-                    .shadow(radius: 4)
+                    .cornerRadius(10)
+                    .shadow(color: .black.opacity(0.1), radius: 4)
                 }
             }
             
@@ -236,10 +253,10 @@ struct GameView: View {
                 Text(gameSession.hintsRevealed >= gameSession.maxHints ? "Submit Final Guess" : "Submit Diagnosis")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
-                    .padding()
+                    .padding(.vertical, 14)
                     .background(currentGuess.isEmpty ? Color.gray : Color.blue)
                     .foregroundStyle(.white)
-                    .cornerRadius(10)
+                    .cornerRadius(12)
             }
             .disabled(currentGuess.isEmpty)
         }
@@ -247,30 +264,26 @@ struct GameView: View {
     
     // MARK: - Result Section
     private var resultSection: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             if gameSession.gameState == .won {
-                VStack(spacing: 12) {
+                VStack(spacing: 10) {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 60))
+                        .font(.system(size: 50))
                         .foregroundStyle(.green)
                     
-                    Text("Correct Diagnosis!")
+                    Text("Correct!")
                         .font(.title2)
                         .bold()
                     
                     Text(currentCase.diagnosis)
-                        .font(.title3)
+                        .font(.body)
                         .bold()
                         .foregroundStyle(.green)
-                        .padding(.horizontal)
                     
-                    Divider()
-                        .padding(.vertical, 4)
-                    
-                    HStack(spacing: 32) {
+                    HStack(spacing: 24) {
                         VStack(spacing: 4) {
                             Text("\(gameSession.score)")
-                                .font(.title)
+                                .font(.title3)
                                 .bold()
                             Text("Score")
                                 .font(.caption)
@@ -279,7 +292,7 @@ struct GameView: View {
                         
                         VStack(spacing: 4) {
                             Text("\(gameSession.guesses.count)")
-                                .font(.title)
+                                .font(.title3)
                                 .bold()
                             Text("Guesses")
                                 .font(.caption)
@@ -288,59 +301,41 @@ struct GameView: View {
                         
                         VStack(spacing: 4) {
                             Text("\(gameSession.hintsRevealed)")
-                                .font(.title)
+                                .font(.title3)
                                 .bold()
-                            Text("Hints Used")
+                            Text("Hints")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    .padding(.top, 4)
                 }
             } else {
-                VStack(spacing: 12) {
+                VStack(spacing: 10) {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 60))
+                        .font(.system(size: 50))
                         .foregroundStyle(.red)
                     
                     Text("Out of Guesses")
                         .font(.title2)
                         .bold()
                     
-                    Text("The correct diagnosis was:")
-                        .font(.subheadline)
+                    Text("Correct diagnosis:")
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                     
                     Text(currentCase.diagnosis)
-                        .font(.title3)
+                        .font(.body)
                         .bold()
                         .foregroundStyle(.blue)
-                        .padding(.horizontal)
                     
                     if !currentCase.alternativeNames.isEmpty {
-                        VStack(spacing: 4) {
-                            Text("Also accepted:")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(currentCase.alternativeNames.joined(separator: ", "))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                        }
-                        .padding(.top, 4)
+                        Text("Also: \(currentCase.alternativeNames.joined(separator: ", "))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
                     }
                 }
-            }
-            
-            Button {
-                // This will be handled by parent view
-            } label: {
-                Text("Play Again")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundStyle(.white)
-                    .cornerRadius(10)
             }
         }
         .padding()
@@ -427,32 +422,74 @@ struct HintCard: View {
     let isRevealed: Bool
     
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: 10) {
             Text("\(number)")
-                .font(.headline)
-                .frame(width: 32, height: 32)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .frame(width: 28, height: 28)
                 .background(isRevealed ? Color.blue : Color.gray)
                 .foregroundStyle(.white)
                 .clipShape(Circle())
             
             if isRevealed {
                 Text(hint)
-                    .font(.body)
+                    .font(.subheadline)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
-                HStack {
+                HStack(spacing: 6) {
                     Image(systemName: "lock.fill")
+                        .font(.caption)
                         .foregroundStyle(.gray)
                     Text("Locked")
+                        .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
             }
             
             Spacer()
         }
-        .padding()
-        .background(isRevealed ? Color.blue.opacity(0.1) : Color.gray.opacity(0.1))
-        .cornerRadius(12)
+        .padding(12)
+        .background(isRevealed ? Color.blue.opacity(0.08) : Color.gray.opacity(0.05))
+        .cornerRadius(10)
+    }
+}
+
+// MARK: - Compact Hint Card
+struct CompactHintCard: View {
+    let number: Int
+    let hint: String
+    let isRevealed: Bool
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text("\(number)")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .frame(width: 20, height: 20)
+                .background(isRevealed ? Color.blue : Color.gray)
+                .foregroundStyle(.white)
+                .clipShape(Circle())
+            
+            if isRevealed {
+                Text(hint)
+                    .font(.caption)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                HStack(spacing: 4) {
+                    Image(systemName: "lock.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.gray)
+                    Text("Locked")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
+            Spacer()
+        }
+        .padding(8)
+        .background(isRevealed ? Color.blue.opacity(0.08) : Color.gray.opacity(0.05))
+        .cornerRadius(8)
     }
 }
 
