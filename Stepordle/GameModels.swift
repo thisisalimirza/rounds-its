@@ -201,41 +201,60 @@ final class PlayerStats {
     
     func recordGame(won: Bool, guessCount: Int, score: Int) {
         gamesPlayed += 1
+        let today = Date()
+        let calendar = Calendar.current
+        let todayDay = calendar.startOfDay(for: today)
         
         if won {
             gamesWon += 1
             totalScore += score
             
-            // Update streak logic with proper edge case handling
+            // Update streak logic - only increment once per day
             if let lastPlayed = lastPlayedDate {
-                let calendar = Calendar.current
-                if calendar.isDateInYesterday(lastPlayed) {
-                    // Continuing streak from yesterday
+                let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
+                let daysBetween = calendar.dateComponents([.day], from: lastPlayedDay, to: todayDay).day ?? 0
+                
+                if daysBetween == 0 {
+                    // Already played today - don't change streak
+                    // Just record the win
+                } else if daysBetween == 1 {
+                    // Played yesterday - continue the streak!
                     currentStreak += 1
-                } else if calendar.isDateInToday(lastPlayed) {
-                    // Already played today, streak stays same (don't increment)
-                    // This handles multiple games in one day
-                } else {
-                    // More than one day gap, reset streak
+                    maxStreak = max(maxStreak, currentStreak)
+                } else if daysBetween > 1 {
+                    // Gap of more than 1 day - reset streak to 1
                     currentStreak = 1
+                    maxStreak = max(maxStreak, currentStreak)
                 }
             } else {
-                // First game ever
+                // First game ever - start streak at 1
                 currentStreak = 1
+                maxStreak = 1
             }
-            
-            maxStreak = max(maxStreak, currentStreak)
             
             // Record guess distribution with bounds checking
             if guessCount > 0 && guessCount <= guessDistribution.count {
                 guessDistribution[guessCount - 1] += 1
             }
         } else {
-            // Lost game breaks the streak
-            currentStreak = 0
+            // Lost game - only break streak if this is our first game today
+            if let lastPlayed = lastPlayedDate {
+                let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
+                let daysBetween = calendar.dateComponents([.day], from: lastPlayedDay, to: todayDay).day ?? 0
+                
+                if daysBetween == 1 || daysBetween > 1 {
+                    // First game today and it's a loss - break the streak
+                    currentStreak = 0
+                }
+                // If daysBetween == 0, we already played today, don't break streak again
+            } else {
+                // First game ever and it's a loss - streak stays at 0
+                currentStreak = 0
+                maxStreak = 0
+            }
         }
         
-        lastPlayedDate = Date()
+        lastPlayedDate = today
     }
     
     var winPercentage: Int {

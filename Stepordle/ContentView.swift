@@ -11,6 +11,7 @@ import UserNotifications
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query private var playerStats: [PlayerStats]
     @State private var currentCase: MedicalCase?
     @State private var isDailyCase = false
     @State private var showingGame = false
@@ -19,14 +20,21 @@ struct ContentView: View {
     @State private var showingCaseBrowser = false
     @State private var showingFeedback = false
     @State private var showingDailyCompleteAlert = false
-    @Query private var playerStats: [PlayerStats]
     
-    private var stats: PlayerStats? {
-        playerStats.first
+    private var stats: PlayerStats {
+        // Ensure stats exist, create if needed
+        if let existingStats = playerStats.first {
+            return existingStats
+        } else {
+            let newStats = PlayerStats()
+            modelContext.insert(newStats)
+            try? modelContext.save()
+            return newStats
+        }
     }
     
     private var hasPlayedDailyToday: Bool {
-        stats?.hasPlayedDailyCaseToday() ?? false
+        stats.hasPlayedDailyCaseToday()
     }
     
     var body: some View {
@@ -74,10 +82,9 @@ struct ContentView: View {
                         .frame(height: 24)
                     
                     // Combined Streak & Stats Card
-                    if let stats = stats {
-                        CompactStreakStatsView(stats: stats)
-                            .padding(.horizontal)
-                    }
+                    CompactStreakStatsView(stats: stats)
+                        .padding(.horizontal)
+                        .id(stats.currentStreak) // Force refresh when streak changes
                     
                     Spacer()
                         .frame(height: 20)
@@ -364,23 +371,31 @@ struct CompactStreakStatsView: View {
     }
     
     private func colorForDay(_ dayIndex: Int, stats: PlayerStats) -> Color {
-        let daysAgo = dayIndex
+        // dayIndex 0 = today, 1 = yesterday, 2 = 2 days ago, etc.
         
-        if let lastPlayed = stats.lastPlayedDate {
-            let calendar = Calendar.current
-            let today = calendar.startOfDay(for: Date())
-            let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
-            let daysSinceLastPlayed = calendar.dateComponents([.day], from: lastPlayedDay, to: today).day ?? 0
-            
-            if stats.currentStreak > 0 {
-                if daysAgo < stats.currentStreak && daysAgo <= daysSinceLastPlayed {
-                    let intensity = 1.0 - (Double(daysAgo) * 0.1)
-                    return Color.orange.opacity(max(0.6, intensity))
-                }
+        guard let lastPlayed = stats.lastPlayedDate else {
+            return Color(.systemGray5)
+        }
+        
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
+        let daysSinceLastPlayed = calendar.dateComponents([.day], from: lastPlayedDay, to: today).day ?? 0
+        
+        // If current streak is active
+        if stats.currentStreak > 0 {
+            // Show the last N days as active where N = currentStreak
+            // For example: if streak is 3, show today, yesterday, and 2 days ago as active
+            if dayIndex < stats.currentStreak {
+                // More recent days are brighter
+                let intensity = 1.0 - (Double(dayIndex) * 0.12)
+                return Color.orange.opacity(max(0.6, intensity))
             }
-            
-            if daysAgo == daysSinceLastPlayed {
-                return Color.orange.opacity(0.8)
+        } else {
+            // No streak, but we might have played recently
+            // Show last played day if within the 7-day window
+            if dayIndex == daysSinceLastPlayed && dayIndex < 7 {
+                return Color.gray.opacity(0.5)
             }
         }
         
