@@ -185,6 +185,24 @@ struct CaseRow: View {
         case "Infectious Disease": return .yellow
         case "Rheumatology": return .indigo
         case "Psychiatry": return .mint
+        case "Biochemistry": return .teal
+        case "Nutrition": return Color(red: 0.5, green: 0.8, blue: 0.3)
+        case "Toxicology": return Color(red: 0.6, green: 0.2, blue: 0.8)
+        case "Immunology": return .cyan
+        case "Genetics": return Color(red: 0.2, green: 0.6, blue: 0.9)
+        case "Pharmacology": return Color(red: 0.9, green: 0.3, blue: 0.5)
+        case "Orthopedics": return .brown
+        case "ENT": return Color(red: 0.8, green: 0.6, blue: 0.2)
+        case "Critical Care": return .red.opacity(0.8)
+        case "Vascular": return .red.opacity(0.6)
+        case "Obstetrics": return .pink.opacity(0.8)
+        case "Gynecology": return .pink
+        case "Obstetrics & Gynecology": return .pink
+        case "Oncology": return .purple.opacity(0.7)
+        case "Dermatology": return .orange.opacity(0.8)
+        case "Ophthalmology": return .blue.opacity(0.7)
+        case "Pediatrics": return Color(red: 0.4, green: 0.8, blue: 0.9)
+        case "Urology": return .cyan.opacity(0.8)
         default: return .gray
         }
     }
