@@ -187,6 +187,7 @@ final class PlayerStats {
     var guessDistribution: [Int] // Index = number of guesses (0-4 for 1-5 guesses)
     var lastPlayedDate: Date?
     var lastDailyCasePlayed: String? // Store date string like "2025-12-13"
+    var favoriteCaseIDs: [String] // Store UUIDs as strings
     
     init() {
         self.gamesPlayed = 0
@@ -197,6 +198,7 @@ final class PlayerStats {
         self.guessDistribution = [0, 0, 0, 0, 0]
         self.lastPlayedDate = nil
         self.lastDailyCasePlayed = nil
+        self.favoriteCaseIDs = []
     }
     
     func recordGame(won: Bool, guessCount: Int, score: Int) {
@@ -280,6 +282,21 @@ final class PlayerStats {
         formatter.dateFormat = "yyyy-MM-dd"
         let todayString = formatter.string(from: Date())
         return lastDaily == todayString
+    }
+    
+    // MARK: - Favorites
+    func toggleFavorite(caseID: UUID) {
+        let idString = caseID.uuidString
+        if let index = favoriteCaseIDs.firstIndex(of: idString) {
+            favoriteCaseIDs.remove(at: index)
+        } else {
+            favoriteCaseIDs.append(idString)
+        }
+        HapticManager.shared.favoriteToggled()
+    }
+    
+    func isFavorite(caseID: UUID) -> Bool {
+        return favoriteCaseIDs.contains(caseID.uuidString)
     }
 }
 

@@ -347,6 +347,7 @@ struct GameView: View {
         }
         
         if isDuplicate {
+            HapticManager.shared.incorrectGuess()
             resultMessage = "You've already guessed '\(trimmedGuess)'. Try a different diagnosis."
             showingResult = true
             return
@@ -357,18 +358,27 @@ struct GameView: View {
         
         let isFinalChance = gameSession.hintsRevealed >= gameSession.maxHints && gameSession.gameState == .playing
         
-        withAnimation {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             gameSession.makeGuess(trimmedGuess, isCorrect: isCorrect)
         }
         
         // Only update stats if the guess was actually added (not a duplicate)
         if gameSession.guesses.count > previousGuessCount {
             if isCorrect {
+                HapticManager.shared.correctGuess()
                 resultMessage = "Correct! You diagnosed \(currentCase.diagnosis) in \(gameSession.guesses.count) guess(es)!"
                 updateStats(won: true)
             } else if gameSession.gameState == .lost {
+                HapticManager.shared.incorrectGuess()
                 resultMessage = "Game Over! The correct diagnosis was \(currentCase.diagnosis)."
                 updateStats(won: false)
+            } else {
+                // Incorrect but game continues
+                HapticManager.shared.incorrectGuess()
+                // Auto-reveal next hint with haptic
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    HapticManager.shared.hintRevealed()
+                }
             }
         }
         
