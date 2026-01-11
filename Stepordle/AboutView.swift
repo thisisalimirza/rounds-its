@@ -89,7 +89,7 @@ struct AboutView: View {
                             .font(.title2)
                             .bold()
                         
-                        Text("Stepordle is a medical diagnosis game designed to help medical students master USMLE Step 1 high-yield topics through engaging gameplay. Each case presents progressive clinical clues that guide you toward the correct diagnosis.")
+                        Text("Rounds is a medical diagnosis game designed to help medical students master USMLE Step 1 high-yield topics through engaging gameplay. Each case presents progressive clinical clues that guide you toward the correct diagnosis.")
                             .font(.body)
                             .foregroundStyle(.secondary)
                         
