@@ -22,6 +22,9 @@ struct StatsView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     if let stats = stats {
+                        // Training Level Card (New!)
+                        trainingLevelCard(stats: stats)
+                        
                         // Overall Statistics
                         statisticsGrid(stats: stats)
                         
@@ -42,6 +45,108 @@ struct StatsView: View {
                     }
                 }
             }
+        }
+    }
+    
+    // MARK: - Training Level Card
+    private func trainingLevelCard(stats: PlayerStats) -> some View {
+        let currentLevel = stats.trainingLevel
+        let nextLevel = MedicalTrainingLevel.nextLevel(for: stats.totalScore)
+        let progress = nextLevel != nil ? Double(stats.totalScore - currentLevel.minScore) / Double(nextLevel!.minScore - currentLevel.minScore) : 1.0
+        
+        return VStack(spacing: 16) {
+            // Header
+            HStack {
+                Text("Your Training Level")
+                    .font(.headline)
+                Spacer()
+            }
+            
+            // Level Badge
+            HStack(spacing: 16) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(colorForString(currentLevel.color).opacity(0.2))
+                        .frame(width: 70, height: 70)
+                    
+                    Image(systemName: currentLevel.icon)
+                        .font(.system(size: 32))
+                        .foregroundStyle(colorForString(currentLevel.color))
+                }
+                
+                // Level Info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(currentLevel.displayTitle)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Text(currentLevel.title)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    
+                    Text("\(stats.totalScore) points")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                
+                Spacer()
+            }
+            
+            // Progress to next level
+            if let nextLevel = nextLevel {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Next: \(nextLevel.rank) - Level \(nextLevel.level)")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                        Spacer()
+                        Text("\(nextLevel.minScore - stats.totalScore) pts to go")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    // Progress bar
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(.systemGray5))
+                                .frame(height: 8)
+                            
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(colorForString(currentLevel.color))
+                                .frame(width: geometry.size.width * progress, height: 8)
+                        }
+                    }
+                    .frame(height: 8)
+                }
+            } else {
+                Text("🎉 Maximum Level Achieved!")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(colorForString(currentLevel.color))
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(16)
+    }
+    
+    // Helper to convert color string to Color
+    private func colorForString(_ colorString: String) -> Color {
+        switch colorString {
+        case "cyan": return .cyan
+        case "blue": return .blue
+        case "green": return .green
+        case "purple": return .purple
+        case "indigo": return .indigo
+        case "orange": return .orange
+        case "red": return .red
+        case "yellow": return .yellow
+        case "pink": return .pink
+        case "mint": return .mint
+        case "teal": return .teal
+        default: return .blue
         }
     }
     

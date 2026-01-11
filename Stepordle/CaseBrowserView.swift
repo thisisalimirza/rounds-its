@@ -30,10 +30,9 @@ struct CaseBrowserView: View {
             cases = cases.filter { $0.category == selectedCategory }
         }
         
-        // Filter by search text
+        // Filter by search text (only search by category, not diagnosis to keep it mysterious)
         if !searchText.isEmpty {
             cases = cases.filter { medicalCase in
-                medicalCase.diagnosis.localizedCaseInsensitiveContains(searchText) ||
                 medicalCase.category.localizedCaseInsensitiveContains(searchText)
             }
         }
@@ -66,12 +65,12 @@ struct CaseBrowserView: View {
                 if filteredCases.isEmpty {
                     emptyStateView
                 } else {
-                    List(filteredCases) { medicalCase in
+                    List(Array(filteredCases.enumerated()), id: \.element.id) { index, medicalCase in
                         Button {
                             selectedCase = medicalCase
                             showingGame = true
                         } label: {
-                            CaseRow(medicalCase: medicalCase)
+                            CaseRow(medicalCase: medicalCase, caseNumber: index + 1)
                         }
                     }
                     .listStyle(.plain)
@@ -79,7 +78,7 @@ struct CaseBrowserView: View {
             }
             .navigationTitle("Browse Cases")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $searchText, prompt: "Search diagnoses...")
+            .searchable(text: $searchText, prompt: "Search categories...")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
@@ -138,12 +137,21 @@ struct CategoryButton: View {
 // MARK: - Case Row
 struct CaseRow: View {
     let medicalCase: MedicalCase
+    let caseNumber: Int
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(medicalCase.diagnosis)
-                    .font(.headline)
+                // Show "Case #" instead of diagnosis
+                HStack(spacing: 8) {
+                    Text("Case \(caseNumber)")
+                        .font(.headline)
+                    
+                    // Mystery indicator
+                    Image(systemName: "questionmark.circle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.blue)
+                }
                 
                 Spacer()
                 
@@ -165,6 +173,7 @@ struct CaseRow: View {
                 .foregroundStyle(getCategoryColor(medicalCase.category))
                 .cornerRadius(6)
             
+            // Show first hint as preview (not the diagnosis!)
             Text(medicalCase.hints.first ?? "")
                 .font(.caption)
                 .foregroundStyle(.secondary)

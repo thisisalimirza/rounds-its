@@ -65,7 +65,7 @@ final class MedicalCase {
 }
 
 // MARK: - Game State
-enum GameState: Codable {
+enum GameState: Codable, Equatable, Sendable {
     case playing
     case won
     case lost
@@ -189,6 +189,11 @@ final class PlayerStats {
     var lastDailyCasePlayed: String? // Store date string like "2025-12-13"
     var favoriteCaseIDs: [String] // Store UUIDs as strings
     
+    // Computed property for current training level
+    var trainingLevel: MedicalTrainingLevel {
+        MedicalTrainingLevel.level(for: totalScore)
+    }
+    
     init() {
         self.gamesPlayed = 0
         self.gamesWon = 0
@@ -298,5 +303,86 @@ final class PlayerStats {
     func isFavorite(caseID: UUID) -> Bool {
         return favoriteCaseIDs.contains(caseID.uuidString)
     }
+}
+
+// MARK: - Medical Training Level System
+struct MedicalTrainingLevel: Equatable {
+    let rank: String
+    let level: Int
+    let title: String
+    let minScore: Int
+    let maxScore: Int
+    let icon: String
+    let color: String
+    
+    var displayTitle: String {
+        "\(rank) - Level \(level)"
+    }
+    
+    var progressToNextLevel: Double {
+        guard maxScore > minScore else { return 1.0 }
+        let currentProgress = Double(maxScore - minScore)
+        let totalRange = Double(maxScore - minScore)
+        return currentProgress / totalRange
+    }
+    
+    static func level(for score: Int) -> MedicalTrainingLevel {
+        return allLevels.last { score >= $0.minScore } ?? allLevels[0]
+    }
+    
+    static func nextLevel(for score: Int) -> MedicalTrainingLevel? {
+        let currentIndex = allLevels.firstIndex { score >= $0.minScore && score < $0.maxScore } ?? allLevels.count - 1
+        guard currentIndex < allLevels.count - 1 else { return nil }
+        return allLevels[currentIndex + 1]
+    }
+    
+    static let allLevels: [MedicalTrainingLevel] = [
+        // Medical Student Levels (0-4,999 points)
+        MedicalTrainingLevel(rank: "MS1", level: 1, title: "Medical Student - Year 1", minScore: 0, maxScore: 499, icon: "book.fill", color: "cyan"),
+        MedicalTrainingLevel(rank: "MS1", level: 2, title: "Medical Student - Year 1", minScore: 500, maxScore: 999, icon: "book.fill", color: "cyan"),
+        MedicalTrainingLevel(rank: "MS2", level: 1, title: "Medical Student - Year 2", minScore: 1000, maxScore: 1499, icon: "book.fill", color: "cyan"),
+        MedicalTrainingLevel(rank: "MS2", level: 2, title: "Medical Student - Year 2", minScore: 1500, maxScore: 1999, icon: "book.fill", color: "cyan"),
+        MedicalTrainingLevel(rank: "MS3", level: 1, title: "Medical Student - Year 3", minScore: 2000, maxScore: 2499, icon: "stethoscope", color: "blue"),
+        MedicalTrainingLevel(rank: "MS3", level: 2, title: "Medical Student - Year 3", minScore: 2500, maxScore: 2999, icon: "stethoscope", color: "blue"),
+        MedicalTrainingLevel(rank: "MS4", level: 1, title: "Medical Student - Year 4", minScore: 3000, maxScore: 3499, icon: "stethoscope", color: "blue"),
+        MedicalTrainingLevel(rank: "MS4", level: 2, title: "Medical Student - Year 4", minScore: 3500, maxScore: 4999, icon: "stethoscope", color: "blue"),
+        
+        // Intern Levels (5,000-9,999 points)
+        MedicalTrainingLevel(rank: "Intern", level: 1, title: "Intern", minScore: 5000, maxScore: 5999, icon: "cross.case.fill", color: "green"),
+        MedicalTrainingLevel(rank: "Intern", level: 2, title: "Intern", minScore: 6000, maxScore: 6999, icon: "cross.case.fill", color: "green"),
+        MedicalTrainingLevel(rank: "Intern", level: 3, title: "Intern", minScore: 7000, maxScore: 7999, icon: "cross.case.fill", color: "green"),
+        MedicalTrainingLevel(rank: "Intern", level: 4, title: "Intern", minScore: 8000, maxScore: 9999, icon: "cross.case.fill", color: "green"),
+        
+        // Resident Levels (10,000-24,999 points)
+        MedicalTrainingLevel(rank: "Resident", level: 1, title: "Junior Resident", minScore: 10000, maxScore: 11999, icon: "heart.text.square.fill", color: "purple"),
+        MedicalTrainingLevel(rank: "Resident", level: 2, title: "Junior Resident", minScore: 12000, maxScore: 13999, icon: "heart.text.square.fill", color: "purple"),
+        MedicalTrainingLevel(rank: "Resident", level: 3, title: "Senior Resident", minScore: 14000, maxScore: 15999, icon: "heart.text.square.fill", color: "purple"),
+        MedicalTrainingLevel(rank: "Resident", level: 4, title: "Senior Resident", minScore: 16000, maxScore: 17999, icon: "heart.text.square.fill", color: "purple"),
+        MedicalTrainingLevel(rank: "Resident", level: 5, title: "Chief Resident", minScore: 18000, maxScore: 19999, icon: "star.circle.fill", color: "indigo"),
+        MedicalTrainingLevel(rank: "Resident", level: 6, title: "Chief Resident", minScore: 20000, maxScore: 24999, icon: "star.circle.fill", color: "indigo"),
+        
+        // Fellow Levels (25,000-39,999 points)
+        MedicalTrainingLevel(rank: "Fellow", level: 1, title: "Clinical Fellow", minScore: 25000, maxScore: 27999, icon: "brain.head.profile", color: "orange"),
+        MedicalTrainingLevel(rank: "Fellow", level: 2, title: "Clinical Fellow", minScore: 28000, maxScore: 30999, icon: "brain.head.profile", color: "orange"),
+        MedicalTrainingLevel(rank: "Fellow", level: 3, title: "Senior Fellow", minScore: 31000, maxScore: 34999, icon: "brain.head.profile", color: "orange"),
+        MedicalTrainingLevel(rank: "Fellow", level: 4, title: "Senior Fellow", minScore: 35000, maxScore: 39999, icon: "brain.head.profile", color: "orange"),
+        
+        // Attending Levels (40,000-69,999 points)
+        MedicalTrainingLevel(rank: "Attending", level: 1, title: "Junior Attending", minScore: 40000, maxScore: 44999, icon: "shield.fill", color: "red"),
+        MedicalTrainingLevel(rank: "Attending", level: 2, title: "Junior Attending", minScore: 45000, maxScore: 49999, icon: "shield.fill", color: "red"),
+        MedicalTrainingLevel(rank: "Attending", level: 3, title: "Attending Physician", minScore: 50000, maxScore: 54999, icon: "shield.fill", color: "red"),
+        MedicalTrainingLevel(rank: "Attending", level: 4, title: "Attending Physician", minScore: 55000, maxScore: 59999, icon: "shield.fill", color: "red"),
+        MedicalTrainingLevel(rank: "Attending", level: 5, title: "Senior Attending", minScore: 60000, maxScore: 69999, icon: "crown.fill", color: "yellow"),
+        
+        // Department Chief Levels (70,000-99,999 points)
+        MedicalTrainingLevel(rank: "Chief", level: 1, title: "Division Chief", minScore: 70000, maxScore: 79999, icon: "medal.fill", color: "pink"),
+        MedicalTrainingLevel(rank: "Chief", level: 2, title: "Department Chief", minScore: 80000, maxScore: 89999, icon: "medal.fill", color: "pink"),
+        MedicalTrainingLevel(rank: "Chief", level: 3, title: "Chief of Medicine", minScore: 90000, maxScore: 99999, icon: "trophy.fill", color: "yellow"),
+        
+        // Legendary Levels (100,000+ points)
+        MedicalTrainingLevel(rank: "Legend", level: 1, title: "Professor of Medicine", minScore: 100000, maxScore: 149999, icon: "graduationcap.fill", color: "mint"),
+        MedicalTrainingLevel(rank: "Legend", level: 2, title: "Distinguished Professor", minScore: 150000, maxScore: 199999, icon: "star.square.fill", color: "teal"),
+        MedicalTrainingLevel(rank: "Legend", level: 3, title: "Medical Luminary", minScore: 200000, maxScore: Int.max, icon: "sparkles", color: "purple")
+    ]
 }
 

@@ -316,7 +316,7 @@ struct CompactStreakStatsView: View {
             // Compact Heatmap
             if stats.gamesPlayed > 0 {
                 HStack(spacing: 4) {
-                    ForEach(0..<7, id: \.self) { dayIndex in
+                    ForEach((0..<7).reversed(), id: \.self) { dayIndex in
                         VStack(spacing: 2) {
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(colorForDay(dayIndex, stats: stats))
