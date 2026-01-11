@@ -155,7 +155,7 @@ struct OnboardingPageData {
 let onboardingPages: [OnboardingPageData] = [
     OnboardingPageData(
         icon: "cross.case.fill",
-        title: "Welcome to Stepordle!",
+        title: "Welcome to Rounds!",
         description: "Master USMLE Step 1 through daily clinical case challenges. Learn diagnosis by doing!"
     ),
     OnboardingPageData(

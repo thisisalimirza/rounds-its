@@ -72,7 +72,7 @@ struct GameView: View {
                     .background(Color(.systemBackground))
             }
         }
-        .navigationTitle("Stepordle")
+        .navigationTitle("Rounds")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -539,7 +539,7 @@ struct ReportCaseSheet: View {
 
     private var mailtoURL: URL? {
         let to = "support@braskgroup.com"
-        let subject = "Stepordle - Case Report: \(caseTitle)"
+        let subject = "Rounds - Case Report: \(caseTitle)"
         let body = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let urlString = "mailto:\(to)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body)"
         return URL(string: urlString)

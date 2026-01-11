@@ -63,7 +63,7 @@ struct ContentView: View {
                                 )
                             )
                         
-                        Text("Stepordle")
+                        Text("Rounds")
                             .font(.system(size: 38, weight: .bold, design: .rounded))
                             .foregroundStyle(
                                 LinearGradient(
@@ -465,7 +465,7 @@ struct FeedbackSheet: View {
 
     private var mailtoURL: URL? {
         let to = "support@braskgroup.com"
-        let subject = "Stepordle Feedback"
+        let subject = "Rounds Feedback"
         let body = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let urlString = "mailto:\(to)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body)"
         return URL(string: urlString)

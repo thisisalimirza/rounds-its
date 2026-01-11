@@ -30,7 +30,7 @@ class ShareManager {
         let guessText = won ? "\(guessCount)/5" : "X/5"
         
         return """
-        Stepordle \(caseType) \(statusEmoji)
+        Rounds \(caseType) \(statusEmoji)
         \(date)
         
         Guesses: \(guessText)

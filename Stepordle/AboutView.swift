@@ -27,7 +27,7 @@ struct AboutView: View {
                                 )
                             )
                         
-                        Text("Stepordle")
+                        Text("Rounds")
                             .font(.largeTitle)
                             .bold()
                         
@@ -85,7 +85,7 @@ struct AboutView: View {
                     
                     // About Section
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("About Stepordle")
+                        Text("About Rounds")
                             .font(.title2)
                             .bold()
                         
@@ -145,7 +145,7 @@ struct AboutView: View {
                             .font(.headline)
                             .foregroundStyle(.orange)
                         
-                        Text("Stepordle is for educational and study purposes only. It is not intended to diagnose, treat, cure, or prevent any disease or medical condition. The content provided should not be used as a substitute for professional medical advice, diagnosis, or treatment.")
+                        Text("Rounds is for educational and study purposes only. It is not intended to diagnose, treat, cure, or prevent any disease or medical condition. The content provided should not be used as a substitute for professional medical advice, diagnosis, or treatment.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         
@@ -187,7 +187,7 @@ struct AboutView: View {
                             .cornerRadius(10)
                         }
                         
-                        Link(destination: URL(string: "mailto:support@braskgroup.com?subject=Stepordle%20Support")!) {
+                        Link(destination: URL(string: "mailto:support@braskgroup.com?subject=Rounds%20Support")!) {
                             HStack {
                                 Image(systemName: "envelope.fill")
                                 Text("Contact Support")
@@ -226,7 +226,7 @@ struct AboutView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         
-                        Text("Brask Group LLC dba Stepordle")
+                        Text("Brask Group LLC dba Rounds")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }
