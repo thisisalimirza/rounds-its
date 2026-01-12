@@ -10,6 +10,8 @@ import SwiftUI
 struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingFeedback = false
+    @State private var showingSubscription = false
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
     
     var body: some View {
         NavigationStack {
@@ -126,6 +128,37 @@ struct AboutView: View {
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(16)
+                    
+                    // Subscription Section
+                    VStack(spacing: 12) {
+                        Button {
+                            showingSubscription = true
+                        } label: {
+                            HStack {
+                                Image(systemName: subscriptionManager.isProSubscriber ? "crown.fill" : "arrow.up.circle.fill")
+                                    .foregroundStyle(subscriptionManager.isProSubscriber ? .yellow : .blue)
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(subscriptionManager.isProSubscriber ? "Manage Subscription" : "Upgrade to Pro")
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+                                    
+                                    Text(subscriptionManager.isProSubscriber ? subscriptionManager.subscriptionStatus.displayName : "Unlock unlimited cases and features")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding()
+                            .background(Color(.systemGray5))
+                            .cornerRadius(12)
+                        }
+                    }
                     
                     Button {
                         showingFeedback = true
@@ -246,6 +279,13 @@ struct AboutView: View {
         }
         .sheet(isPresented: $showingFeedback) {
             FeedbackSheet()
+        }
+        .sheet(isPresented: $showingSubscription) {
+            if subscriptionManager.isProSubscriber {
+                SubscriptionSettingsView()
+            } else {
+                PaywallView()
+            }
         }
     }
 }

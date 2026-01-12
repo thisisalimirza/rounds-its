@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		A34522152EE87434009BD6EA /* POLISH_IMPROVEMENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = A34522142EE87434009BD6EA /* POLISH_IMPROVEMENTS.md */; };
+		A3A7AB152F147A7400707B4B /* ReceiptParser in Frameworks */ = {isa = PBXBuildFile; productRef = A3A7AB142F147A7400707B4B /* ReceiptParser */; };
+		A3A7AB172F147A7400707B4B /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = A3A7AB162F147A7400707B4B /* RevenueCat */; };
+		A3A7AB192F147A7400707B4B /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = A3A7AB182F147A7400707B4B /* RevenueCatUI */; };
+		A3A7AB1B2F147A7400707B4B /* RevenueCat_CustomEntitlementComputation in Frameworks */ = {isa = PBXBuildFile; productRef = A3A7AB1A2F147A7400707B4B /* RevenueCat_CustomEntitlementComputation */; };
 		A3DFA9FB2EEE3FC200620718 /* UI_IMPROVEMENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = A3DFA9FA2EEE3FC200620718 /* UI_IMPROVEMENTS.md */; };
 		A3DFA9FD2EEE45F600620718 /* DAILY_CASE_TRACKING.md in Resources */ = {isa = PBXBuildFile; fileRef = A3DFA9FC2EEE45F600620718 /* DAILY_CASE_TRACKING.md */; };
 		A3DFA9FF2EEE47FF00620718 /* UI_REFINEMENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = A3DFA9FE2EEE47FF00620718 /* UI_REFINEMENTS.md */; };
@@ -88,6 +92,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A3A7AB172F147A7400707B4B /* RevenueCat in Frameworks */,
+				A3A7AB152F147A7400707B4B /* ReceiptParser in Frameworks */,
+				A3A7AB192F147A7400707B4B /* RevenueCatUI in Frameworks */,
+				A3A7AB1B2F147A7400707B4B /* RevenueCat_CustomEntitlementComputation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,6 +166,10 @@
 			);
 			name = Rounds;
 			packageProductDependencies = (
+				A3A7AB142F147A7400707B4B /* ReceiptParser */,
+				A3A7AB162F147A7400707B4B /* RevenueCat */,
+				A3A7AB182F147A7400707B4B /* RevenueCatUI */,
+				A3A7AB1A2F147A7400707B4B /* RevenueCat_CustomEntitlementComputation */,
 			);
 			productName = Stepordle;
 			productReference = A34521D72EE86FB0009BD6EA /* Rounds.app */;
@@ -241,6 +253,9 @@
 			);
 			mainGroup = A34521CE2EE86FB0009BD6EA;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A3A7AB132F147A7400707B4B /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A34521D82EE86FB0009BD6EA /* Products */;
 			projectDirPath = "";
@@ -350,7 +365,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.BraskGroup.Rounds;
+				PRODUCT_BUNDLE_IDENTIFIER = AliMirza.Stepordle;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -391,7 +406,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.BraskGroup.Rounds;
+				PRODUCT_BUNDLE_IDENTIFIER = AliMirza.Stepordle;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -654,6 +669,40 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A3A7AB132F147A7400707B4B /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.54.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A3A7AB142F147A7400707B4B /* ReceiptParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3A7AB132F147A7400707B4B /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = ReceiptParser;
+		};
+		A3A7AB162F147A7400707B4B /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3A7AB132F147A7400707B4B /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
+		A3A7AB182F147A7400707B4B /* RevenueCatUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3A7AB132F147A7400707B4B /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCatUI;
+		};
+		A3A7AB1A2F147A7400707B4B /* RevenueCat_CustomEntitlementComputation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3A7AB132F147A7400707B4B /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat_CustomEntitlementComputation;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A34521CF2EE86FB0009BD6EA /* Project object */;
 }

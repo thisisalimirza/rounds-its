@@ -12,6 +12,12 @@ import SwiftData
 struct RoundsApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var showOnboarding = false
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
+    
+    init() {
+        // Configure RevenueCat on app launch
+        SubscriptionManager.shared.configure()
+    }
     
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -55,6 +61,7 @@ struct RoundsApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(subscriptionManager)
                 .onAppear {
                     // Track app launch
                     AnalyticsManager.shared.trackAppLaunch()

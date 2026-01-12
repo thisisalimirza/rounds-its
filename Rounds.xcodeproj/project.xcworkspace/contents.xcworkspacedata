@@ -4,4 +4,34 @@
    <FileRef
       location = "self:">
    </FileRef>
+   <FileRef
+      location = "group:SubscriptionManager.swift">
+   </FileRef>
+   <FileRef
+      location = "group:PaywallView.swift">
+   </FileRef>
+   <FileRef
+      location = "group:SubscriptionSettingsView.swift">
+   </FileRef>
+   <FileRef
+      location = "group:ProFeatureGate.swift">
+   </FileRef>
+   <FileRef
+      location = "group:RevenueCatIntegrationGuide.swift">
+   </FileRef>
+   <FileRef
+      location = "group:ProFeatureExamples.swift">
+   </FileRef>
+   <FileRef
+      location = "group:REVENUECAT_SETUP_COMPLETE.md">
+   </FileRef>
+   <FileRef
+      location = "group:GameFlowWithSubscription.swift">
+   </FileRef>
+   <FileRef
+      location = "group:RevenueCatQuickReference.swift">
+   </FileRef>
+   <FileRef
+      location = "group:SubscriptionBestPractices.swift">
+   </FileRef>
 </Workspace>
