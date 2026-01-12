@@ -2,198 +2,91 @@
 //  PaywallView.swift
 //  Rounds
 //
-//  Created by Ali Mirza on 1/11/26.
+//  RevenueCat Paywall wrapper - Clean implementation
 //
 
 import SwiftUI
 import RevenueCat
 import RevenueCatUI
 
-struct PaywallView: View {
+// MARK: - Rounds Paywall View
+
+/// Main paywall view using RevenueCat's built-in PaywallView
+struct RoundsPaywallView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var subscriptionManager = SubscriptionManager.shared
+    
+    var onPurchaseCompleted: ((CustomerInfo) -> Void)?
+    var onRestoreCompleted: ((CustomerInfo) -> Void)?
+    
+    init(
+        onPurchaseCompleted: ((CustomerInfo) -> Void)? = nil,
+        onRestoreCompleted: ((CustomerInfo) -> Void)? = nil
+    ) {
+        self.onPurchaseCompleted = onPurchaseCompleted
+        self.onRestoreCompleted = onRestoreCompleted
+    }
     
     var body: some View {
-        PaywallView()
-            .onRestoreCompleted { customerInfo in
-                // Handle successful restore
-                print("Restore completed: \(customerInfo)")
-                if subscriptionManager.hasProAccess() {
+        NavigationStack {
+            RevenueCatUI.PaywallView()
+                .onPurchaseCompleted { customerInfo in
+                    print("✅ Purchase completed")
+                    onPurchaseCompleted?(customerInfo)
                     dismiss()
                 }
-            }
-            .onPurchaseCompleted { customerInfo in
-                // Handle successful purchase
-                print("Purchase completed: \(customerInfo)")
-                dismiss()
-            }
-            .onPurchaseFailure { error in
-                // Handle purchase failure
-                print("Purchase failed: \(error.localizedDescription)")
-            }
-            .onPurchaseCancelled {
-                // Handle cancelled purchase
-                print("Purchase cancelled")
-            }
-            .paywallFooter {
-                // Custom footer with dismiss button
-                Button("Maybe Later") {
-                    dismiss()
+                .onRestoreCompleted { customerInfo in
+                    print("✅ Restore completed")
+                    onRestoreCompleted?(customerInfo)
+                    if SubscriptionManager.shared.hasProAccess() {
+                        dismiss()
+                    }
                 }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .padding()
-            }
+                .onPurchaseFailure { error in
+                    print("❌ Purchase failed: \(error.localizedDescription)")
+                }
+                .onRestoreFailure { error in
+                    print("❌ Restore failed: \(error.localizedDescription)")
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                                .symbolRenderingMode(.hierarchical)
+                        }
+                    }
+                }
+        }
     }
 }
 
-// MARK: - Custom Paywall (Alternative)
+// MARK: - Custom Paywall View (Alternative)
 
-/// A custom-built paywall if you want full control over the UI
-struct CustomPaywallView: View {
+/// A custom-built paywall for full UI control
+struct CustomRoundsPaywallView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var subscriptionManager = SubscriptionManager.shared
     
     @State private var offerings: Offerings?
-    @State private var isLoading = false
     @State private var selectedPackage: Package?
+    @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var showingError = false
     @State private var showingSuccess = false
+    
+    private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 32) {
-                    // Header
-                    VStack(spacing: 16) {
-                        Image(systemName: "crown.fill")
-                            .font(.system(size: 60))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.yellow, .orange],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                        
-                        Text("Upgrade to Rounds Pro")
-                            .font(.largeTitle)
-                            .bold()
-                            .multilineTextAlignment(.center)
-                        
-                        Text("Unlock unlimited cases and advanced features")
-                            .font(.title3)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding(.top)
-                    
-                    // Features
-                    VStack(alignment: .leading, spacing: 16) {
-                        FeatureRow(
-                            icon: "infinity",
-                            title: "Unlimited Cases",
-                            description: "Access all medical cases without limits"
-                        )
-                        
-                        FeatureRow(
-                            icon: "chart.line.uptrend.xyaxis",
-                            title: "Advanced Statistics",
-                            description: "Track your progress with detailed analytics"
-                        )
-                        
-                        FeatureRow(
-                            icon: "star.fill",
-                            title: "Priority Support",
-                            description: "Get help faster with priority support"
-                        )
-                        
-                        FeatureRow(
-                            icon: "arrow.down.circle.fill",
-                            title: "Offline Access",
-                            description: "Download cases to study offline"
-                        )
-                        
-                        FeatureRow(
-                            icon: "bell.badge.fill",
-                            title: "Daily Notifications",
-                            description: "Never miss your daily case"
-                        )
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(16)
-                    
-                    // Packages
-                    if let offering = offerings?.current {
-                        VStack(spacing: 12) {
-                            ForEach(offering.availablePackages, id: \.identifier) { package in
-                                PackageCard(
-                                    package: package,
-                                    isSelected: selectedPackage?.identifier == package.identifier
-                                ) {
-                                    selectedPackage = package
-                                }
-                            }
-                        }
-                    } else if isLoading {
-                        ProgressView()
-                            .scaleEffect(1.5)
-                            .padding()
-                    }
-                    
-                    // Purchase Button
-                    Button {
-                        Task {
-                            await purchaseSelectedPackage()
-                        }
-                    } label: {
-                        Group {
-                            if isLoading {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            } else {
-                                Text("Continue")
-                                    .font(.headline)
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(selectedPackage == nil ? Color.gray : Color.blue)
-                        .foregroundStyle(.white)
-                        .cornerRadius(12)
-                    }
-                    .disabled(selectedPackage == nil || isLoading)
-                    
-                    // Restore Button
-                    Button {
-                        Task {
-                            await restorePurchases()
-                        }
-                    } label: {
-                        Text("Restore Purchases")
-                            .font(.subheadline)
-                            .foregroundStyle(.blue)
-                    }
-                    .disabled(isLoading)
-                    
-                    // Legal
-                    VStack(spacing: 8) {
-                        Text("Subscription automatically renews unless cancelled")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                        
-                        HStack(spacing: 16) {
-                            Link("Terms", destination: URL(string: "https://braskgroup.com/rounds.html")!)
-                            Text("•")
-                            Link("Privacy", destination: URL(string: "https://braskgroup.com/rounds.html")!)
-                        }
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    }
-                    .padding(.bottom)
+                    headerSection
+                    featuresSection
+                    packagesSection
+                    purchaseButton
+                    restoreButton
+                    legalSection
                 }
                 .padding()
             }
@@ -219,13 +112,155 @@ struct CustomPaywallView: View {
         } message: {
             Text(errorMessage ?? "An error occurred")
         }
-        .alert("Success!", isPresented: $showingSuccess) {
+        .alert("Welcome to Rounds Pro! 🎉", isPresented: $showingSuccess) {
             Button("Continue") {
                 dismiss()
             }
-        } message: {
-            Text("Welcome to Rounds Pro! 🎉")
         }
+    }
+    
+    // MARK: - Header
+    
+    private var headerSection: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "crown.fill")
+                .font(.system(size: 60))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.yellow, .orange],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+            
+            Text("Upgrade to Rounds Pro")
+                .font(.largeTitle)
+                .bold()
+                .multilineTextAlignment(.center)
+            
+            Text("Unlock unlimited cases and advanced features")
+                .font(.title3)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(.top)
+    }
+    
+    // MARK: - Features
+    
+    private var featuresSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            PaywallFeatureRow(
+                icon: "infinity",
+                title: "Unlimited Cases",
+                description: "Access all medical cases without limits"
+            )
+            
+            PaywallFeatureRow(
+                icon: "chart.line.uptrend.xyaxis",
+                title: "Advanced Statistics",
+                description: "Track your progress with detailed analytics"
+            )
+            
+            PaywallFeatureRow(
+                icon: "star.fill",
+                title: "Priority Support",
+                description: "Get help faster with priority support"
+            )
+            
+            PaywallFeatureRow(
+                icon: "bell.badge.fill",
+                title: "Daily Reminders",
+                description: "Never miss your daily case"
+            )
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(16)
+    }
+    
+    // MARK: - Packages
+    
+    private var packagesSection: some View {
+        Group {
+            if let offering = offerings?.current {
+                VStack(spacing: 12) {
+                    ForEach(offering.availablePackages, id: \.identifier) { package in
+                        PaywallPackageCard(
+                            package: package,
+                            isSelected: selectedPackage?.identifier == package.identifier
+                        ) {
+                            selectedPackage = package
+                        }
+                    }
+                }
+            } else if isLoading {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .padding()
+            }
+        }
+    }
+    
+    // MARK: - Purchase Button
+    
+    private var purchaseButton: some View {
+        Button {
+            Task {
+                await purchaseSelectedPackage()
+            }
+        } label: {
+            Group {
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                } else {
+                    Text("Continue")
+                        .font(.headline)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(selectedPackage == nil ? Color.gray : Color.blue)
+            .foregroundStyle(.white)
+            .cornerRadius(12)
+        }
+        .disabled(selectedPackage == nil || isLoading)
+    }
+    
+    // MARK: - Restore Button
+    
+    private var restoreButton: some View {
+        Button {
+            Task {
+                await restorePurchases()
+            }
+        } label: {
+            Text("Restore Purchases")
+                .font(.subheadline)
+                .foregroundStyle(.blue)
+        }
+        .disabled(isLoading)
+    }
+    
+    // MARK: - Legal
+    
+    private var legalSection: some View {
+        VStack(spacing: 8) {
+            Text("Subscription automatically renews unless cancelled")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            
+            HStack(spacing: 16) {
+                Link("Terms", destination: URL(string: "https://braskgroup.com/rounds.html")!)
+                Text("•")
+                Link("Privacy", destination: URL(string: "https://braskgroup.com/rounds.html")!)
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+        }
+        .padding(.bottom)
     }
     
     // MARK: - Functions
@@ -239,7 +274,7 @@ struct CustomPaywallView: View {
             // Auto-select yearly by default
             if let offering = offerings?.current {
                 selectedPackage = offering.availablePackages.first {
-                    $0.identifier.contains("yearly")
+                    $0.identifier.contains("yearly") || $0.packageType == .annual
                 } ?? offering.availablePackages.first
             }
         } catch {
@@ -268,7 +303,7 @@ struct CustomPaywallView: View {
         defer { isLoading = false }
         
         do {
-            let info = try await subscriptionManager.restorePurchases()
+            _ = try await subscriptionManager.restorePurchases()
             if subscriptionManager.hasProAccess() {
                 showingSuccess = true
             } else {
@@ -284,7 +319,7 @@ struct CustomPaywallView: View {
 
 // MARK: - Feature Row
 
-struct FeatureRow: View {
+struct PaywallFeatureRow: View {
     let icon: String
     let title: String
     let description: String
@@ -310,27 +345,32 @@ struct FeatureRow: View {
 
 // MARK: - Package Card
 
-struct PackageCard: View {
+struct PaywallPackageCard: View {
     let package: Package
     let isSelected: Bool
     let onTap: () -> Void
     
     private var isPopular: Bool {
-        package.identifier.contains("yearly")
+        package.identifier.contains("yearly") || package.packageType == .annual
     }
     
-    private var savingsText: String? {
-        guard let monthlyPrice = package.storeProduct.subscriptionPeriod?.unit == .month else {
-            return nil
+    private var periodDescription: String {
+        guard let period = package.storeProduct.subscriptionPeriod else {
+            return package.identifier.contains("lifetime") ? "One-time purchase" : ""
         }
         
-        if package.identifier.contains("yearly") {
-            return "Save 40%"
-        } else if package.identifier.contains("lifetime") {
-            return "Best Value"
+        switch period.unit {
+        case .day:
+            return period.value == 1 ? "Billed daily" : "Billed every \(period.value) days"
+        case .week:
+            return period.value == 1 ? "Billed weekly" : "Billed every \(period.value) weeks"
+        case .month:
+            return period.value == 1 ? "Billed monthly" : "Billed every \(period.value) months"
+        case .year:
+            return period.value == 1 ? "Billed annually" : "Billed every \(period.value) years"
+        @unknown default:
+            return ""
         }
-        
-        return nil
     }
     
     var body: some View {
@@ -366,16 +406,16 @@ struct PackageCard: View {
                             .font(.title3)
                             .bold()
                         
-                        if let savings = savingsText {
-                            Text(savings)
+                        if isPopular {
+                            Text("Save 40%")
                                 .font(.caption)
                                 .foregroundStyle(.green)
                         }
                     }
                 }
                 
-                if let period = package.storeProduct.subscriptionPeriod {
-                    Text(periodDescription(period))
+                if !periodDescription.isEmpty {
+                    Text(periodDescription)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -390,23 +430,14 @@ struct PackageCard: View {
         }
         .buttonStyle(.plain)
     }
-    
-    private func periodDescription(_ period: SubscriptionPeriod) -> String {
-        switch period.unit {
-        case .day:
-            return "Billed every \(period.value) day(s)"
-        case .week:
-            return "Billed every \(period.value) week(s)"
-        case .month:
-            return period.value == 1 ? "Billed monthly" : "Billed every \(period.value) months"
-        case .year:
-            return period.value == 1 ? "Billed annually" : "Billed every \(period.value) years"
-        @unknown default:
-            return "Subscription"
-        }
-    }
 }
 
-#Preview {
-    CustomPaywallView()
+// MARK: - Previews
+
+#Preview("RevenueCat Paywall") {
+    RoundsPaywallView()
+}
+
+#Preview("Custom Paywall") {
+    CustomRoundsPaywallView()
 }

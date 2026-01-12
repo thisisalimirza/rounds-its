@@ -14,10 +14,8 @@ struct RoundsApp: App {
     @State private var showOnboarding = false
     
     init() {
-        // Configure RevenueCat on app launch
-        Task { @MainActor in
-            SubscriptionManager.shared.configure()
-        }
+        // Configure RevenueCat on app launch (synchronous - no Task needed)
+        SubscriptionManager.shared.configure()
     }
     
     var sharedModelContainer: ModelContainer = {
@@ -62,7 +60,6 @@ struct RoundsApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(SubscriptionManager.shared)
                 .onAppear {
                     // Track app launch
                     AnalyticsManager.shared.trackAppLaunch()

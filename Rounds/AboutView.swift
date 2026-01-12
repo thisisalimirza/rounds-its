@@ -11,7 +11,8 @@ struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingFeedback = false
     @State private var showingSubscription = false
-    @StateObject private var subscriptionManager = SubscriptionManager.shared
+    
+    private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     
     var body: some View {
         NavigationStack {
@@ -284,7 +285,7 @@ struct AboutView: View {
             if subscriptionManager.isProSubscriber {
                 SubscriptionSettingsView()
             } else {
-                PaywallView()
+                RoundsPaywallView()
             }
         }
     }

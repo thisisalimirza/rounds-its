@@ -2,36 +2,46 @@
 //  SubscriptionManager.swift
 //  Rounds
 //
-//  Created by Ali Mirza on 1/11/26.
+//  RevenueCat subscription management - Clean implementation
 //
 
 import Foundation
 import RevenueCat
 import SwiftUI
-import Combine
+import Observation
 
-/// Manages all RevenueCat subscription operations
-class SubscriptionManager: NSObject, ObservableObject {
+/// Manages all RevenueCat subscription operations for Rounds
+@Observable
+@MainActor
+final class SubscriptionManager {
+    
+    // MARK: - Singleton
+    
     static let shared = SubscriptionManager()
     
-    // MARK: - Published Properties
-    @Published var customerInfo: CustomerInfo?
-    @Published var isProSubscriber: Bool = false
-    @Published var currentOffering: Offering?
-    @Published var subscriptionStatus: SubscriptionStatus = .free
+    // MARK: - Observable Properties
+    
+    private(set) var customerInfo: CustomerInfo?
+    private(set) var isProSubscriber: Bool = false
+    private(set) var currentOffering: Offering?
+    private(set) var subscriptionStatus: SubscriptionStatus = .free
     
     // MARK: - Constants
-    private let apiKey = "test_dDeBAeUiVPFXqkYLYBpRccJBmWC"
-    private let proEntitlementID = "Rounds Pro"
     
-    // Product IDs
-    enum ProductID: String {
+    private let apiKey = "test_dDeBAeUiVPFXqkYLYBpRccJBmWC"
+    static let proEntitlementID = "Rounds Pro"
+    
+    // MARK: - Product Identifiers
+    
+    enum ProductID: String, CaseIterable {
         case monthly = "monthly"
         case yearly = "yearly"
         case lifetime = "lifetime"
     }
     
-    enum SubscriptionStatus {
+    // MARK: - Subscription Status
+    
+    enum SubscriptionStatus: String, Sendable {
         case free
         case monthly
         case yearly
@@ -40,35 +50,35 @@ class SubscriptionManager: NSObject, ObservableObject {
         var displayName: String {
             switch self {
             case .free: return "Free"
-            case .monthly: return "Pro (Monthly)"
-            case .yearly: return "Pro (Yearly)"
-            case .lifetime: return "Pro (Lifetime)"
+            case .monthly: return "Pro Monthly"
+            case .yearly: return "Pro Yearly"
+            case .lifetime: return "Pro Lifetime"
             }
+        }
+        
+        var isProActive: Bool {
+            self != .free
         }
     }
     
-    private override init() {
-        super.init()
-    }
+    // MARK: - Initialization
+    
+    private init() {}
     
     // MARK: - Configuration
     
     /// Configure RevenueCat SDK - Call this at app launch
-    func configure() {
-        // Configure with API key
-        Purchases.configure(withAPIKey: apiKey)
-        
-        // Enable debug logs in development
-        #if DEBUG
+    nonisolated func configure() {
         Purchases.logLevel = .debug
-        #endif
+        Purchases.configure(withAPIKey: "test_dDeBAeUiVPFXqkYLYBpRccJBmWC")
         
-        // Set up delegate for customer info updates
-        Purchases.shared.delegate = self
+        // Set up delegate
+        let delegateAdapter = SubscriptionManagerDelegate.shared
+        Purchases.shared.delegate = delegateAdapter
         
         // Fetch initial customer info
-        Task {
-            await refreshCustomerInfo()
+        Task { @MainActor in
+            await self.refreshCustomerInfo()
         }
     }
     
@@ -78,36 +88,31 @@ class SubscriptionManager: NSObject, ObservableObject {
     func refreshCustomerInfo() async {
         do {
             let info = try await Purchases.shared.customerInfo()
-            await MainActor.run {
-                self.updateCustomerInfo(info)
-            }
+            updateCustomerInfo(info)
         } catch {
-            print("Error fetching customer info: \(error.localizedDescription)")
+            print("❌ Error fetching customer info: \(error.localizedDescription)")
         }
     }
     
-    /// Update customer info and subscription status
-    @MainActor
-    private func updateCustomerInfo(_ info: CustomerInfo) {
+    /// Update local state from customer info
+    func updateCustomerInfo(_ info: CustomerInfo) {
         self.customerInfo = info
-        self.isProSubscriber = info.entitlements[proEntitlementID]?.isActive == true
+        
+        // Check Pro entitlement
+        let proEntitlement = info.entitlements[Self.proEntitlementID]
+        self.isProSubscriber = proEntitlement?.isActive == true
         
         // Determine subscription status
-        if let entitlement = info.entitlements[proEntitlementID], entitlement.isActive {
-            // Check if lifetime
-            if entitlement.willRenew == false && entitlement.expirationDate == nil {
+        if let entitlement = proEntitlement, entitlement.isActive {
+            let productId = entitlement.productIdentifier
+            if productId.contains("lifetime") || (entitlement.expirationDate == nil && !entitlement.willRenew) {
                 self.subscriptionStatus = .lifetime
-            } else if let productId = entitlement.productIdentifier {
-                // Check subscription type
-                if productId.contains("yearly") {
-                    self.subscriptionStatus = .yearly
-                } else if productId.contains("monthly") {
-                    self.subscriptionStatus = .monthly
-                } else if productId.contains("lifetime") {
-                    self.subscriptionStatus = .lifetime
-                } else {
-                    self.subscriptionStatus = .free
-                }
+            } else if productId.contains("yearly") {
+                self.subscriptionStatus = .yearly
+            } else if productId.contains("monthly") {
+                self.subscriptionStatus = .monthly
+            } else {
+                self.subscriptionStatus = .monthly
             }
         } else {
             self.subscriptionStatus = .free
@@ -120,11 +125,8 @@ class SubscriptionManager: NSObject, ObservableObject {
     func fetchOfferings() async throws -> Offerings {
         let offerings = try await Purchases.shared.offerings()
         
-        // Store current offering
         if let current = offerings.current {
-            await MainActor.run {
-                self.currentOffering = current
-            }
+            self.currentOffering = current
         }
         
         return offerings
@@ -135,55 +137,53 @@ class SubscriptionManager: NSObject, ObservableObject {
     /// Purchase a specific package
     func purchase(package: Package) async throws -> CustomerInfo {
         let result = try await Purchases.shared.purchase(package: package)
-        await MainActor.run {
-            self.updateCustomerInfo(result.customerInfo)
-        }
+        updateCustomerInfo(result.customerInfo)
         return result.customerInfo
     }
     
     /// Restore previous purchases
     func restorePurchases() async throws -> CustomerInfo {
         let info = try await Purchases.shared.restorePurchases()
-        await MainActor.run {
-            self.updateCustomerInfo(info)
-        }
+        updateCustomerInfo(info)
         return info
     }
     
-    // MARK: - Subscription Management
+    // MARK: - Entitlement Helpers
     
     /// Check if user has active Pro subscription
     func hasProAccess() -> Bool {
         return isProSubscriber
     }
     
-    /// Get subscription expiration date
+    /// Get subscription expiration date (nil for lifetime)
     func getExpirationDate() -> Date? {
-        return customerInfo?.entitlements[proEntitlementID]?.expirationDate
+        return customerInfo?.entitlements[Self.proEntitlementID]?.expirationDate
     }
     
-    /// Check if subscription will renew
+    /// Check if subscription will auto-renew
     func willRenew() -> Bool {
-        return customerInfo?.entitlements[proEntitlementID]?.willRenew ?? false
+        return customerInfo?.entitlements[Self.proEntitlementID]?.willRenew ?? false
     }
     
-    /// Get active subscription period type
-    func getSubscriptionPeriod() -> String? {
-        guard let entitlement = customerInfo?.entitlements[proEntitlementID],
-              entitlement.isActive else {
-            return nil
-        }
-        
-        return entitlement.periodType.rawValue
+    /// Check if there's a billing issue
+    func hasBillingIssue() -> Bool {
+        return customerInfo?.entitlements[Self.proEntitlementID]?.billingIssueDetectedAt != nil
     }
 }
 
-// MARK: - PurchasesDelegate
+// MARK: - Delegate Adapter
 
-extension SubscriptionManager: PurchasesDelegate {
+/// Separate delegate class to handle RevenueCat callbacks
+final class SubscriptionManagerDelegate: NSObject, PurchasesDelegate, Sendable {
+    static let shared = SubscriptionManagerDelegate()
+    
+    private override init() {
+        super.init()
+    }
+    
     func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
         Task { @MainActor in
-            self.updateCustomerInfo(customerInfo)
+            SubscriptionManager.shared.updateCustomerInfo(customerInfo)
         }
     }
 }
