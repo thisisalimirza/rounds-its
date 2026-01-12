@@ -8,10 +8,10 @@
 import Foundation
 import RevenueCat
 import SwiftUI
+import Combine
 
 /// Manages all RevenueCat subscription operations
-@MainActor
-class SubscriptionManager: ObservableObject {
+class SubscriptionManager: NSObject, ObservableObject {
     static let shared = SubscriptionManager()
     
     // MARK: - Published Properties
@@ -47,7 +47,9 @@ class SubscriptionManager: ObservableObject {
         }
     }
     
-    private init() {}
+    private override init() {
+        super.init()
+    }
     
     // MARK: - Configuration
     
@@ -76,14 +78,17 @@ class SubscriptionManager: ObservableObject {
     func refreshCustomerInfo() async {
         do {
             let info = try await Purchases.shared.customerInfo()
-            await updateCustomerInfo(info)
+            await MainActor.run {
+                self.updateCustomerInfo(info)
+            }
         } catch {
             print("Error fetching customer info: \(error.localizedDescription)")
         }
     }
     
     /// Update customer info and subscription status
-    private func updateCustomerInfo(_ info: CustomerInfo) async {
+    @MainActor
+    private func updateCustomerInfo(_ info: CustomerInfo) {
         self.customerInfo = info
         self.isProSubscriber = info.entitlements[proEntitlementID]?.isActive == true
         
@@ -130,14 +135,18 @@ class SubscriptionManager: ObservableObject {
     /// Purchase a specific package
     func purchase(package: Package) async throws -> CustomerInfo {
         let result = try await Purchases.shared.purchase(package: package)
-        await updateCustomerInfo(result.customerInfo)
+        await MainActor.run {
+            self.updateCustomerInfo(result.customerInfo)
+        }
         return result.customerInfo
     }
     
     /// Restore previous purchases
     func restorePurchases() async throws -> CustomerInfo {
         let info = try await Purchases.shared.restorePurchases()
-        await updateCustomerInfo(info)
+        await MainActor.run {
+            self.updateCustomerInfo(info)
+        }
         return info
     }
     
@@ -172,9 +181,9 @@ class SubscriptionManager: ObservableObject {
 // MARK: - PurchasesDelegate
 
 extension SubscriptionManager: PurchasesDelegate {
-    nonisolated func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
+    func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
         Task { @MainActor in
-            await updateCustomerInfo(customerInfo)
+            self.updateCustomerInfo(customerInfo)
         }
     }
 }

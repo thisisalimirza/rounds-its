@@ -11,7 +11,7 @@ import SwiftUI
 
 /// Manages all RevenueCat subscription operations
 @MainActor
-class SubscriptionManager: ObservableObject {
+final class SubscriptionManager: ObservableObject {
     static let shared = SubscriptionManager()
     
     // MARK: - Published Properties

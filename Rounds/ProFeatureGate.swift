@@ -6,10 +6,11 @@
 //
 
 import SwiftUI
+import RevenueCatUI
 
 /// A view modifier that gates content behind Pro subscription
 struct ProFeatureGate: ViewModifier {
-    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
     @State private var showingPaywall = false
     
     let action: () -> Void
@@ -38,7 +39,7 @@ extension View {
 
 /// A button that shows paywall if user doesn't have Pro
 struct ProGatedButton<Label: View>: View {
-    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
     @State private var showingPaywall = false
     
     let action: () -> Void
@@ -75,7 +76,7 @@ struct ProGatedButton<Label: View>: View {
 
 /// A view that shows different content based on subscription status
 struct ProContentView<Content: View, Placeholder: View>: View {
-    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
     
     let content: Content
     let placeholder: Placeholder
@@ -97,28 +98,7 @@ struct ProContentView<Content: View, Placeholder: View>: View {
     }
 }
 
-/// A badge to show Pro features
-struct ProBadge: View {
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "crown.fill")
-            Text("PRO")
-        }
-        .font(.caption2)
-        .bold()
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(
-            LinearGradient(
-                colors: [.yellow, .orange],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        )
-        .foregroundStyle(.white)
-        .cornerRadius(4)
-    }
-}
+// Note: ProBadge is defined in ProBadge.swift to avoid duplication
 
 #Preview {
     VStack(spacing: 20) {

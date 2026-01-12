@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import RevenueCat
+import RevenueCatUI
 
 // MARK: - Example 1: Limit Cases for Free Users
 
@@ -115,7 +117,6 @@ struct AdvancedStatisticsView: View {
 
 // MARK: - Example 3: Daily Case Limit for Free Users
 
-@MainActor
 class GameAccessManager: ObservableObject {
     @Published var dailyCasesPlayed: Int {
         didSet {
