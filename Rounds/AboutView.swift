@@ -353,7 +353,7 @@ struct AboutView: View {
                 }
                 .padding()
             }
-            .navigationTitle("About")
+            .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

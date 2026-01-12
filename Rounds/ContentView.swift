@@ -101,7 +101,7 @@ struct ContentView: View {
                     .animation(.spring(response: 0.4, dampingFraction: 0.7), value: subscriptionManager.isProSubscriber)
                     
                     Spacer()
-                        .frame(height: 24)
+                        .frame(height: 16)
                     
                     // Combined Streak & Stats Card
                     CompactStreakStatsView(stats: stats)
@@ -109,7 +109,7 @@ struct ContentView: View {
                         .id(stats.currentStreak) // Force refresh when streak changes
                     
                     Spacer()
-                        .frame(height: 20)
+                        .frame(height: 14)
                     
                     // Main Menu Buttons
                     VStack(spacing: 12) {
@@ -186,7 +186,7 @@ struct ContentView: View {
                     .padding(.horizontal)
                     
                     Spacer()
-                        .frame(height: 16)
+                        .frame(height: 12)
                     
                     // Feature Cards Grid
                     LazyVGrid(columns: [
@@ -236,42 +236,33 @@ struct ContentView: View {
                     }
                     .padding(.horizontal)
                     
-                    // Bottom Action Buttons
-                    HStack(spacing: 12) {
-                        Button {
+                    Spacer()
+                        .frame(height: 12)
+                    
+                    // Bottom Action Buttons (secondary)
+                    HStack(spacing: 8) {
+                        SecondaryButton(
+                            icon: "chart.bar.fill",
+                            title: "Stats",
+                            color: .blue
+                        ) {
                             showingStats = true
-                        } label: {
-                            Label("Stats", systemImage: "chart.bar.fill")
-                                .font(.subheadline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(Color(.systemGray6))
-                                .foregroundStyle(.primary)
-                                .cornerRadius(10)
                         }
                         
-                        Button {
+                        SecondaryButton(
+                            icon: "gearshape.fill",
+                            title: "Settings",
+                            color: .gray
+                        ) {
                             showingAbout = true
-                        } label: {
-                            Label("About", systemImage: "info.circle.fill")
-                                .font(.subheadline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(Color(.systemGray6))
-                                .foregroundStyle(.primary)
-                                .cornerRadius(10)
                         }
                         
-                        Button {
+                        SecondaryButton(
+                            icon: "envelope.fill",
+                            title: "Feedback",
+                            color: .green
+                        ) {
                             showingFeedback = true
-                        } label: {
-                            Label("Feedback", systemImage: "paperplane.fill")
-                                .font(.subheadline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(Color(.systemGray6))
-                                .foregroundStyle(.primary)
-                                .cornerRadius(10)
                         }
                     }
                     .padding(.horizontal)
@@ -471,6 +462,36 @@ struct FeatureCardButton: View {
         }
         .buttonStyle(.plain)
         .opacity(isLocked ? 0.7 : 1.0)
+    }
+}
+
+// MARK: - Secondary Button (for Stats, Settings, Feedback)
+struct SecondaryButton: View {
+    let icon: String
+    let title: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(color)
+                
+                Text(title)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray6).opacity(0.8))
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 

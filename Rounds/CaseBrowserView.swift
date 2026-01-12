@@ -27,14 +27,29 @@ struct CaseBrowserView: View {
         Set(caseHistory.map { $0.caseID })
     }
     
-    /// Check if a case has been completed
+    /// Set of diagnosis names that have been completed (fallback for old entries)
+    private var completedDiagnoses: Set<String> {
+        Set(caseHistory.map { $0.diagnosis.lowercased() })
+    }
+    
+    /// Check if a case has been completed (by ID or diagnosis name)
     private func isCaseCompleted(_ medicalCase: MedicalCase) -> Bool {
-        completedCaseIDs.contains(medicalCase.id)
+        // Check by ID first (for new deterministic IDs)
+        if completedCaseIDs.contains(medicalCase.id) {
+            return true
+        }
+        // Fallback: check by diagnosis name (for old random IDs)
+        return completedDiagnoses.contains(medicalCase.diagnosis.lowercased())
     }
     
     /// Get the history entry for a completed case
     private func historyEntry(for medicalCase: MedicalCase) -> CaseHistoryEntry? {
-        caseHistory.first { $0.caseID == medicalCase.id }
+        // Try by ID first
+        if let entry = caseHistory.first(where: { $0.caseID == medicalCase.id }) {
+            return entry
+        }
+        // Fallback: try by diagnosis name
+        return caseHistory.first { $0.diagnosis.lowercased() == medicalCase.diagnosis.lowercased() }
     }
     
     private var categories: [String] {

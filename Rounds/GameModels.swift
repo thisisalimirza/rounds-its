@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import CryptoKit
 
 // MARK: - Medical Case
 @Model
@@ -20,7 +21,8 @@ final class MedicalCase {
     var dateAdded: Date
     
     init(diagnosis: String, alternativeNames: [String] = [], hints: [String], category: String, difficulty: Int = 3) {
-        self.id = UUID()
+        // Generate a deterministic UUID from the diagnosis so the same case always has the same ID
+        self.id = Self.deterministicID(for: diagnosis)
         self.diagnosis = diagnosis
         self.alternativeNames = alternativeNames
         
@@ -36,6 +38,25 @@ final class MedicalCase {
         self.category = category
         self.difficulty = max(1, min(5, difficulty)) // Clamp difficulty between 1-5
         self.dateAdded = Date()
+    }
+    
+    /// Generate a deterministic UUID from the diagnosis string
+    /// This ensures the same case always has the same ID across app launches
+    static func deterministicID(for diagnosis: String) -> UUID {
+        // Create a consistent hash from the diagnosis using SHA256 (deterministic)
+        let normalizedDiagnosis = diagnosis.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let inputString = "rounds.case.\(normalizedDiagnosis)"
+        let inputData = Data(inputString.utf8)
+        
+        // Use CryptoKit SHA256 for deterministic hashing
+        let hash = SHA256.hash(data: inputData)
+        let hashBytes = Array(hash)
+        
+        // Use first 16 bytes of SHA256 hash for UUID
+        return UUID(uuid: (hashBytes[0], hashBytes[1], hashBytes[2], hashBytes[3],
+                          hashBytes[4], hashBytes[5], hashBytes[6], hashBytes[7],
+                          hashBytes[8], hashBytes[9], hashBytes[10], hashBytes[11],
+                          hashBytes[12], hashBytes[13], hashBytes[14], hashBytes[15]))
     }
     
     func isCorrectDiagnosis(_ guess: String) -> Bool {
