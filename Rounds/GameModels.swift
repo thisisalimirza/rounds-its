@@ -297,7 +297,6 @@ final class PlayerStats {
         } else {
             favoriteCaseIDs.append(idString)
         }
-        HapticManager.shared.favoriteToggled()
     }
     
     func isFavorite(caseID: UUID) -> Bool {

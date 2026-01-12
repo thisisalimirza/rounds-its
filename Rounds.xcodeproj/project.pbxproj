@@ -11,7 +11,6 @@
 		A3A7AB152F147A7400707B4B /* ReceiptParser in Frameworks */ = {isa = PBXBuildFile; productRef = A3A7AB142F147A7400707B4B /* ReceiptParser */; };
 		A3A7AB172F147A7400707B4B /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = A3A7AB162F147A7400707B4B /* RevenueCat */; };
 		A3A7AB192F147A7400707B4B /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = A3A7AB182F147A7400707B4B /* RevenueCatUI */; };
-		A3A7AB1B2F147A7400707B4B /* RevenueCat_CustomEntitlementComputation in Frameworks */ = {isa = PBXBuildFile; productRef = A3A7AB1A2F147A7400707B4B /* RevenueCat_CustomEntitlementComputation */; };
 		A3DFA9FB2EEE3FC200620718 /* UI_IMPROVEMENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = A3DFA9FA2EEE3FC200620718 /* UI_IMPROVEMENTS.md */; };
 		A3DFA9FD2EEE45F600620718 /* DAILY_CASE_TRACKING.md in Resources */ = {isa = PBXBuildFile; fileRef = A3DFA9FC2EEE45F600620718 /* DAILY_CASE_TRACKING.md */; };
 		A3DFA9FF2EEE47FF00620718 /* UI_REFINEMENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = A3DFA9FE2EEE47FF00620718 /* UI_REFINEMENTS.md */; };
@@ -95,7 +94,6 @@
 				A3A7AB172F147A7400707B4B /* RevenueCat in Frameworks */,
 				A3A7AB152F147A7400707B4B /* ReceiptParser in Frameworks */,
 				A3A7AB192F147A7400707B4B /* RevenueCatUI in Frameworks */,
-				A3A7AB1B2F147A7400707B4B /* RevenueCat_CustomEntitlementComputation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -169,7 +167,6 @@
 				A3A7AB142F147A7400707B4B /* ReceiptParser */,
 				A3A7AB162F147A7400707B4B /* RevenueCat */,
 				A3A7AB182F147A7400707B4B /* RevenueCatUI */,
-				A3A7AB1A2F147A7400707B4B /* RevenueCat_CustomEntitlementComputation */,
 			);
 			productName = Stepordle;
 			productReference = A34521D72EE86FB0009BD6EA /* Rounds.app */;
@@ -696,11 +693,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A3A7AB132F147A7400707B4B /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
 			productName = RevenueCatUI;
-		};
-		A3A7AB1A2F147A7400707B4B /* RevenueCat_CustomEntitlementComputation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A3A7AB132F147A7400707B4B /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
-			productName = RevenueCat_CustomEntitlementComputation;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
