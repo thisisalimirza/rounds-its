@@ -8,16 +8,16 @@
 import Foundation
 import RevenueCat
 import SwiftUI
-import Observation
 
 /// Manages all RevenueCat subscription operations for Rounds
-@Observable
 @MainActor
+@Observable
 final class SubscriptionManager {
     
     // MARK: - Singleton
     
-    static let shared = SubscriptionManager()
+    // nonisolated(unsafe) allows access from any context - safe because we only mutate on MainActor
+    nonisolated(unsafe) static let shared = SubscriptionManager()
     
     // MARK: - Observable Properties
     
@@ -28,12 +28,12 @@ final class SubscriptionManager {
     
     // MARK: - Constants
     
-    private let apiKey = "test_dDeBAeUiVPFXqkYLYBpRccJBmWC"
-    static let proEntitlementID = "Rounds Pro"
+    private static let apiKey = "test_dDeBAeUiVPFXqkYLYBpRccJBmWC"
+    nonisolated static let proEntitlementID = "Rounds Pro"
     
     // MARK: - Product Identifiers
     
-    enum ProductID: String, CaseIterable {
+    enum ProductID: String, CaseIterable, Sendable {
         case monthly = "monthly"
         case yearly = "yearly"
         case lifetime = "lifetime"
@@ -63,22 +63,21 @@ final class SubscriptionManager {
     
     // MARK: - Initialization
     
-    private init() {}
+    private nonisolated init() {}
     
     // MARK: - Configuration
     
     /// Configure RevenueCat SDK - Call this at app launch
     nonisolated func configure() {
         Purchases.logLevel = .debug
-        Purchases.configure(withAPIKey: "test_dDeBAeUiVPFXqkYLYBpRccJBmWC")
+        Purchases.configure(withAPIKey: Self.apiKey)
         
         // Set up delegate
-        let delegateAdapter = SubscriptionManagerDelegate.shared
-        Purchases.shared.delegate = delegateAdapter
+        Purchases.shared.delegate = RevenueCatDelegate.shared
         
         // Fetch initial customer info
         Task { @MainActor in
-            await self.refreshCustomerInfo()
+            await Self.shared.refreshCustomerInfo()
         }
     }
     
@@ -151,8 +150,10 @@ final class SubscriptionManager {
     // MARK: - Entitlement Helpers
     
     /// Check if user has active Pro subscription
-    func hasProAccess() -> Bool {
-        return isProSubscriber
+    nonisolated func hasProAccess() -> Bool {
+        return MainActor.assumeIsolated {
+            isProSubscriber
+        }
     }
     
     /// Get subscription expiration date (nil for lifetime)
@@ -171,17 +172,17 @@ final class SubscriptionManager {
     }
 }
 
-// MARK: - Delegate Adapter
+// MARK: - RevenueCat Delegate
 
-/// Separate delegate class to handle RevenueCat callbacks
-final class SubscriptionManagerDelegate: NSObject, PurchasesDelegate, Sendable {
-    static let shared = SubscriptionManagerDelegate()
+/// Separate delegate class to handle RevenueCat callbacks (must not be MainActor)
+final class RevenueCatDelegate: NSObject, PurchasesDelegate, @unchecked Sendable {
+    static let shared = RevenueCatDelegate()
     
     private override init() {
         super.init()
     }
     
-    func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
+    nonisolated func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
         Task { @MainActor in
             SubscriptionManager.shared.updateCustomerInfo(customerInfo)
         }
