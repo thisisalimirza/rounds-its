@@ -1,6 +1,6 @@
 //
 //  AnalyticsManager.swift
-//  Stepordle
+//  Rounds
 //
 //  Created for launch tracking
 //
@@ -192,7 +192,7 @@ class SessionTracker {
 /*
  HOW TO USE:
  
- 1. In StepordleApp.swift, add to .onAppear:
+ 1. In RoundsApp.swift, add to .onAppear:
     AnalyticsManager.shared.trackAppLaunch()
     SessionTracker.shared.startSession()
  

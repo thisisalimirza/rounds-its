@@ -13,14 +13,14 @@ struct NotificationManager {
 
     static func scheduleDailyReminder(hour: Int = 19, minute: Int = 0) {
         let center = UNUserNotificationCenter.current()
-        let identifier = "stepordle.daily.reminder"
+        let identifier = "rounds.daily.reminder"
 
         // Remove any existing pending request with same identifier to avoid duplicates
         center.removePendingNotificationRequests(withIdentifiers: [identifier])
 
         let content = UNMutableNotificationContent()
         content.title = "Keep your streak alive 🔥"
-        content.body = "Come back for today's Stepordle case."
+        content.body = "Come back for today's Rounds case."
         content.sound = .default
 
         var dateComponents = DateComponents()

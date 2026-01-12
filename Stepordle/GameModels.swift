@@ -1,6 +1,6 @@
 //
 //  GameModels.swift
-//  Stepordle
+//  Rounds
 //
 //  Created by Ali Mirza on 12/9/25.
 //

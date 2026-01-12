@@ -1,6 +1,6 @@
 //
 //  AboutView.swift
-//  Stepordle
+//  Rounds
 //
 //  Created by Ali Mirza on 12/9/25.
 //
@@ -159,7 +159,7 @@ struct AboutView: View {
                     
                     // Support Links
                     VStack(spacing: 12) {
-                        Link(destination: URL(string: "https://braskgroup.com/stepordle.html")!) {
+                        Link(destination: URL(string: "https://braskgroup.com/rounds.html")!) {
                             HStack {
                                 Image(systemName: "hand.raised.fill")
                                 Text("Privacy Policy")
@@ -173,7 +173,7 @@ struct AboutView: View {
                             .cornerRadius(10)
                         }
                         
-                        Link(destination: URL(string: "https://braskgroup.com/stepordle.html")!) {
+                        Link(destination: URL(string: "https://braskgroup.com/rounds.html")!) {
                             HStack {
                                 Image(systemName: "doc.text.fill")
                                 Text("Terms of Service")

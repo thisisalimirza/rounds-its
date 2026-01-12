@@ -1,6 +1,6 @@
 //
 //  OnboardingView.swift
-//  Stepordle
+//  Rounds
 //
 //  First-launch onboarding experience
 //

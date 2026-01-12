@@ -1,6 +1,6 @@
 //
-//  StepordleApp.swift
-//  Stepordle
+//  RoundsApp.swift
+//  Rounds
 //
 //  Created by Ali Mirza on 12/9/25.
 //
@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct StepordleApp: App {
+struct RoundsApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var showOnboarding = false
     
@@ -23,7 +23,7 @@ struct StepordleApp: App {
         // Use a stable URL so we can remove incompatible stores and retry
         let storeURL = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Stepordle.store")
+            .appendingPathComponent("Rounds.store")
 
         // Ensure directory exists
         try? FileManager.default.createDirectory(
