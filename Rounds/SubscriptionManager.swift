@@ -16,8 +16,7 @@ final class SubscriptionManager {
     
     // MARK: - Singleton
     
-    // nonisolated(unsafe) allows access from any context - safe because we only mutate on MainActor
-    nonisolated(unsafe) static let shared = SubscriptionManager()
+    static let shared = SubscriptionManager()
     
     // MARK: - Observable Properties
     
@@ -26,9 +25,9 @@ final class SubscriptionManager {
     private(set) var currentOffering: Offering?
     private(set) var subscriptionStatus: SubscriptionStatus = .free
     
-    // MARK: - Constants
+    // MARK: - Constants (nonisolated for cross-actor access)
     
-    private static let apiKey = "test_dDeBAeUiVPFXqkYLYBpRccJBmWC"
+    private nonisolated static let apiKey = "test_dDeBAeUiVPFXqkYLYBpRccJBmWC"
     nonisolated static let proEntitlementID = "Rounds Pro"
     
     // MARK: - Product Identifiers

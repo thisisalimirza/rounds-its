@@ -12,6 +12,7 @@ import UserNotifications
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var playerStats: [PlayerStats]
+    @Query private var achievementProgressList: [AchievementProgress]
     @State private var currentCase: MedicalCase?
     @State private var isDailyCase = false
     @State private var showingGame = false
@@ -22,6 +23,9 @@ struct ContentView: View {
     @State private var showingDailyCompleteAlert = false
     @State private var showingPaywall = false
     @State private var showingConfetti = false
+    @State private var showingCaseHistory = false
+    @State private var showingAchievements = false
+    @State private var showingCategoryAnalytics = false
     
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     
@@ -39,6 +43,12 @@ struct ContentView: View {
     
     private var hasPlayedDailyToday: Bool {
         stats.hasPlayedDailyCaseToday()
+    }
+    
+    private var achievementBadgeText: String {
+        let unlockedCount = achievementProgressList.first?.unlockedAchievements.count ?? 0
+        let totalCount = Achievement.allCases.count
+        return "\(unlockedCount)/\(totalCount)"
     }
     
     var body: some View {
@@ -178,6 +188,54 @@ struct ContentView: View {
                     Spacer()
                         .frame(height: 16)
                     
+                    // Feature Cards Grid
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12)
+                    ], spacing: 12) {
+                        // Case History
+                        FeatureCardButton(
+                            icon: "clock.arrow.circlepath",
+                            title: "History",
+                            color: .cyan,
+                            isPro: true,
+                            isProUser: subscriptionManager.isProSubscriber
+                        ) {
+                            if subscriptionManager.isProSubscriber {
+                                showingCaseHistory = true
+                            } else {
+                                showingPaywall = true
+                            }
+                        }
+                        
+                        // Category Analytics
+                        FeatureCardButton(
+                            icon: "chart.pie.fill",
+                            title: "Analytics",
+                            color: .indigo,
+                            isPro: true,
+                            isProUser: subscriptionManager.isProSubscriber
+                        ) {
+                            if subscriptionManager.isProSubscriber {
+                                showingCategoryAnalytics = true
+                            } else {
+                                showingPaywall = true
+                            }
+                        }
+                        
+                        // Achievements
+                        FeatureCardButton(
+                            icon: "trophy.fill",
+                            title: "Badges",
+                            color: .yellow,
+                            badgeText: achievementBadgeText
+                        ) {
+                            showingAchievements = true
+                        }
+                    }
+                    .padding(.horizontal)
+                    
                     // Bottom Action Buttons
                     HStack(spacing: 12) {
                         Button {
@@ -229,6 +287,15 @@ struct ContentView: View {
             .sheet(isPresented: $showingStats) {
                 StatsView()
             }
+            .sheet(isPresented: $showingCaseHistory) {
+                CaseHistoryView()
+            }
+            .sheet(isPresented: $showingAchievements) {
+                AchievementsView()
+            }
+            .sheet(isPresented: $showingCategoryAnalytics) {
+                CategoryAnalyticsView()
+            }
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
@@ -276,9 +343,10 @@ struct ContentView: View {
     }
     
     private func startNewGame() {
-        // Use seed based on current date for "daily" case
-        let dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: Date())
-        var generator = SeededRandomNumberGenerator(seed: dateComponents.hashValue)
+        // Use deterministic seed based on current date for "daily" case
+        // This ensures ALL users get the same case on the same day
+        let seed = Self.getDailyCaseSeed()
+        var generator = SeededRandomNumberGenerator(seed: seed)
         
         let cases = CaseLibrary.getSampleCases()
         if let randomCase = cases.randomElement(using: &generator) {
@@ -286,6 +354,26 @@ struct ContentView: View {
             isDailyCase = true
             showingGame = true
         }
+    }
+    
+    /// Generate a deterministic seed from the current date
+    /// This is the same for all users worldwide on the same calendar day
+    static func getDailyCaseSeed() -> Int {
+        let calendar = Calendar(identifier: .gregorian)
+        let components = calendar.dateComponents([.year, .month, .day], from: Date())
+        // Create a deterministic integer: YYYYMMDD format
+        let year = components.year ?? 2025
+        let month = components.month ?? 1
+        let day = components.day ?? 1
+        return year * 10000 + month * 100 + day
+    }
+    
+    /// Get the daily case number (days since Jan 1, 2025)
+    static func getDailyCaseNumber() -> Int {
+        let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 1))!
+        let today = Calendar.current.startOfDay(for: Date())
+        let daysSinceStart = Calendar.current.dateComponents([.day], from: startDate, to: today).day ?? 0
+        return daysSinceStart + 1
     }
     
     private func startRandomGame() {
@@ -314,9 +402,82 @@ struct QuickStat: View {
     }
 }
 
+// MARK: - Feature Card Button
+struct FeatureCardButton: View {
+    let icon: String
+    let title: String
+    let color: Color
+    var isPro: Bool = false
+    var isProUser: Bool = true
+    var badgeText: String? = nil
+    let action: () -> Void
+    
+    private var isLocked: Bool {
+        isPro && !isProUser
+    }
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                ZStack {
+                    // Background circle with gradient
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [color.opacity(0.3), color.opacity(0.15)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 40, height: 40)
+                    
+                    Image(systemName: isLocked ? "lock.fill" : icon)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(isLocked ? .gray : color)
+                }
+                
+                // Title with optional badge/indicator inline
+                HStack(spacing: 4) {
+                    Text(title)
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(isLocked ? .secondary : .primary)
+                        .lineLimit(1)
+                    
+                    // Small badge or PRO indicator inline
+                    if let badge = badgeText {
+                        Text(badge)
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundStyle(color)
+                    } else if isLocked {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 8))
+                            .foregroundStyle(.orange)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: color.opacity(0.15), radius: 6, x: 0, y: 3)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(color.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .opacity(isLocked ? 0.7 : 1.0)
+    }
+}
+
 // MARK: - Compact Streak & Stats View
 struct CompactStreakStatsView: View {
     let stats: PlayerStats
+    private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     
     var body: some View {
         VStack(spacing: 10) {
@@ -354,9 +515,27 @@ struct CompactStreakStatsView: View {
                             .foregroundStyle(.secondary)
                     }
                     
-                    Text(streakMessage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 8) {
+                        Text(streakMessage)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        // Streak Freeze indicator for Pro users
+                        if subscriptionManager.isProSubscriber && stats.streakFreezesAvailable > 0 {
+                            HStack(spacing: 3) {
+                                Image(systemName: "snowflake")
+                                    .font(.system(size: 10))
+                                Text("\(stats.streakFreezesAvailable)")
+                                    .font(.caption2)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundStyle(.cyan)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(Color.cyan.opacity(0.15))
+                            .cornerRadius(6)
+                        }
+                    }
                 }
                 
                 Spacer()
@@ -504,6 +683,65 @@ struct SeededRandomNumberGenerator: RandomNumberGenerator {
 #Preview {
     ContentView()
         .modelContainer(for: [PlayerStats.self], inMemory: true)
+}
+
+// MARK: - Achievement Progress Badge
+
+struct AchievementProgressBadge: View {
+    @Query private var progressList: [AchievementProgress]
+    
+    private var progress: AchievementProgress? {
+        progressList.first
+    }
+    
+    private var unlockedCount: Int {
+        progress?.unlockedAchievements.count ?? 0
+    }
+    
+    private var totalCount: Int {
+        Achievement.allCases.count
+    }
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "trophy.fill")
+                .font(.caption)
+                .foregroundStyle(.yellow)
+            
+            Text("\(unlockedCount)/\(totalCount)")
+                .font(.caption)
+                .fontWeight(.semibold)
+            
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .foregroundStyle(.primary)
+    }
+}
+
+// MARK: - Streak Freeze Indicator
+
+struct StreakFreezeIndicator: View {
+    let freezesAvailable: Int
+    let isPro: Bool
+    
+    var body: some View {
+        if isPro && freezesAvailable > 0 {
+            HStack(spacing: 4) {
+                Image(systemName: "snowflake")
+                    .font(.caption2)
+                Text("\(freezesAvailable)")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+            }
+            .foregroundStyle(.cyan)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(Color.cyan.opacity(0.15))
+            .cornerRadius(8)
+        }
+    }
 }
 
 import MessageUI

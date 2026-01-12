@@ -6,13 +6,36 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingFeedback = false
     @State private var showingSubscription = false
+    @State private var notificationsEnabled = false
+    @AppStorage("dailyReminderHour") private var reminderHour = 19
+    @AppStorage("dailyReminderMinute") private var reminderMinute = 0
     
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
+    
+    // Computed property for the reminder time binding
+    private var reminderTime: Binding<Date> {
+        Binding(
+            get: {
+                var components = DateComponents()
+                components.hour = reminderHour
+                components.minute = reminderMinute
+                return Calendar.current.date(from: components) ?? Date()
+            },
+            set: { newDate in
+                let components = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                reminderHour = components.hour ?? 19
+                reminderMinute = components.minute ?? 0
+                // Reschedule notification with new time
+                NotificationManager.scheduleDailyReminder(hour: reminderHour, minute: reminderMinute)
+            }
+        )
+    }
     
     var body: some View {
         NavigationStack {
@@ -161,6 +184,68 @@ struct AboutView: View {
                         }
                     }
                     
+                    // Notification Settings Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("Daily Reminder", systemImage: "bell.badge.fill")
+                            .font(.headline)
+                            .foregroundStyle(.blue)
+                        
+                        VStack(spacing: 16) {
+                            Toggle(isOn: $notificationsEnabled) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Enable Notifications")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                    Text("Get a daily reminder to keep your streak alive")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            .tint(.blue)
+                            .onChange(of: notificationsEnabled) { _, newValue in
+                                if newValue {
+                                    NotificationManager.requestAuthorization { granted in
+                                        if granted {
+                                            NotificationManager.scheduleDailyReminder(hour: reminderHour, minute: reminderMinute)
+                                        } else {
+                                            notificationsEnabled = false
+                                        }
+                                    }
+                                } else {
+                                    NotificationManager.cancelAll()
+                                }
+                            }
+                            
+                            if notificationsEnabled {
+                                Divider()
+                                
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Reminder Time")
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                        Text("When would you like to be reminded?")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    DatePicker(
+                                        "",
+                                        selection: reminderTime,
+                                        displayedComponents: .hourAndMinute
+                                    )
+                                    .labelsHidden()
+                                    .tint(.blue)
+                                }
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(16)
+                    
                     Button {
                         showingFeedback = true
                     } label: {
@@ -286,6 +371,14 @@ struct AboutView: View {
                 SubscriptionSettingsView()
             } else {
                 RoundsPaywallView()
+            }
+        }
+        .onAppear {
+            // Check current notification authorization status
+            UNUserNotificationCenter.current().getNotificationSettings { settings in
+                DispatchQueue.main.async {
+                    notificationsEnabled = settings.authorizationStatus == .authorized
+                }
             }
         }
     }

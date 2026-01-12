@@ -53,4 +53,20 @@ class HapticManager {
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
     }
+    
+    // Achievement unlocked - celebratory haptic
+    func achievementUnlocked() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+        
+        // Triple tap for celebration
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            let impactGenerator = UIImpactFeedbackGenerator(style: .medium)
+            impactGenerator.impactOccurred()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            let impactGenerator = UIImpactFeedbackGenerator(style: .heavy)
+            impactGenerator.impactOccurred()
+        }
+    }
 }

@@ -23,6 +23,8 @@ struct GameView: View {
     @State private var showingLevelUp = false
     @State private var newLevel: MedicalTrainingLevel?
     @State private var showConfetti = false
+    @State private var showingAchievementUnlock = false
+    @State private var unlockedAchievement: Achievement?
     @FocusState private var isTextFieldFocused: Bool
     let isDailyCase: Bool
     
@@ -126,6 +128,14 @@ struct GameView: View {
         .overlay(
             ConfettiView(isActive: $showConfetti)
         )
+        .overlay(alignment: .top) {
+            if showingAchievementUnlock, let achievement = unlockedAchievement {
+                AchievementUnlockToast(achievement: achievement)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .padding(.top, 60)
+            }
+        }
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showingAchievementUnlock)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
@@ -271,70 +281,72 @@ struct GameView: View {
     
     // MARK: - Result Section
     private var resultSection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             if gameSession.gameState == .won {
-                VStack(spacing: 10) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 50))
-                        .foregroundStyle(.green)
-                    
-                    Text("Correct!")
-                        .font(.title2)
-                        .bold()
-                    
-                    Text(currentCase.diagnosis)
-                        .font(.body)
-                        .bold()
-                        .foregroundStyle(.green)
-                    
-                    HStack(spacing: 24) {
-                        VStack(spacing: 4) {
-                            Text("\(gameSession.score)")
-                                .font(.title3)
-                                .bold()
-                            Text("Score")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
+                VStack(spacing: 8) {
+                    // Compact header with icon and text inline
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(.green)
                         
-                        VStack(spacing: 4) {
-                            Text("\(gameSession.guesses.count)")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Correct!")
                                 .font(.title3)
                                 .bold()
-                            Text("Guesses")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            
+                            // Tappable diagnosis - opens AMBOSS
+                            DiagnosisLinkButton(diagnosis: currentCase.diagnosis, color: .green)
                         }
+                    }
+                    
+                    // Compact stats row with hint visualization
+                    HStack(spacing: 16) {
+                        // Hint performance dots
+                        HintPerformanceView(hintsUsed: gameSession.hintsRevealed)
                         
-                        VStack(spacing: 4) {
-                            Text("\(gameSession.hintsRevealed)")
-                                .font(.title3)
-                                .bold()
-                            Text("Hints")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                        Divider()
+                            .frame(height: 24)
+                        
+                        // Stats
+                        HStack(spacing: 16) {
+                            VStack(spacing: 2) {
+                                Text("\(gameSession.score)")
+                                    .font(.subheadline)
+                                    .bold()
+                                Text("Score")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                            
+                            VStack(spacing: 2) {
+                                Text("\(gameSession.guesses.count)")
+                                    .font(.subheadline)
+                                    .bold()
+                                Text("Guesses")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                     .padding(.top, 4)
                 }
             } else {
-                VStack(spacing: 10) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 50))
-                        .foregroundStyle(.red)
-                    
-                    Text("Out of Guesses")
-                        .font(.title2)
-                        .bold()
-                    
-                    Text("Correct diagnosis:")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    
-                    Text(currentCase.diagnosis)
-                        .font(.body)
-                        .bold()
-                        .foregroundStyle(.blue)
+                VStack(spacing: 8) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(.red)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Out of Guesses")
+                                .font(.title3)
+                                .bold()
+                            
+                            // Tappable diagnosis - opens AMBOSS
+                            DiagnosisLinkButton(diagnosis: currentCase.diagnosis, color: .blue)
+                        }
+                    }
                     
                     if !currentCase.alternativeNames.isEmpty {
                         Text("Also: \(currentCase.alternativeNames.joined(separator: ", "))")
@@ -344,10 +356,25 @@ struct GameView: View {
                     }
                 }
             }
+            
+            // Share button - challenge a friend!
+            ShareResultButton(
+                won: gameSession.gameState == .won,
+                diagnosis: currentCase.diagnosis,
+                guessCount: gameSession.guesses.count,
+                hintsUsed: gameSession.hintsRevealed,
+                score: gameSession.score,
+                isDailyCase: isDailyCase
+            )
+            
+            // Hint about AMBOSS link
+            Text("Tap diagnosis to learn more on AMBOSS")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
         }
-        .padding()
+        .padding(14)
         .background(Color(.systemGray6))
-        .cornerRadius(16)
+        .cornerRadius(14)
     }
     
     // MARK: - Helper Methods
@@ -429,13 +456,15 @@ struct GameView: View {
     }
     
     private func updateStats(won: Bool) {
+        let isPro = SubscriptionManager.shared.isProSubscriber
+        
         // Fetch or create player stats
         let descriptor = FetchDescriptor<PlayerStats>()
         if let stats = try? modelContext.fetch(descriptor).first {
             // Check level before adding score
             let oldLevel = stats.trainingLevel
             
-            stats.recordGame(won: won, guessCount: gameSession.guesses.count, score: gameSession.score)
+            stats.recordGame(won: won, guessCount: gameSession.guesses.count, score: gameSession.score, isPro: isPro)
             
             // Check if level changed
             let newLevelData = stats.trainingLevel
@@ -457,9 +486,12 @@ struct GameView: View {
                 AnalyticsManager.shared.trackStreakMilestone(streak: stats.currentStreak)
                 AppStoreReviewManager.shared.streakAchieved(stats.currentStreak)
             }
+            
+            // Check achievements
+            checkAchievements(stats: stats, won: won)
         } else {
             let newStats = PlayerStats()
-            newStats.recordGame(won: won, guessCount: gameSession.guesses.count, score: gameSession.score)
+            newStats.recordGame(won: won, guessCount: gameSession.guesses.count, score: gameSession.score, isPro: isPro)
             
             // Mark daily case as completed
             if isDailyCase {
@@ -467,7 +499,25 @@ struct GameView: View {
             }
             
             modelContext.insert(newStats)
+            
+            // Check achievements for new stats
+            checkAchievements(stats: newStats, won: won)
         }
+        
+        // Save to case history
+        let historyEntry = CaseHistoryEntry(
+            caseID: currentCase.id,
+            diagnosis: currentCase.diagnosis,
+            category: currentCase.category,
+            difficulty: currentCase.difficulty,
+            wasCorrect: won,
+            guessCount: gameSession.guesses.count,
+            score: gameSession.score,
+            hintsUsed: gameSession.hintsRevealed,
+            guesses: gameSession.guesses,
+            wasDailyCase: isDailyCase
+        )
+        modelContext.insert(historyEntry)
         
         try? modelContext.save()
         
@@ -483,6 +533,49 @@ struct GameView: View {
         
         // Request review after wins
         AppStoreReviewManager.shared.gameCompleted(won: won)
+    }
+    
+    private func checkAchievements(stats: PlayerStats, won: Bool) {
+        // Fetch or create achievement progress
+        let progressDescriptor = FetchDescriptor<AchievementProgress>()
+        let progress: AchievementProgress
+        
+        if let existingProgress = try? modelContext.fetch(progressDescriptor).first {
+            progress = existingProgress
+        } else {
+            progress = AchievementProgress()
+            modelContext.insert(progress)
+        }
+        
+        // Check achievements
+        let newlyUnlocked = AchievementManager.shared.checkAchievements(
+            stats: stats,
+            progress: progress,
+            lastGameWon: won,
+            lastGameHints: gameSession.hintsRevealed,
+            lastGameScore: gameSession.score,
+            lastGameCategory: currentCase.category,
+            wasDailyCase: isDailyCase,
+            modelContext: modelContext
+        )
+        
+        // Show first unlocked achievement
+        if let firstUnlocked = newlyUnlocked.first {
+            unlockedAchievement = firstUnlocked
+            
+            // Delay showing achievement until after other animations
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                showingAchievementUnlock = true
+                HapticManager.shared.achievementUnlocked()
+                
+                // Auto-hide after 3 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    withAnimation {
+                        showingAchievementUnlock = false
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -967,6 +1060,83 @@ struct ConfettiPieceView: View {
                     rotationAmount = Double.random(in: 360...1080)
                 }
             }
+    }
+}
+
+// MARK: - Diagnosis Link Button
+
+/// Tappable diagnosis that opens AMBOSS search
+struct DiagnosisLinkButton: View {
+    let diagnosis: String
+    var color: Color = .blue
+    
+    private var ambossURL: URL? {
+        let query = diagnosis.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? diagnosis
+        return URL(string: "https://next.amboss.com/us/search?q=\(query)")
+    }
+    
+    var body: some View {
+        Button {
+            if let url = ambossURL {
+                UIApplication.shared.open(url)
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text(diagnosis)
+                    .font(.body)
+                    .bold()
+                
+                Image(systemName: "arrow.up.right.square")
+                    .font(.caption)
+            }
+            .foregroundStyle(color)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Hint Performance View
+/// Visual representation of how many hints were needed
+struct HintPerformanceView: View {
+    let hintsUsed: Int
+    let maxHints: Int = 5
+    
+    private var performanceEmoji: String {
+        switch hintsUsed {
+        case 1: return "🔥"
+        case 2: return "⭐️"
+        case 3: return "✨"
+        case 4: return "👍"
+        case 5: return "✅"
+        default: return "✅"
+        }
+    }
+    
+    private var performanceColor: Color {
+        switch hintsUsed {
+        case 1: return .orange
+        case 2: return .yellow
+        case 3: return .green
+        case 4: return .blue
+        default: return .purple
+        }
+    }
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            // Dots visualization (compact)
+            HStack(spacing: 4) {
+                ForEach(0..<maxHints, id: \.self) { index in
+                    Circle()
+                        .fill(index < hintsUsed ? performanceColor : Color(.systemGray4))
+                        .frame(width: 10, height: 10)
+                        .scaleEffect(index < hintsUsed ? 1.0 : 0.8)
+                }
+            }
+            
+            Text(performanceEmoji)
+                .font(.caption)
+        }
     }
 }
 

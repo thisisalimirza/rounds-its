@@ -22,7 +22,9 @@ struct RoundsApp: App {
         let schema = Schema([
             MedicalCase.self,
             GameSession.self,
-            PlayerStats.self
+            PlayerStats.self,
+            CaseHistoryEntry.self,
+            AchievementProgress.self
         ])
 
         // Use a stable URL so we can remove incompatible stores and retry

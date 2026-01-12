@@ -189,6 +189,11 @@ final class PlayerStats {
     var lastDailyCasePlayed: String? // Store date string like "2025-12-13"
     var favoriteCaseIDs: [String] // Store UUIDs as strings
     
+    // Streak Freeze (Pro Feature)
+    var streakFreezesAvailable: Int
+    var lastStreakFreezeReset: Date?
+    var streakFreezeUsedToday: Bool
+    
     // Computed property for current training level
     var trainingLevel: MedicalTrainingLevel {
         MedicalTrainingLevel.level(for: totalScore)
@@ -204,13 +209,84 @@ final class PlayerStats {
         self.lastPlayedDate = nil
         self.lastDailyCasePlayed = nil
         self.favoriteCaseIDs = []
+        self.streakFreezesAvailable = 1  // Pro users get 1 per week
+        self.lastStreakFreezeReset = nil
+        self.streakFreezeUsedToday = false
     }
     
-    func recordGame(won: Bool, guessCount: Int, score: Int) {
+    // MARK: - Streak Freeze Logic
+    
+    /// Check and reset weekly streak freeze for Pro users
+    func checkWeeklyStreakFreezeReset(isPro: Bool) {
+        guard isPro else {
+            streakFreezesAvailable = 0
+            return
+        }
+        
+        let calendar = Calendar.current
+        let today = Date()
+        
+        // Reset on Monday each week
+        if let lastReset = lastStreakFreezeReset {
+            let weekday = calendar.component(.weekday, from: today)
+            let lastWeekday = calendar.component(.weekday, from: lastReset)
+            let daysSinceReset = calendar.dateComponents([.day], from: lastReset, to: today).day ?? 0
+            
+            // Reset if it's Monday and we haven't reset this week, or if it's been 7+ days
+            if (weekday == 2 && lastWeekday != 2) || daysSinceReset >= 7 {
+                streakFreezesAvailable = 1
+                lastStreakFreezeReset = today
+                streakFreezeUsedToday = false
+            }
+        } else {
+            // First time - give them a freeze
+            streakFreezesAvailable = 1
+            lastStreakFreezeReset = today
+        }
+    }
+    
+    /// Try to use a streak freeze to protect the streak
+    /// Returns true if freeze was used
+    func useStreakFreezeIfAvailable(isPro: Bool) -> Bool {
+        guard isPro, streakFreezesAvailable > 0, !streakFreezeUsedToday else {
+            return false
+        }
+        
+        streakFreezesAvailable -= 1
+        streakFreezeUsedToday = true
+        return true
+    }
+    
+    /// Check if streak would break and if freeze is available
+    func wouldStreakBreak() -> Bool {
+        guard currentStreak > 0, let lastPlayed = lastPlayedDate else {
+            return false
+        }
+        
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
+        let daysSinceLastPlayed = calendar.dateComponents([.day], from: lastPlayedDay, to: today).day ?? 0
+        
+        return daysSinceLastPlayed > 1
+    }
+    
+    func recordGame(won: Bool, guessCount: Int, score: Int, isPro: Bool = false) {
         gamesPlayed += 1
         let today = Date()
         let calendar = Calendar.current
         let todayDay = calendar.startOfDay(for: today)
+        
+        // Check and reset weekly streak freeze for Pro users
+        checkWeeklyStreakFreezeReset(isPro: isPro)
+        
+        // Reset streakFreezeUsedToday if it's a new day
+        if let lastPlayed = lastPlayedDate {
+            let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
+            if todayDay != lastPlayedDay {
+                streakFreezeUsedToday = false
+            }
+        }
         
         if won {
             gamesWon += 1
@@ -229,9 +305,16 @@ final class PlayerStats {
                     currentStreak += 1
                     maxStreak = max(maxStreak, currentStreak)
                 } else if daysBetween > 1 {
-                    // Gap of more than 1 day - reset streak to 1
-                    currentStreak = 1
-                    maxStreak = max(maxStreak, currentStreak)
+                    // Gap of more than 1 day - check if streak freeze can save us
+                    if useStreakFreezeIfAvailable(isPro: isPro) {
+                        // Streak freeze saved the streak! Continue as if no gap
+                        currentStreak += 1
+                        maxStreak = max(maxStreak, currentStreak)
+                    } else {
+                        // No freeze available - reset streak to 1
+                        currentStreak = 1
+                        maxStreak = max(maxStreak, currentStreak)
+                    }
                 }
             } else {
                 // First game ever - start streak at 1
@@ -301,6 +384,49 @@ final class PlayerStats {
     
     func isFavorite(caseID: UUID) -> Bool {
         return favoriteCaseIDs.contains(caseID.uuidString)
+    }
+}
+
+// MARK: - Case History Entry
+@Model
+final class CaseHistoryEntry {
+    var id: UUID
+    var caseID: UUID
+    var diagnosis: String
+    var category: String
+    var difficulty: Int
+    var wasCorrect: Bool
+    var guessCount: Int
+    var score: Int
+    var hintsUsed: Int
+    var playedAt: Date
+    var guesses: [String]
+    var wasDailyCase: Bool
+    
+    init(
+        caseID: UUID,
+        diagnosis: String,
+        category: String,
+        difficulty: Int,
+        wasCorrect: Bool,
+        guessCount: Int,
+        score: Int,
+        hintsUsed: Int,
+        guesses: [String],
+        wasDailyCase: Bool
+    ) {
+        self.id = UUID()
+        self.caseID = caseID
+        self.diagnosis = diagnosis
+        self.category = category
+        self.difficulty = difficulty
+        self.wasCorrect = wasCorrect
+        self.guessCount = guessCount
+        self.score = score
+        self.hintsUsed = hintsUsed
+        self.playedAt = Date()
+        self.guesses = guesses
+        self.wasDailyCase = wasDailyCase
     }
 }
 

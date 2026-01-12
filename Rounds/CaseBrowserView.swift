@@ -10,15 +10,32 @@ import SwiftData
 
 struct CaseBrowserView: View {
     @Environment(\.dismiss) private var dismiss
+    @Query private var caseHistory: [CaseHistoryEntry]
     @State private var selectedCategory: String = "All"
     @State private var searchText = ""
     @State private var selectedCase: MedicalCase?
     @State private var showingGame = false
     @State private var showingPaywall = false
     @State private var showingConfetti = false
+    @State private var showingCompletedAlert = false
     
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     private let allCases: [MedicalCase] = CaseLibrary.getSampleCases()
+    
+    /// Set of case IDs that have been completed
+    private var completedCaseIDs: Set<UUID> {
+        Set(caseHistory.map { $0.caseID })
+    }
+    
+    /// Check if a case has been completed
+    private func isCaseCompleted(_ medicalCase: MedicalCase) -> Bool {
+        completedCaseIDs.contains(medicalCase.id)
+    }
+    
+    /// Get the history entry for a completed case
+    private func historyEntry(for medicalCase: MedicalCase) -> CaseHistoryEntry? {
+        caseHistory.first { $0.caseID == medicalCase.id }
+    }
     
     private var categories: [String] {
         let allCategories = Set(allCases.map { $0.category })
@@ -69,8 +86,15 @@ struct CaseBrowserView: View {
                     emptyStateView
                 } else {
                     List(Array(filteredCases.enumerated()), id: \.element.id) { index, medicalCase in
+                        let isCompleted = isCaseCompleted(medicalCase)
+                        let historyItem = historyEntry(for: medicalCase)
+                        
                         Button {
-                            if subscriptionManager.isProSubscriber {
+                            if isCompleted {
+                                // Case already completed - show alert
+                                selectedCase = medicalCase
+                                showingCompletedAlert = true
+                            } else if subscriptionManager.isProSubscriber {
                                 selectedCase = medicalCase
                                 showingGame = true
                             } else {
@@ -80,9 +104,12 @@ struct CaseBrowserView: View {
                             CaseRow(
                                 medicalCase: medicalCase,
                                 caseNumber: index + 1,
-                                isLocked: !subscriptionManager.isProSubscriber
+                                isLocked: !subscriptionManager.isProSubscriber,
+                                isCompleted: isCompleted,
+                                wasCorrect: historyItem?.wasCorrect
                             )
                         }
+                        .disabled(isCompleted)
                     }
                     .listStyle(.plain)
                 }
@@ -122,6 +149,15 @@ struct CaseBrowserView: View {
             }
             .overlay {
                 ConfettiView(isActive: $showingConfetti)
+            }
+            .alert("Case Already Completed", isPresented: $showingCompletedAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                if let selectedCase = selectedCase {
+                    Text("You've already completed this case (\(selectedCase.diagnosis)). Check your Case History to review it!")
+                } else {
+                    Text("You've already completed this case. Check your Case History to review it!")
+                }
             }
         }
     }
@@ -171,6 +207,8 @@ struct CaseRow: View {
     let medicalCase: MedicalCase
     let caseNumber: Int
     var isLocked: Bool = false
+    var isCompleted: Bool = false
+    var wasCorrect: Bool? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -179,9 +217,15 @@ struct CaseRow: View {
                 HStack(spacing: 8) {
                     Text("Case \(caseNumber)")
                         .font(.headline)
+                        .foregroundStyle(isCompleted ? .secondary : .primary)
                     
-                    // Mystery or lock indicator
-                    if isLocked {
+                    // Status indicator
+                    if isCompleted {
+                        // Completed indicator
+                        Image(systemName: wasCorrect == true ? "checkmark.circle.fill" : "xmark.circle.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(wasCorrect == true ? .green : .red)
+                    } else if isLocked {
                         Image(systemName: "lock.fill")
                             .font(.subheadline)
                             .foregroundStyle(.orange)
@@ -194,8 +238,17 @@ struct CaseRow: View {
                 
                 Spacer()
                 
-                // Pro badge for locked cases
-                if isLocked {
+                // Right side indicator
+                if isCompleted {
+                    Text("Completed")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color(.systemGray5))
+                        .cornerRadius(6)
+                } else if isLocked {
                     ProBadge(size: .small)
                 } else {
                     // Difficulty indicator
@@ -209,23 +262,35 @@ struct CaseRow: View {
                 }
             }
             
-            Text(medicalCase.category)
-                .font(.caption)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(getCategoryColor(medicalCase.category).opacity(isLocked ? 0.1 : 0.2))
-                .foregroundStyle(getCategoryColor(medicalCase.category).opacity(isLocked ? 0.6 : 1))
-                .cornerRadius(6)
+            HStack(spacing: 8) {
+                Text(medicalCase.category)
+                    .font(.caption)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(getCategoryColor(medicalCase.category).opacity(isCompleted ? 0.1 : (isLocked ? 0.1 : 0.2)))
+                    .foregroundStyle(getCategoryColor(medicalCase.category).opacity(isCompleted ? 0.5 : (isLocked ? 0.6 : 1)))
+                    .cornerRadius(6)
+                
+                // Show diagnosis if completed (no longer a mystery!)
+                if isCompleted {
+                    Text(medicalCase.diagnosis)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
             
             // Show first hint as preview (not the diagnosis!)
-            Text(medicalCase.hints.first ?? "")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .opacity(isLocked ? 0.6 : 1)
+            if !isCompleted {
+                Text(medicalCase.hints.first ?? "")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .opacity(isLocked ? 0.6 : 1)
+            }
         }
         .padding(.vertical, 4)
-        .opacity(isLocked ? 0.85 : 1)
+        .opacity(isCompleted ? 0.7 : (isLocked ? 0.85 : 1))
     }
     
     private func getCategoryColor(_ category: String) -> Color {

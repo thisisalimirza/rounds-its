@@ -7,6 +7,7 @@
 
 import Foundation
 import StoreKit
+import UIKit
 
 /// Simple analytics manager for tracking key events
 /// Replace with TelemetryDeck, Firebase, or your preferred analytics service
@@ -90,6 +91,7 @@ class AppStoreReviewManager {
     private init() {}
     
     /// Call this after each successful game completion
+    @MainActor
     func gameCompleted(won: Bool) {
         guard won else { return } // Only count wins
         gamesCompleted += 1
@@ -101,6 +103,7 @@ class AppStoreReviewManager {
     }
     
     /// Call this when user achieves a milestone streak
+    @MainActor
     func streakAchieved(_ streak: Int) {
         if streak >= 7 && shouldRequestReview() {
             requestReview()
@@ -118,9 +121,11 @@ class AppStoreReviewManager {
         return gamesCompleted >= 3
     }
     
+    @MainActor
     private func requestReview() {
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            SKStoreReviewController.requestReview(in: scene)
+            // Use modern AppStore API (iOS 16+)
+            AppStore.requestReview(in: scene)
             lastReviewRequestDate = Date()
             hasRequestedReview = true
             
@@ -129,9 +134,10 @@ class AppStoreReviewManager {
     }
     
     /// Manually trigger review request (e.g., from Settings)
+    @MainActor
     func manualReviewRequest() {
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            SKStoreReviewController.requestReview(in: scene)
+            AppStore.requestReview(in: scene)
             AnalyticsManager.shared.track("review_prompt_manual")
         }
     }
