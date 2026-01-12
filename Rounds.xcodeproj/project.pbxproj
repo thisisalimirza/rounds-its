@@ -217,7 +217,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2610;
-				LastUpgradeCheck = 2610;
+				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					A34521D62EE86FB0009BD6EA = {
 						CreatedOnToolsVersion = 26.1.1;
@@ -232,7 +232,7 @@
 					};
 				};
 			};
-			buildConfigurationList = A34521D22EE86FB0009BD6EA /* Build configuration list for PBXProject "Rounds - Step 1" */;
+			buildConfigurationList = A34521D22EE86FB0009BD6EA /* Build configuration list for PBXProject "Rounds" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -466,6 +466,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -523,6 +524,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -615,7 +617,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A34521D22EE86FB0009BD6EA /* Build configuration list for PBXProject "Rounds - Step 1" */ = {
+		A34521D22EE86FB0009BD6EA /* Build configuration list for PBXProject "Rounds" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A34521FE2EE86FB2009BD6EA /* Debug */,
