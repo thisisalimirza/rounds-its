@@ -20,6 +20,10 @@ struct ContentView: View {
     @State private var showingCaseBrowser = false
     @State private var showingFeedback = false
     @State private var showingDailyCompleteAlert = false
+    @State private var showingPaywall = false
+    @State private var showingConfetti = false
+    
+    private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     
     private var stats: PlayerStats {
         // Ensure stats exist, create if needed
@@ -63,20 +67,28 @@ struct ContentView: View {
                                 )
                             )
                         
-                        Text("Rounds")
-                            .font(.system(size: 38, weight: .bold, design: .rounded))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
+                        HStack(spacing: 8) {
+                            Text("Rounds")
+                                .font(.system(size: 38, weight: .bold, design: .rounded))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.blue, .purple],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
                                 )
-                            )
+                            
+                            if subscriptionManager.isProSubscriber {
+                                ProBadge(size: .medium)
+                                    .transition(.scale.combined(with: .opacity))
+                            }
+                        }
                         
                         Text("Master USMLE Step 1")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: subscriptionManager.isProSubscriber)
                     
                     Spacer()
                         .frame(height: 24)
@@ -124,27 +136,41 @@ struct ContentView: View {
                         }
                         
                         Button {
-                            startRandomGame()
+                            if subscriptionManager.isProSubscriber {
+                                startRandomGame()
+                            } else {
+                                showingPaywall = true
+                            }
                         } label: {
-                            Label("Random Case", systemImage: "shuffle")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color.purple)
-                                .foregroundStyle(.white)
-                                .cornerRadius(12)
+                            HStack {
+                                Label("Random Case", systemImage: "shuffle")
+                                if !subscriptionManager.isProSubscriber {
+                                    ProBadge(size: .small)
+                                }
+                            }
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(subscriptionManager.isProSubscriber ? Color.purple : Color.purple.opacity(0.5))
+                            .foregroundStyle(.white)
+                            .cornerRadius(12)
                         }
                         
                         Button {
                             showingCaseBrowser = true
                         } label: {
-                            Label("Browse Cases", systemImage: "list.bullet.clipboard")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color.green)
-                                .foregroundStyle(.white)
-                                .cornerRadius(12)
+                            HStack {
+                                Label("Browse Cases", systemImage: "list.bullet.clipboard")
+                                if !subscriptionManager.isProSubscriber {
+                                    ProBadge(size: .small)
+                                }
+                            }
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(subscriptionManager.isProSubscriber ? Color.green : Color.green.opacity(0.5))
+                            .foregroundStyle(.white)
+                            .cornerRadius(12)
                         }
                     }
                     .padding(.horizontal)
@@ -211,6 +237,29 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingFeedback) {
                 FeedbackSheet()
+            }
+            .sheet(isPresented: $showingPaywall) {
+                RoundsPaywallView(
+                    onPurchaseCompleted: { _ in
+                        // Show confetti celebration
+                        showingConfetti = true
+                        // Hide confetti after 3 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            showingConfetti = false
+                        }
+                    },
+                    onRestoreCompleted: { _ in
+                        if subscriptionManager.isProSubscriber {
+                            showingConfetti = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                showingConfetti = false
+                            }
+                        }
+                    }
+                )
+            }
+            .overlay {
+                ConfettiView(isActive: $showingConfetti)
             }
             .alert("Daily Case Complete! ✅", isPresented: $showingDailyCompleteAlert) {
                 Button("View Stats") {
@@ -507,3 +556,4 @@ struct FeedbackSheet: View {
         }
     }
 }
+

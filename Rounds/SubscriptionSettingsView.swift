@@ -11,21 +11,10 @@ import RevenueCatUI
 
 // MARK: - Subscription Settings View
 
-/// View for managing subscription using RevenueCat Customer Center
+/// View for managing subscription - Uses custom UI for reliability
 struct SubscriptionSettingsView: View {
-    @Environment(\.dismiss) private var dismiss
-    
     var body: some View {
-        NavigationStack {
-            CustomerCenterView()
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Done") {
-                            dismiss()
-                        }
-                    }
-                }
-        }
+        CustomSubscriptionSettingsView()
     }
 }
 

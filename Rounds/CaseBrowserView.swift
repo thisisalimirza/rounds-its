@@ -14,7 +14,10 @@ struct CaseBrowserView: View {
     @State private var searchText = ""
     @State private var selectedCase: MedicalCase?
     @State private var showingGame = false
+    @State private var showingPaywall = false
+    @State private var showingConfetti = false
     
+    private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     private let allCases: [MedicalCase] = CaseLibrary.getSampleCases()
     
     private var categories: [String] {
@@ -67,10 +70,18 @@ struct CaseBrowserView: View {
                 } else {
                     List(Array(filteredCases.enumerated()), id: \.element.id) { index, medicalCase in
                         Button {
-                            selectedCase = medicalCase
-                            showingGame = true
+                            if subscriptionManager.isProSubscriber {
+                                selectedCase = medicalCase
+                                showingGame = true
+                            } else {
+                                showingPaywall = true
+                            }
                         } label: {
-                            CaseRow(medicalCase: medicalCase, caseNumber: index + 1)
+                            CaseRow(
+                                medicalCase: medicalCase,
+                                caseNumber: index + 1,
+                                isLocked: !subscriptionManager.isProSubscriber
+                            )
                         }
                     }
                     .listStyle(.plain)
@@ -90,6 +101,27 @@ struct CaseBrowserView: View {
                 if let selectedCase = selectedCase {
                     GameView(medicalCase: selectedCase)
                 }
+            }
+            .sheet(isPresented: $showingPaywall) {
+                RoundsPaywallView(
+                    onPurchaseCompleted: { _ in
+                        showingConfetti = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            showingConfetti = false
+                        }
+                    },
+                    onRestoreCompleted: { _ in
+                        if subscriptionManager.isProSubscriber {
+                            showingConfetti = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                showingConfetti = false
+                            }
+                        }
+                    }
+                )
+            }
+            .overlay {
+                ConfettiView(isActive: $showingConfetti)
             }
         }
     }
@@ -138,6 +170,7 @@ struct CategoryButton: View {
 struct CaseRow: View {
     let medicalCase: MedicalCase
     let caseNumber: Int
+    var isLocked: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -147,20 +180,31 @@ struct CaseRow: View {
                     Text("Case \(caseNumber)")
                         .font(.headline)
                     
-                    // Mystery indicator
-                    Image(systemName: "questionmark.circle.fill")
-                        .font(.subheadline)
-                        .foregroundStyle(.blue)
+                    // Mystery or lock indicator
+                    if isLocked {
+                        Image(systemName: "lock.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(.orange)
+                    } else {
+                        Image(systemName: "questionmark.circle.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(.blue)
+                    }
                 }
                 
                 Spacer()
                 
-                // Difficulty indicator
-                HStack(spacing: 2) {
-                    ForEach(0..<5) { index in
-                        Image(systemName: index < medicalCase.difficulty ? "star.fill" : "star")
-                            .font(.caption2)
-                            .foregroundStyle(index < medicalCase.difficulty ? .yellow : .gray)
+                // Pro badge for locked cases
+                if isLocked {
+                    ProBadge(size: .small)
+                } else {
+                    // Difficulty indicator
+                    HStack(spacing: 2) {
+                        ForEach(0..<5) { index in
+                            Image(systemName: index < medicalCase.difficulty ? "star.fill" : "star")
+                                .font(.caption2)
+                                .foregroundStyle(index < medicalCase.difficulty ? .yellow : .gray)
+                        }
                     }
                 }
             }
@@ -169,8 +213,8 @@ struct CaseRow: View {
                 .font(.caption)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(getCategoryColor(medicalCase.category).opacity(0.2))
-                .foregroundStyle(getCategoryColor(medicalCase.category))
+                .background(getCategoryColor(medicalCase.category).opacity(isLocked ? 0.1 : 0.2))
+                .foregroundStyle(getCategoryColor(medicalCase.category).opacity(isLocked ? 0.6 : 1))
                 .cornerRadius(6)
             
             // Show first hint as preview (not the diagnosis!)
@@ -178,8 +222,10 @@ struct CaseRow: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
+                .opacity(isLocked ? 0.6 : 1)
         }
         .padding(.vertical, 4)
+        .opacity(isLocked ? 0.85 : 1)
     }
     
     private func getCategoryColor(_ category: String) -> Color {
