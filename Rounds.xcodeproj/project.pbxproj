@@ -53,7 +53,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		A34521FA2EE86FB2009BD6EA /* Exceptions for "Stepordle" folder in "Rounds" target */ = {
+		A34521FA2EE86FB2009BD6EA /* Exceptions for "Rounds" folder in "Rounds" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -63,22 +63,22 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A34521D92EE86FB0009BD6EA /* Stepordle */ = {
+		A34521D92EE86FB0009BD6EA /* Rounds */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				A34521FA2EE86FB2009BD6EA /* Exceptions for "Stepordle" folder in "Rounds" target */,
+				A34521FA2EE86FB2009BD6EA /* Exceptions for "Rounds" folder in "Rounds" target */,
 			);
-			path = Stepordle;
+			path = Rounds;
 			sourceTree = "<group>";
 		};
-		A34521EB2EE86FB2009BD6EA /* StepordleTests */ = {
+		A34521EB2EE86FB2009BD6EA /* RoundsTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = StepordleTests;
+			path = RoundsTests;
 			sourceTree = "<group>";
 		};
-		A34521F52EE86FB2009BD6EA /* StepordleUITests */ = {
+		A34521F52EE86FB2009BD6EA /* RoundsUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = StepordleUITests;
+			path = RoundsUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -111,9 +111,9 @@
 		A34521CE2EE86FB0009BD6EA = {
 			isa = PBXGroup;
 			children = (
-				A34521D92EE86FB0009BD6EA /* Stepordle */,
-				A34521EB2EE86FB2009BD6EA /* StepordleTests */,
-				A34521F52EE86FB2009BD6EA /* StepordleUITests */,
+				A34521D92EE86FB0009BD6EA /* Rounds */,
+				A34521EB2EE86FB2009BD6EA /* RoundsTests */,
+				A34521F52EE86FB2009BD6EA /* RoundsUITests */,
 				A34521D82EE86FB0009BD6EA /* Products */,
 				A34522142EE87434009BD6EA /* POLISH_IMPROVEMENTS.md */,
 				A3DFA9FA2EEE3FC200620718 /* UI_IMPROVEMENTS.md */,
@@ -154,7 +154,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				A34521D92EE86FB0009BD6EA /* Stepordle */,
+				A34521D92EE86FB0009BD6EA /* Rounds */,
 			);
 			name = Rounds;
 			packageProductDependencies = (
@@ -177,7 +177,7 @@
 				A34521EA2EE86FB2009BD6EA /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				A34521EB2EE86FB2009BD6EA /* StepordleTests */,
+				A34521EB2EE86FB2009BD6EA /* RoundsTests */,
 			);
 			name = StepordleTests;
 			packageProductDependencies = (
@@ -200,7 +200,7 @@
 				A34521F42EE86FB2009BD6EA /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				A34521F52EE86FB2009BD6EA /* StepordleUITests */,
+				A34521F52EE86FB2009BD6EA /* RoundsUITests */,
 			);
 			name = StepordleUITests;
 			packageProductDependencies = (

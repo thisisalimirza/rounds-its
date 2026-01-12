@@ -6,7 +6,7 @@
 //
 
 import Testing
-@testable import Stepordle
+@testable import Rounds
 
 struct StepordleTests {
 
