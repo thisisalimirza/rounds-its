@@ -36,8 +36,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A34521E72EE86FB2009BD6EA"
-               BuildableName = "StepordleTests.xctest"
-               BlueprintName = "StepordleTests"
+               BuildableName = "RoundsTests.xctest"
+               BlueprintName = "RoundsTests"
                ReferencedContainer = "container:Rounds.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -47,8 +47,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A34521F12EE86FB2009BD6EA"
-               BuildableName = "StepordleUITests.xctest"
-               BlueprintName = "StepordleUITests"
+               BuildableName = "RoundsUITests.xctest"
+               BlueprintName = "RoundsUITests"
                ReferencedContainer = "container:Rounds.xcodeproj">
             </BuildableReference>
          </TestableReference>
