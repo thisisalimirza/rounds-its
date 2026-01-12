@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A34521D62EE86FB0009BD6EA"
-               BuildableName = "Stepordle.app"
-               BlueprintName = "Stepordle"
+               BuildableName = "Rounds.app"
+               BlueprintName = "Rounds"
                ReferencedContainer = "container:Rounds.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -69,8 +69,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A34521D62EE86FB0009BD6EA"
-            BuildableName = "Stepordle.app"
-            BlueprintName = "Stepordle"
+            BuildableName = "Rounds.app"
+            BlueprintName = "Rounds"
             ReferencedContainer = "container:Rounds.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -86,8 +86,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A34521D62EE86FB0009BD6EA"
-            BuildableName = "Stepordle.app"
-            BlueprintName = "Stepordle"
+            BuildableName = "Rounds.app"
+            BlueprintName = "Rounds"
             ReferencedContainer = "container:Rounds.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

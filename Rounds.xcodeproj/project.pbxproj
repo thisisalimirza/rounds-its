@@ -37,7 +37,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		A34521D72EE86FB0009BD6EA /* Stepordle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stepordle.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A34521D72EE86FB0009BD6EA /* Rounds.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Rounds.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A34521E82EE86FB2009BD6EA /* StepordleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StepordleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A34521F22EE86FB2009BD6EA /* StepordleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StepordleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A34522142EE87434009BD6EA /* POLISH_IMPROVEMENTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = POLISH_IMPROVEMENTS.md; sourceTree = "<group>"; };
@@ -53,12 +53,12 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		A34521FA2EE86FB2009BD6EA /* Exceptions for "Stepordle" folder in "Stepordle" target */ = {
+		A34521FA2EE86FB2009BD6EA /* Exceptions for "Stepordle" folder in "Rounds" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = A34521D62EE86FB0009BD6EA /* Stepordle */;
+			target = A34521D62EE86FB0009BD6EA /* Rounds */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -66,7 +66,7 @@
 		A34521D92EE86FB0009BD6EA /* Stepordle */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				A34521FA2EE86FB2009BD6EA /* Exceptions for "Stepordle" folder in "Stepordle" target */,
+				A34521FA2EE86FB2009BD6EA /* Exceptions for "Stepordle" folder in "Rounds" target */,
 			);
 			path = Stepordle;
 			sourceTree = "<group>";
@@ -131,7 +131,7 @@
 		A34521D82EE86FB0009BD6EA /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A34521D72EE86FB0009BD6EA /* Stepordle.app */,
+				A34521D72EE86FB0009BD6EA /* Rounds.app */,
 				A34521E82EE86FB2009BD6EA /* StepordleTests.xctest */,
 				A34521F22EE86FB2009BD6EA /* StepordleUITests.xctest */,
 			);
@@ -141,9 +141,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A34521D62EE86FB0009BD6EA /* Stepordle */ = {
+		A34521D62EE86FB0009BD6EA /* Rounds */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A34521FB2EE86FB2009BD6EA /* Build configuration list for PBXNativeTarget "Stepordle" */;
+			buildConfigurationList = A34521FB2EE86FB2009BD6EA /* Build configuration list for PBXNativeTarget "Rounds" */;
 			buildPhases = (
 				A34521D32EE86FB0009BD6EA /* Sources */,
 				A34521D42EE86FB0009BD6EA /* Frameworks */,
@@ -156,11 +156,11 @@
 			fileSystemSynchronizedGroups = (
 				A34521D92EE86FB0009BD6EA /* Stepordle */,
 			);
-			name = Stepordle;
+			name = Rounds;
 			packageProductDependencies = (
 			);
 			productName = Stepordle;
-			productReference = A34521D72EE86FB0009BD6EA /* Stepordle.app */;
+			productReference = A34521D72EE86FB0009BD6EA /* Rounds.app */;
 			productType = "com.apple.product-type.application";
 		};
 		A34521E72EE86FB2009BD6EA /* StepordleTests */ = {
@@ -246,7 +246,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A34521D62EE86FB0009BD6EA /* Stepordle */,
+				A34521D62EE86FB0009BD6EA /* Rounds */,
 				A34521E72EE86FB2009BD6EA /* StepordleTests */,
 				A34521F12EE86FB2009BD6EA /* StepordleUITests */,
 			);
@@ -314,12 +314,12 @@
 /* Begin PBXTargetDependency section */
 		A34521EA2EE86FB2009BD6EA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = A34521D62EE86FB0009BD6EA /* Stepordle */;
+			target = A34521D62EE86FB0009BD6EA /* Rounds */;
 			targetProxy = A34521E92EE86FB2009BD6EA /* PBXContainerItemProxy */;
 		};
 		A34521F42EE86FB2009BD6EA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = A34521D62EE86FB0009BD6EA /* Stepordle */;
+			target = A34521D62EE86FB0009BD6EA /* Rounds */;
 			targetProxy = A34521F32EE86FB2009BD6EA /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -626,7 +626,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A34521FB2EE86FB2009BD6EA /* Build configuration list for PBXNativeTarget "Stepordle" */ = {
+		A34521FB2EE86FB2009BD6EA /* Build configuration list for PBXNativeTarget "Rounds" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A34521FC2EE86FB2009BD6EA /* Debug */,
