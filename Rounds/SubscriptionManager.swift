@@ -16,7 +16,9 @@ final class SubscriptionManager {
     
     // MARK: - Singleton
     
-    static let shared = SubscriptionManager()
+    // nonisolated(unsafe) allows cross-actor access to the singleton
+    // The instance itself is @MainActor protected
+    nonisolated(unsafe) static let shared = SubscriptionManager()
     
     // MARK: - Observable Properties
     
@@ -149,10 +151,9 @@ final class SubscriptionManager {
     // MARK: - Entitlement Helpers
     
     /// Check if user has active Pro subscription
-    nonisolated func hasProAccess() -> Bool {
-        return MainActor.assumeIsolated {
-            isProSubscriber
-        }
+    /// Note: This is @MainActor isolated - call from SwiftUI views or main thread only
+    func hasProAccess() -> Bool {
+        return isProSubscriber
     }
     
     /// Get subscription expiration date (nil for lifetime)
