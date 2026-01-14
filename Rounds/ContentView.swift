@@ -13,6 +13,7 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var playerStats: [PlayerStats]
     @Query private var achievementProgressList: [AchievementProgress]
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var currentCase: MedicalCase?
     @State private var isDailyCase = false
     @State private var showingGame = false
@@ -26,6 +27,7 @@ struct ContentView: View {
     @State private var showingCaseHistory = false
     @State private var showingAchievements = false
     @State private var showingCategoryAnalytics = false
+    @State private var showOnboarding = false
     
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     
@@ -316,6 +318,9 @@ struct ContentView: View {
                     }
                 )
             }
+            .sheet(isPresented: $showOnboarding) {
+                OnboardingView()
+            }
             .overlay {
                 ConfettiView(isActive: $showingConfetti)
             }
@@ -330,7 +335,24 @@ struct ContentView: View {
             } message: {
                 Text("You've already completed today's daily case! Come back tomorrow for a new challenge, or play a random case now.")
             }
+            .task {
+                // Use .task instead of .onAppear for async operations
+                // This is safer and more reliable on iOS 18+
+                await trackAppLaunchSafely()
+                
+                // Show onboarding for first-time users
+                if !hasCompletedOnboarding {
+                    showOnboarding = true
+                }
+            }
         }
+    }
+    
+    @MainActor
+    private func trackAppLaunchSafely() async {
+        // Track analytics in a safe, non-blocking way
+        AnalyticsManager.shared.trackAppLaunch()
+        SessionTracker.shared.startSession()
     }
     
     private func startNewGame() {

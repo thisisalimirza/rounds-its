@@ -162,6 +162,7 @@ struct UserDefaultsWrapper<T> {
 
 // MARK: - Session Tracking
 
+@MainActor
 class SessionTracker {
     static let shared = SessionTracker()
     
@@ -175,6 +176,8 @@ class SessionTracker {
     func startSession() {
         sessionStart = Date()
         totalSessions += 1
+        
+        // Track analytics synchronously since we're already on MainActor
         AnalyticsManager.shared.track("session_started", properties: [
             "session_number": totalSessions
         ])
@@ -184,6 +187,7 @@ class SessionTracker {
         guard let start = sessionStart else { return }
         let duration = Date().timeIntervalSince(start)
         
+        // Track analytics synchronously since we're already on MainActor
         AnalyticsManager.shared.track("session_ended", properties: [
             "duration_seconds": Int(duration),
             "session_number": totalSessions

@@ -14,7 +14,8 @@ struct RoundsApp: App {
     @State private var showOnboarding = false
     
     init() {
-        // Configure RevenueCat on app launch (synchronous - no Task needed)
+        // Configure RevenueCat on app launch
+        // This is nonisolated and safe to call during init
         SubscriptionManager.shared.configure()
     }
     
@@ -62,14 +63,16 @@ struct RoundsApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .onAppear {
-                    // Track app launch
-                    AnalyticsManager.shared.trackAppLaunch()
-                    SessionTracker.shared.startSession()
-                    
-                    // Show onboarding for first-time users
-                    if !hasCompletedOnboarding {
-                        showOnboarding = true
+                .task {
+                    // Track app launch asynchronously to avoid concurrency issues
+                    await MainActor.run {
+                        AnalyticsManager.shared.trackAppLaunch()
+                        SessionTracker.shared.startSession()
+                        
+                        // Show onboarding for first-time users
+                        if !hasCompletedOnboarding {
+                            showOnboarding = true
+                        }
                     }
                 }
                 .sheet(isPresented: $showOnboarding) {
