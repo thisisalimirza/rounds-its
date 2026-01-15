@@ -4,4 +4,10 @@
    <FileRef
       location = "self:">
    </FileRef>
+   <FileRef
+      location = "group:IPAD_COMPATIBILITY_GUIDE.md">
+   </FileRef>
+   <FileRef
+      location = "group:XCODE_IPAD_SETUP.md">
+   </FileRef>
 </Workspace>

@@ -271,6 +271,7 @@ struct ContentView: View {
                     
                     Spacer()
                 }
+                .adaptiveContentWidth() // Apply iPad-friendly centering
             }
             .navigationDestination(isPresented: $showingGame) {
                 if let currentCase = currentCase {

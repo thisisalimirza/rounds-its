@@ -8,6 +8,33 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - iPad Layout Support
+extension View {
+    /// Adds appropriate horizontal padding for iPad to create a centered layout with white space
+    func adaptiveContentWidth() -> some View {
+        self.modifier(AdaptiveContentWidthModifier())
+    }
+}
+
+struct AdaptiveContentWidthModifier: ViewModifier {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    
+    func body(content: Content) -> some View {
+        if horizontalSizeClass == .regular {
+            // iPad: Center content with max width and white space on sides
+            HStack {
+                Spacer()
+                content
+                    .frame(maxWidth: 600) // Comfortable reading width
+                Spacer()
+            }
+        } else {
+            // iPhone: Full width
+            content
+        }
+    }
+}
+
 struct GameView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var currentCase: MedicalCase
@@ -70,6 +97,7 @@ struct GameView: View {
                     Spacer()
                         .frame(height: gameSession.gameState == .playing ? 100 : 20)
                 }
+                .adaptiveContentWidth() // Apply iPad-friendly centering
             }
             
             // Floating action buttons for input (only when playing)
@@ -119,6 +147,7 @@ struct GameView: View {
                         .frame(width: 90)
                     }
                 }
+                .adaptiveContentWidth() // Apply iPad-friendly centering to buttons too
                 .padding(.horizontal)
                 .padding(.bottom)
             }
