@@ -53,6 +53,7 @@ struct GameView: View {
     @State private var showingAchievementUnlock = false
     @State private var unlockedAchievement: Achievement?
     @FocusState private var isTextFieldFocused: Bool
+    @AppStorage("hideCategoryLabel") private var hideCategoryLabel = false
     let isDailyCase: Bool
     
     init(medicalCase: MedicalCase, isDailyCase: Bool = false) {
@@ -223,15 +224,18 @@ struct GameView: View {
             
             Spacer()
             
-            Text(currentCase.category)
-                .font(.caption)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(Color.blue.opacity(0.2))
-                .foregroundStyle(.blue)
-                .cornerRadius(8)
-            
-            Spacer()
+            // Category label - can be hidden via Settings for harder gameplay
+            if !hideCategoryLabel {
+                Text(currentCase.category)
+                    .font(.caption)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Color.blue.opacity(0.2))
+                    .foregroundStyle(.blue)
+                    .cornerRadius(8)
+                
+                Spacer()
+            }
             
             Label("\(gameSession.hintsRevealed)/\(gameSession.maxHints)", systemImage: "lightbulb.fill")
                 .font(.subheadline)

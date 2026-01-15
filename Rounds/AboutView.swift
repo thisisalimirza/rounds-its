@@ -15,6 +15,7 @@ struct AboutView: View {
     @State private var notificationsEnabled = false
     @AppStorage("dailyReminderHour") private var reminderHour = 19
     @AppStorage("dailyReminderMinute") private var reminderMinute = 0
+    @AppStorage("hideCategoryLabel") private var hideCategoryLabel = false
     
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     
@@ -240,6 +241,30 @@ struct AboutView: View {
                                     .tint(.blue)
                                 }
                             }
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(16)
+                    
+                    // Gameplay Settings Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("Gameplay", systemImage: "gamecontroller.fill")
+                            .font(.headline)
+                            .foregroundStyle(.purple)
+                        
+                        VStack(spacing: 16) {
+                            Toggle(isOn: $hideCategoryLabel) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Hide Category Label")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                    Text("Hide the specialty tag (e.g. \"Cardiology\") during cases for a harder challenge")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            .tint(.purple)
                         }
                     }
                     .padding()
