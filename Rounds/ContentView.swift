@@ -28,6 +28,7 @@ struct ContentView: View {
     @State private var showingAchievements = false
     @State private var showingCategoryAnalytics = false
     @State private var showOnboarding = false
+    @State private var hasCheckedOnboarding = false // Track if we've already checked this session
     
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     
@@ -321,6 +322,7 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showOnboarding) {
                 OnboardingView()
+                    .interactiveDismissDisabled() // Prevent accidental swipe to dismiss
             }
             .overlay {
                 ConfettiView(isActive: $showingConfetti)
@@ -336,14 +338,17 @@ struct ContentView: View {
             } message: {
                 Text("You've already completed today's daily case! Come back tomorrow for a new challenge, or play a random case now.")
             }
-            .task {
-                // Use .task instead of .onAppear for async operations
-                // This is safer and more reliable on iOS 18+
-                await trackAppLaunchSafely()
+            .onAppear {
+                // Track analytics
+                AnalyticsManager.shared.trackAppLaunch()
+                SessionTracker.shared.startSession()
                 
-                // Show onboarding for first-time users
-                if !hasCompletedOnboarding {
-                    showOnboarding = true
+                // Show onboarding for first-time users (only check once per app launch)
+                if !hasCompletedOnboarding && !hasCheckedOnboarding {
+                    hasCheckedOnboarding = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showOnboarding = true
+                    }
                 }
             }
         }

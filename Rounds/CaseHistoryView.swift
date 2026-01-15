@@ -419,6 +419,12 @@ struct CaseHistoryDetailView: View {
     @State private var replayCase: MedicalCase?
     @State private var showingGame = false
     
+    // Get the full case with all hints
+    private var fullCase: MedicalCase? {
+        let allCases = CaseLibrary.getSampleCases()
+        return allCases.first { $0.id == entry.caseID }
+    }
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -431,6 +437,11 @@ struct CaseHistoryDetailView: View {
                     
                     // Your Guesses
                     guessesCard
+                    
+                    // All Hints Card (Educational - show all hints)
+                    if let medicalCase = fullCase {
+                        allHintsCard(hints: medicalCase.hints)
+                    }
                     
                     // Replay Button (for missed cases)
                     if !entry.wasCorrect {
@@ -451,7 +462,7 @@ struct CaseHistoryDetailView: View {
             .alert("Replay This Case?", isPresented: $showingReplayConfirm) {
                 Button("Cancel", role: .cancel) { }
                 Button("Replay") {
-                    if let caseToReplay = findCase() {
+                    if let caseToReplay = fullCase {
                         replayCase = caseToReplay
                         showingGame = true
                     }
@@ -702,6 +713,91 @@ struct CaseHistoryDetailView: View {
         return .gray.opacity(0.6)
     }
     
+    // MARK: - All Hints Card
+    
+    private func allHintsCard(hints: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "lightbulb.fill")
+                    .foregroundStyle(.yellow)
+                Text("Clinical Clues")
+                    .font(.headline)
+            }
+            
+            Text("Review all diagnostic hints for this case to deepen your understanding.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            
+            VStack(spacing: 12) {
+                ForEach(Array(hints.enumerated()), id: \.offset) { index, hint in
+                    HStack(alignment: .top, spacing: 12) {
+                        // Hint number badge
+                        ZStack {
+                            Circle()
+                                .fill(hintBadgeColor(for: index))
+                                .frame(width: 32, height: 32)
+                            
+                            Text("\(index + 1)")
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.white)
+                        }
+                        
+                        // Hint text
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(hint)
+                                .font(.body)
+                                .fixedSize(horizontal: false, vertical: true)
+                            
+                            // Show if user revealed this hint during play
+                            if index < entry.hintsUsed {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.caption2)
+                                    Text("Revealed during play")
+                                        .font(.caption2)
+                                }
+                                .foregroundStyle(.green)
+                            } else {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "eye.slash.fill")
+                                        .font(.caption2)
+                                    Text("Not revealed")
+                                        .font(.caption2)
+                                }
+                                .foregroundStyle(.secondary)
+                            }
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(12)
+                    .background(index < entry.hintsUsed ? Color.yellow.opacity(0.05) : Color(.systemBackground))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(index < entry.hintsUsed ? Color.yellow.opacity(0.3) : Color(.systemGray5), lineWidth: 1)
+                    )
+                    .cornerRadius(10)
+                }
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(16)
+    }
+    
+    private func hintBadgeColor(for index: Int) -> Color {
+        // Color gradient from green (first hint) to red (last hint) to show progression
+        switch index {
+        case 0: return .green
+        case 1: return .mint
+        case 2: return .blue
+        case 3: return .orange
+        case 4: return .red
+        default: return .gray
+        }
+    }
+    
     // MARK: - Replay Button
     
     private var replayButton: some View {
@@ -726,11 +822,6 @@ struct CaseHistoryDetailView: View {
         if let url = URL(string: "https://next.amboss.com/us/search?q=\(query)") {
             UIApplication.shared.open(url)
         }
-    }
-    
-    private func findCase() -> MedicalCase? {
-        let allCases = CaseLibrary.getSampleCases()
-        return allCases.first { $0.id == entry.caseID }
     }
 }
 
