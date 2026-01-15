@@ -383,7 +383,13 @@ struct ContentView: View {
     
     /// Get the daily case number (days since Jan 1, 2025)
     static func getDailyCaseNumber() -> Int {
-        let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 1))!
+        guard let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 1)) else {
+            // Fallback: use a simple day-of-year calculation
+            let components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+            let yearsSince2025 = (components.year ?? 2025) - 2025
+            let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1
+            return yearsSince2025 * 365 + dayOfYear
+        }
         let today = Calendar.current.startOfDay(for: Date())
         let daysSinceStart = Calendar.current.dateComponents([.day], from: startDate, to: today).day ?? 0
         return daysSinceStart + 1
