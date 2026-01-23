@@ -29,7 +29,7 @@ final class SubscriptionManager {
     
     // MARK: - Constants (nonisolated for cross-actor access)
     
-    private nonisolated static let apiKey = "test_dDeBAeUiVPFXqkYLYBpRccJBmWC"
+    private nonisolated static let apiKey = "appl_FxQcTJBUrEzLFLjEcowArMgLKcp"
     nonisolated static let proEntitlementID = "Rounds Pro"
     
     // MARK: - Product Identifiers
@@ -70,7 +70,11 @@ final class SubscriptionManager {
     
     /// Configure RevenueCat SDK - Call this at app launch
     nonisolated func configure() {
+        #if DEBUG
         Purchases.logLevel = .debug
+        #else
+        Purchases.logLevel = .error
+        #endif
         Purchases.configure(withAPIKey: Self.apiKey)
         
         // Set up delegate
