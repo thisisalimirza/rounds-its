@@ -11,6 +11,8 @@
 		A32AF78F2F2561F500C83D9C /* POSTHOG_QUICK_START.md in Resources */ = {isa = PBXBuildFile; fileRef = A32AF78E2F2561F500C83D9C /* POSTHOG_QUICK_START.md */; };
 		A32AF7912F2563F800C83D9C /* POSTHOG_EVENTS_SUMMARY.md in Resources */ = {isa = PBXBuildFile; fileRef = A32AF7902F2563F800C83D9C /* POSTHOG_EVENTS_SUMMARY.md */; };
 		A32AF7932F256A3400C83D9C /* TESTFLIGHT_PRO_ACCESS.md in Resources */ = {isa = PBXBuildFile; fileRef = A32AF7922F256A3400C83D9C /* TESTFLIGHT_PRO_ACCESS.md */; };
+		A32AF7DE2F258C1D00C83D9C /* TESTFLIGHT_FIX_SUMMARY.md in Resources */ = {isa = PBXBuildFile; fileRef = A32AF7DD2F258C1D00C83D9C /* TESTFLIGHT_FIX_SUMMARY.md */; };
+		A32AF7E02F258CA000C83D9C /* TESTFLIGHT_COMPLETE_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = A32AF7DF2F258CA000C83D9C /* TESTFLIGHT_COMPLETE_GUIDE.md */; };
 		A34522152EE87434009BD6EA /* POLISH_IMPROVEMENTS.md in Resources */ = {isa = PBXBuildFile; fileRef = A34522142EE87434009BD6EA /* POLISH_IMPROVEMENTS.md */; };
 		A3A7AB152F147A7400707B4B /* ReceiptParser in Frameworks */ = {isa = PBXBuildFile; productRef = A3A7AB142F147A7400707B4B /* ReceiptParser */; };
 		A3A7AB172F147A7400707B4B /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = A3A7AB162F147A7400707B4B /* RevenueCat */; };
@@ -47,6 +49,8 @@
 		A32AF78E2F2561F500C83D9C /* POSTHOG_QUICK_START.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = POSTHOG_QUICK_START.md; sourceTree = "<group>"; };
 		A32AF7902F2563F800C83D9C /* POSTHOG_EVENTS_SUMMARY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = POSTHOG_EVENTS_SUMMARY.md; sourceTree = "<group>"; };
 		A32AF7922F256A3400C83D9C /* TESTFLIGHT_PRO_ACCESS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TESTFLIGHT_PRO_ACCESS.md; sourceTree = "<group>"; };
+		A32AF7DD2F258C1D00C83D9C /* TESTFLIGHT_FIX_SUMMARY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TESTFLIGHT_FIX_SUMMARY.md; sourceTree = "<group>"; };
+		A32AF7DF2F258CA000C83D9C /* TESTFLIGHT_COMPLETE_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TESTFLIGHT_COMPLETE_GUIDE.md; sourceTree = "<group>"; };
 		A34521D72EE86FB0009BD6EA /* Rounds.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Rounds.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A34521E82EE86FB2009BD6EA /* RoundsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RoundsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A34521F22EE86FB2009BD6EA /* RoundsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RoundsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -142,6 +146,8 @@
 				A32AF78E2F2561F500C83D9C /* POSTHOG_QUICK_START.md */,
 				A32AF7902F2563F800C83D9C /* POSTHOG_EVENTS_SUMMARY.md */,
 				A32AF7922F256A3400C83D9C /* TESTFLIGHT_PRO_ACCESS.md */,
+				A32AF7DD2F258C1D00C83D9C /* TESTFLIGHT_FIX_SUMMARY.md */,
+				A32AF7DF2F258CA000C83D9C /* TESTFLIGHT_COMPLETE_GUIDE.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -292,6 +298,8 @@
 				A32AF7932F256A3400C83D9C /* TESTFLIGHT_PRO_ACCESS.md in Resources */,
 				A3DFAA072EEE49B800620718 /* LAUNCH_GUIDE.md in Resources */,
 				A3DFA9FF2EEE47FF00620718 /* UI_REFINEMENTS.md in Resources */,
+				A32AF7DE2F258C1D00C83D9C /* TESTFLIGHT_FIX_SUMMARY.md in Resources */,
+				A32AF7E02F258CA000C83D9C /* TESTFLIGHT_COMPLETE_GUIDE.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

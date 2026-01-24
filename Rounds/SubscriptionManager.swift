@@ -262,6 +262,22 @@ final class SubscriptionManager {
         }
     }
     
+    /// Debug info for troubleshooting
+    func getDebugInfo() -> String {
+        var info = """
+        Build Type: \(isTestFlightBuild() ? "TestFlight" : "Production")
+        Pro Access: \(hasProAccess() ? "Yes" : "No")
+        Pro Subscriber: \(isProSubscriber ? "Yes" : "No")
+        Subscription Status: \(subscriptionStatus.displayName)
+        """
+        
+        if let receiptURL = Bundle.main.appStoreReceiptURL {
+            info += "\nReceipt: \(receiptURL.lastPathComponent)"
+        }
+        
+        return info
+    }
+    
     /// Get subscription expiration date (nil for lifetime)
     func getExpirationDate() -> Date? {
         return customerInfo?.entitlements[Self.proEntitlementID]?.expirationDate

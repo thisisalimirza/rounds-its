@@ -361,4 +361,16 @@ class SessionTracker {
    - User analytics and funnels
    - Free tier available
  
+ TESTFLIGHT PRO ACCESS TRACKING:
+ 
+ • TestFlight users automatically get Pro access (see SubscriptionManager)
+ • Analytics tracks this via user properties:
+   - "is_testflight": true/false
+   - "subscription_status": free/monthly/yearly/lifetime
+ 
+ • Use PostHog to filter analytics by user type:
+   - TestFlight beta testers (exclude from revenue)
+   - Production subscribers (actual customers)
+   - Free users (conversion funnel)
+ 
  */

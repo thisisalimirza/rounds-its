@@ -46,6 +46,8 @@ struct CustomSubscriptionSettingsView: View {
                     subscriptionDetailsSection
                 }
                 
+                debugSection
+                
                 supportSection
             }
             .navigationTitle("Subscription")
@@ -76,15 +78,15 @@ struct CustomSubscriptionSettingsView: View {
     private var currentPlanSection: some View {
         Section {
             HStack {
-                Image(systemName: subscriptionManager.isProSubscriber ? "crown.fill" : "person.crop.circle")
+                Image(systemName: subscriptionManager.isProUser ? "crown.fill" : "person.crop.circle")
                     .font(.title)
-                    .foregroundStyle(subscriptionManager.isProSubscriber ? .yellow : .secondary)
+                    .foregroundStyle(subscriptionManager.isProUser ? .yellow : .secondary)
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(subscriptionManager.subscriptionStatus.displayName)
+                    Text(subscriptionManager.getSubscriptionSource())
                         .font(.headline)
                     
-                    if subscriptionManager.isProSubscriber {
+                    if subscriptionManager.isProUser {
                         statusText
                     } else {
                         Text("Limited access")
@@ -222,6 +224,21 @@ struct CustomSubscriptionSettingsView: View {
     }
     
     // MARK: - Support Section
+    
+    private var debugSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(subscriptionManager.getDebugInfo())
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 4)
+        } header: {
+            Text("Debug Info")
+        } footer: {
+            Text("Use this to verify TestFlight detection and subscription status.")
+        }
+    }
     
     private var supportSection: some View {
         Section {
