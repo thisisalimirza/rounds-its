@@ -109,7 +109,7 @@ struct CaseBrowserView: View {
                                 // Case already completed - show alert
                                 selectedCase = medicalCase
                                 showingCompletedAlert = true
-                            } else if subscriptionManager.isProSubscriber {
+                            } else if subscriptionManager.isProUser {
                                 selectedCase = medicalCase
                                 showingGame = true
                             } else {
@@ -153,7 +153,7 @@ struct CaseBrowserView: View {
                         }
                     },
                     onRestoreCompleted: { _ in
-                        if subscriptionManager.isProSubscriber {
+                        if subscriptionManager.isProUser {
                             showingConfetti = true
                             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                                 showingConfetti = false

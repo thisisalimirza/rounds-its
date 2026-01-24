@@ -160,15 +160,15 @@ struct AboutView: View {
                             showingSubscription = true
                         } label: {
                             HStack {
-                                Image(systemName: subscriptionManager.isProSubscriber ? "crown.fill" : "arrow.up.circle.fill")
-                                    .foregroundStyle(subscriptionManager.isProSubscriber ? .yellow : .blue)
+                                Image(systemName: subscriptionManager.isProUser ? "crown.fill" : "arrow.up.circle.fill")
+                                    .foregroundStyle(subscriptionManager.isProUser ? .yellow : .blue)
                                 
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(subscriptionManager.isProSubscriber ? "Manage Subscription" : "Upgrade to Pro")
+                                    Text(subscriptionManager.isProUser ? "Manage Subscription" : "Upgrade to Pro")
                                         .font(.headline)
                                         .foregroundStyle(.primary)
                                     
-                                    Text(subscriptionManager.isProSubscriber ? subscriptionManager.subscriptionStatus.displayName : "Unlock unlimited cases and features")
+                                    Text(subscriptionManager.isProUser ? subscriptionManager.getSubscriptionSource() : "Unlock unlimited cases and features")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -392,7 +392,7 @@ struct AboutView: View {
             FeedbackSheet()
         }
         .sheet(isPresented: $showingSubscription) {
-            if subscriptionManager.isProSubscriber {
+            if subscriptionManager.isProUser {
                 SubscriptionSettingsView()
             } else {
                 RoundsPaywallView()

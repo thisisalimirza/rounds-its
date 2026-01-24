@@ -91,7 +91,7 @@ struct ContentView: View {
                                     )
                                 )
                             
-                            if subscriptionManager.isProSubscriber {
+                            if subscriptionManager.isProUser {
                                 ProBadge(size: .medium)
                                     .transition(.scale.combined(with: .opacity))
                             }
@@ -101,7 +101,7 @@ struct ContentView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: subscriptionManager.isProSubscriber)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: subscriptionManager.isProUser)
                     
                     Spacer()
                         .frame(height: 16)
@@ -149,7 +149,7 @@ struct ContentView: View {
                         }
                         
                         Button {
-                            if subscriptionManager.isProSubscriber {
+                            if subscriptionManager.isProUser {
                                 startRandomGame()
                             } else {
                                 showingPaywall = true
@@ -157,14 +157,14 @@ struct ContentView: View {
                         } label: {
                             HStack {
                                 Label("Random Case", systemImage: "shuffle")
-                                if !subscriptionManager.isProSubscriber {
+                                if !subscriptionManager.isProUser {
                                     ProBadge(size: .small)
                                 }
                             }
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(subscriptionManager.isProSubscriber ? Color.purple : Color.purple.opacity(0.5))
+                            .background(subscriptionManager.isProUser ? Color.purple : Color.purple.opacity(0.5))
                             .foregroundStyle(.white)
                             .cornerRadius(12)
                         }
@@ -174,14 +174,14 @@ struct ContentView: View {
                         } label: {
                             HStack {
                                 Label("Browse Cases", systemImage: "list.bullet.clipboard")
-                                if !subscriptionManager.isProSubscriber {
+                                if !subscriptionManager.isProUser {
                                     ProBadge(size: .small)
                                 }
                             }
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(subscriptionManager.isProSubscriber ? Color.green : Color.green.opacity(0.5))
+                            .background(subscriptionManager.isProUser ? Color.green : Color.green.opacity(0.5))
                             .foregroundStyle(.white)
                             .cornerRadius(12)
                         }
@@ -203,9 +203,9 @@ struct ContentView: View {
                             title: "History",
                             color: .cyan,
                             isPro: true,
-                            isProUser: subscriptionManager.isProSubscriber
+                            isProUser: subscriptionManager.isProUser
                         ) {
-                            if subscriptionManager.isProSubscriber {
+                            if subscriptionManager.isProUser {
                                 showingCaseHistory = true
                             } else {
                                 showingPaywall = true
@@ -218,9 +218,9 @@ struct ContentView: View {
                             title: "Analytics",
                             color: .indigo,
                             isPro: true,
-                            isProUser: subscriptionManager.isProSubscriber
+                            isProUser: subscriptionManager.isProUser
                         ) {
-                            if subscriptionManager.isProSubscriber {
+                            if subscriptionManager.isProUser {
                                 showingCategoryAnalytics = true
                             } else {
                                 showingPaywall = true
@@ -311,7 +311,7 @@ struct ContentView: View {
                         }
                     },
                     onRestoreCompleted: { _ in
-                        if subscriptionManager.isProSubscriber {
+                        if subscriptionManager.isProUser {
                             showingConfetti = true
                             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                                 showingConfetti = false
@@ -576,7 +576,7 @@ struct CompactStreakStatsView: View {
                             .foregroundStyle(.secondary)
                         
                         // Streak Freeze indicator for Pro users
-                        if subscriptionManager.isProSubscriber && stats.streakFreezesAvailable > 0 {
+                        if subscriptionManager.isProUser && stats.streakFreezesAvailable > 0 {
                             HStack(spacing: 3) {
                                 Image(systemName: "snowflake")
                                     .font(.system(size: 10))

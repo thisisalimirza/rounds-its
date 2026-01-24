@@ -29,6 +29,10 @@ struct RoundsPaywallView: View {
     var body: some View {
         NavigationStack {
             RevenueCatUI.PaywallView()
+                .onAppear {
+                    // Track paywall viewed - determine source from context
+                    AnalyticsManager.shared.trackPaywallViewed(source: "app")
+                }
                 .onPurchaseCompleted { customerInfo in
                     print("✅ Purchase completed")
                     onPurchaseCompleted?(customerInfo)

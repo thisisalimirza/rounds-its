@@ -3,18 +3,39 @@
 //  Rounds
 //
 //  Created for launch tracking
+//  Integrated with PostHog Analytics
 //
 
 import Foundation
 import StoreKit
 import UIKit
+import PostHog
 
-/// Simple analytics manager for tracking key events
-/// Replace with TelemetryDeck, Firebase, or your preferred analytics service
+/// Analytics manager with PostHog integration
 class AnalyticsManager {
     static let shared = AnalyticsManager()
     
-    private init() {}
+    private init() {
+        configurePostHog()
+    }
+    
+    // MARK: - PostHog Configuration
+    
+    private func configurePostHog() {
+        let POSTHOG_API_KEY = "phc_NVtFkrQ9hDhm7Th69dTXo8HiTOLtxPrlwPf0biV4Mql"
+        let POSTHOG_HOST = "https://us.i.posthog.com"
+        
+        let config = PostHogConfig(apiKey: POSTHOG_API_KEY, host: POSTHOG_HOST)
+        
+        #if DEBUG
+        config.debug = true
+        print("📊 PostHog configured in DEBUG mode")
+        #else
+        config.debug = false
+        #endif
+        
+        PostHogSDK.shared.setup(config)
+    }
     
     // MARK: - Event Tracking
     
@@ -30,11 +51,25 @@ class AnalyticsManager {
         }
         #endif
         
-        // TODO: Integrate with your analytics service
-        // Examples:
-        // - TelemetryDeck.signal(event, parameters: properties)
-        // - Analytics.logEvent(event, parameters: properties)
-        // - Mixpanel.mainInstance().track(event, properties: properties)
+        // Send to PostHog
+        PostHogSDK.shared.capture(event, properties: properties)
+    }
+    
+    // MARK: - User Identification
+    
+    /// Identify user with custom properties
+    func identifyUser(userId: String, properties: [String: Any]? = nil) {
+        PostHogSDK.shared.identify(userId, userProperties: properties)
+    }
+    
+    /// Update user properties without changing user ID
+    func setUserProperties(_ properties: [String: Any]) {
+        PostHogSDK.shared.identify(PostHogSDK.shared.getDistinctId(), userProperties: properties)
+    }
+    
+    /// Set a single user property
+    func setUserProperty(key: String, value: Any) {
+        setUserProperties([key: value])
     }
     
     // MARK: - Convenience Methods
@@ -70,6 +105,78 @@ class AnalyticsManager {
     func trackFeatureUsed(_ feature: String) {
         track("feature_used", properties: [
             "feature": feature
+        ])
+    }
+    
+    // MARK: - Subscription Tracking
+    
+    func trackSubscriptionEvent(_ event: String, productId: String? = nil, properties: [String: Any]? = nil) {
+        var mergedProperties = properties ?? [:]
+        if let productId = productId {
+            mergedProperties["product_id"] = productId
+        }
+        track(event, properties: mergedProperties.isEmpty ? nil : mergedProperties)
+    }
+    
+    func trackPaywallViewed(source: String) {
+        track("paywall_viewed", properties: [
+            "source": source
+        ])
+    }
+    
+    func trackPurchaseStarted(productId: String) {
+        trackSubscriptionEvent("subscription_purchase_started", productId: productId)
+    }
+    
+    func trackPurchaseCompleted(productId: String) {
+        trackSubscriptionEvent("subscription_purchase_completed", productId: productId)
+    }
+    
+    func trackPurchaseFailed(productId: String, error: String? = nil) {
+        var props: [String: Any] = [:]
+        if let error = error {
+            props["error"] = error
+        }
+        trackSubscriptionEvent("subscription_purchase_failed", productId: productId, properties: props)
+    }
+    
+    func trackPurchaseRestored() {
+        track("subscription_restored")
+    }
+    
+    // MARK: - Gameplay Tracking
+    
+    func trackHintRevealed(hintIndex: Int, caseID: String) {
+        track("hint_revealed", properties: [
+            "hint_index": hintIndex,
+            "case_id": caseID
+        ])
+    }
+    
+    func trackDiagnosisSubmitted(guess: String, isCorrect: Bool, guessNumber: Int, hintsRevealed: Int, caseID: String, isDaily: Bool) {
+        track("diagnosis_submitted", properties: [
+            "case_id": caseID,
+            "is_correct": isCorrect,
+            "guess_number": guessNumber,
+            "hints_revealed": hintsRevealed,
+            "is_daily": isDaily
+        ])
+    }
+    
+    func trackShareResults(won: Bool, score: Int) {
+        track("share_results", properties: [
+            "won": won,
+            "score": score
+        ])
+    }
+    
+    func trackOnboardingCompleted() {
+        track("onboarding_completed")
+    }
+    
+    func trackOnboardingSkipped(step: Int) {
+        track("onboarding_skipped", properties: [
+            "step": step
         ])
     }
 }

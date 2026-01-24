@@ -130,6 +130,12 @@ struct GameView: View {
                                 gameSession.revealNextHint()
                             }
                             HapticManager.shared.hintRevealed()
+                            
+                            // Track hint revealed
+                            AnalyticsManager.shared.trackHintRevealed(
+                                hintIndex: gameSession.hintsRevealed - 1,
+                                caseID: currentCase.id.uuidString
+                            )
                         } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "lightbulb.fill")
@@ -433,6 +439,16 @@ struct GameView: View {
         
         let isFinalChance = gameSession.hintsRevealed >= gameSession.maxHints && gameSession.gameState == .playing
         
+        // Track diagnosis submission
+        AnalyticsManager.shared.track("diagnosis_submitted", properties: [
+            "case_id": currentCase.id.uuidString,
+            "guess": trimmedGuess,
+            "is_correct": isCorrect,
+            "guess_number": previousGuessCount + 1,
+            "hints_revealed": gameSession.hintsRevealed,
+            "is_daily": isDailyCase
+        ])
+        
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             gameSession.makeGuess(trimmedGuess, isCorrect: isCorrect)
         }
@@ -489,7 +505,7 @@ struct GameView: View {
     }
     
     private func updateStats(won: Bool) {
-        let isPro = SubscriptionManager.shared.isProSubscriber
+        let isPro = SubscriptionManager.shared.isProUser
         
         // Fetch or create player stats
         let descriptor = FetchDescriptor<PlayerStats>()
