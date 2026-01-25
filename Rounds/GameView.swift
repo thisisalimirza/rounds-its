@@ -341,8 +341,8 @@ struct GameView: View {
                     
                     // Compact stats row with hint visualization
                     HStack(spacing: 16) {
-                        // Hint performance dots
-                        HintPerformanceView(hintsUsed: gameSession.hintsRevealed)
+                        // Hint performance dots - show actual hints used, not display count
+                        HintPerformanceView(hintsUsed: gameSession.hintsRevealedAtWin)
                         
                         Divider()
                             .frame(height: 24)
@@ -396,12 +396,12 @@ struct GameView: View {
                 }
             }
             
-            // Share button - challenge a friend!
+            // Share button - challenge a friend! (use actual hints for won games)
             ShareResultButton(
                 won: gameSession.gameState == .won,
                 diagnosis: currentCase.diagnosis,
                 guessCount: gameSession.guesses.count,
-                hintsUsed: gameSession.hintsRevealed,
+                hintsUsed: gameSession.gameState == .won ? gameSession.hintsRevealedAtWin : gameSession.hintsRevealed,
                 score: gameSession.score,
                 isDailyCase: isDailyCase
             )
@@ -507,6 +507,9 @@ struct GameView: View {
     private func updateStats(won: Bool) {
         let isPro = SubscriptionManager.shared.isProUser
         
+        // Use the actual hints revealed at win time for stats, not the display count
+        let actualHintsUsed = won ? gameSession.hintsRevealedAtWin : gameSession.hintsRevealed
+        
         // Fetch or create player stats
         let descriptor = FetchDescriptor<PlayerStats>()
         if let stats = try? modelContext.fetch(descriptor).first {
@@ -537,7 +540,7 @@ struct GameView: View {
             }
             
             // Check achievements
-            checkAchievements(stats: stats, won: won)
+            checkAchievements(stats: stats, won: won, hintsUsed: actualHintsUsed)
         } else {
             let newStats = PlayerStats()
             newStats.recordGame(won: won, guessCount: gameSession.guesses.count, score: gameSession.score, isPro: isPro)
@@ -550,10 +553,10 @@ struct GameView: View {
             modelContext.insert(newStats)
             
             // Check achievements for new stats
-            checkAchievements(stats: newStats, won: won)
+            checkAchievements(stats: newStats, won: won, hintsUsed: actualHintsUsed)
         }
         
-        // Save to case history
+        // Save to case history - use actual hints used
         let historyEntry = CaseHistoryEntry(
             caseID: currentCase.id,
             diagnosis: currentCase.diagnosis,
@@ -562,7 +565,7 @@ struct GameView: View {
             wasCorrect: won,
             guessCount: gameSession.guesses.count,
             score: gameSession.score,
-            hintsUsed: gameSession.hintsRevealed,
+            hintsUsed: actualHintsUsed,
             guesses: gameSession.guesses,
             wasDailyCase: isDailyCase
         )
@@ -570,12 +573,12 @@ struct GameView: View {
         
         try? modelContext.save()
         
-        // Track completion analytics
+        // Track completion analytics - use actual hints used
         AnalyticsManager.shared.trackCaseCompleted(
             caseID: currentCase.id.uuidString,
             won: won,
             guesses: gameSession.guesses.count,
-            hints: gameSession.hintsRevealed,
+            hints: actualHintsUsed,
             score: gameSession.score,
             isDaily: isDailyCase
         )
@@ -584,7 +587,7 @@ struct GameView: View {
         AppStoreReviewManager.shared.gameCompleted(won: won)
     }
     
-    private func checkAchievements(stats: PlayerStats, won: Bool) {
+    private func checkAchievements(stats: PlayerStats, won: Bool, hintsUsed: Int) {
         // Fetch or create achievement progress
         let progressDescriptor = FetchDescriptor<AchievementProgress>()
         let progress: AchievementProgress
@@ -596,12 +599,12 @@ struct GameView: View {
             modelContext.insert(progress)
         }
         
-        // Check achievements
+        // Check achievements - use the actual hints used
         let newlyUnlocked = AchievementManager.shared.checkAchievements(
             stats: stats,
             progress: progress,
             lastGameWon: won,
-            lastGameHints: gameSession.hintsRevealed,
+            lastGameHints: hintsUsed,
             lastGameScore: gameSession.score,
             lastGameCategory: currentCase.category,
             wasDailyCase: isDailyCase,

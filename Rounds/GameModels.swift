@@ -114,6 +114,7 @@ final class GameSession {
     var caseID: UUID
     var guesses: [String] // Store guess strings
     var hintsRevealed: Int
+    var hintsRevealedAtWin: Int // Track how many hints were visible when they won (for scoring)
     var gameState: GameState
     var timestamp: Date
     var score: Int // Points based on guesses used
@@ -131,6 +132,7 @@ final class GameSession {
         self.caseID = caseID
         self.guesses = []
         self.hintsRevealed = 1 // Start with first hint visible
+        self.hintsRevealedAtWin = 0 // Will be set when player wins
         self.gameState = .playing
         self.timestamp = Date()
         self.score = 0
@@ -155,6 +157,12 @@ final class GameSession {
         guesses.append(guess)
 
         if isCorrect {
+            // Save how many hints they had when they won (for scoring)
+            hintsRevealedAtWin = hintsRevealed
+            
+            // Reveal all remaining hints so they can see the full picture
+            hintsRevealed = maxHints
+            
             gameState = .won
             calculateScore()
             return
@@ -181,8 +189,9 @@ final class GameSession {
     
     private func calculateScore() {
         // Score: 500 base points - (100 * guesses used) - (50 * extra hints revealed)
+        // Use hintsRevealedAtWin for scoring (the actual number they saw when they won)
         let guessePenalty = guesses.count * 100
-        let hintPenalty = max(0, hintsRevealed - 1) * 50 // First hint is free
+        let hintPenalty = max(0, hintsRevealedAtWin - 1) * 50 // First hint is free
         score = max(0, 500 - guessePenalty - hintPenalty)
     }
     
