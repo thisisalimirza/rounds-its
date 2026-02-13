@@ -61,7 +61,7 @@ struct WhatsNewView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     ForEach(Array(data.features.enumerated()), id: \.element.id) { index, feature in
-                        FeatureRow(feature: feature)
+                        WhatsNewFeatureRow(feature: feature)
                             .opacity(appeared ? 1 : 0)
                             .offset(x: appeared ? 0 : -30)
                             .animation(
@@ -121,7 +121,7 @@ struct WhatsNewView: View {
 
 // MARK: - Feature Row
 
-struct FeatureRow: View {
+struct WhatsNewFeatureRow: View {
     let feature: WhatsNewFeature
 
     var body: some View {
