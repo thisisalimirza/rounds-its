@@ -57,7 +57,7 @@ struct CategoryMapper {
             ),
             DisplayCategory(
                 name: "Gastroenterology",
-                icon: "stomach",
+                icon: "fork.knife",
                 color: .orange,
                 includedCategories: ["Gastroenterology", "Hepatology / GI"]
             ),
@@ -181,6 +181,9 @@ struct CaseBrowserView: View {
     @State private var showingCompletedAlert = false
     @State private var showingAllCases = false
 
+    // Cached categories to avoid recomputation on every render
+    @State private var cachedCategories: [DisplayCategory] = []
+
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     private let allCases: [MedicalCase] = CaseLibrary.getSampleCases()
 
@@ -208,9 +211,11 @@ struct CaseBrowserView: View {
         return caseHistory.first { $0.diagnosis.lowercased() == medicalCase.diagnosis.lowercased() }
     }
 
-    /// Display categories with computed case counts
-    private var displayCategories: [DisplayCategory] {
+    /// Compute categories with case counts - called once on appear
+    private func computeCategories() -> [DisplayCategory] {
         var categories = CategoryMapper.getDisplayCategories()
+        let completedIDs = completedCaseIDs
+        let completedDiags = completedDiagnoses
 
         for i in categories.indices {
             let casesInCategory = allCases.filter { medicalCase in
@@ -218,10 +223,11 @@ struct CaseBrowserView: View {
                 CategoryMapper.displayCategory(for: medicalCase.category, in: categories)?.name == categories[i].name
             }
             categories[i].caseCount = casesInCategory.count
-            categories[i].completedCount = casesInCategory.filter { isCaseCompleted($0) }.count
+            categories[i].completedCount = casesInCategory.filter { mc in
+                completedIDs.contains(mc.id) || completedDiags.contains(mc.diagnosis.lowercased())
+            }.count
         }
 
-        // Sort by case count descending, filter out empty categories
         return categories
             .filter { $0.caseCount > 0 }
             .sorted { $0.caseCount > $1.caseCount }
@@ -236,11 +242,12 @@ struct CaseBrowserView: View {
         }
     }
 
-    /// Cases for selected category
+    /// Cases for selected category - uses the category's includedCategories directly
     private func cases(for displayCategory: DisplayCategory) -> [MedicalCase] {
-        allCases.filter { medicalCase in
+        let baseCategories = CategoryMapper.getDisplayCategories()
+        return allCases.filter { medicalCase in
             displayCategory.includedCategories.contains(medicalCase.category) ||
-            CategoryMapper.displayCategory(for: medicalCase.category, in: displayCategories)?.name == displayCategory.name
+            CategoryMapper.displayCategory(for: medicalCase.category, in: baseCategories)?.name == displayCategory.name
         }.sorted { $0.category < $1.category }
     }
 
@@ -330,6 +337,16 @@ struct CaseBrowserView: View {
                     Text("You've already completed this case.")
                 }
             }
+            .onAppear {
+                // Compute categories once on appear
+                if cachedCategories.isEmpty {
+                    cachedCategories = computeCategories()
+                }
+            }
+            .onChange(of: caseHistory.count) { _, _ in
+                // Recompute when history changes
+                cachedCategories = computeCategories()
+            }
         }
     }
 
@@ -346,7 +363,7 @@ struct CaseBrowserView: View {
                 GridItem(.flexible(), spacing: 12),
                 GridItem(.flexible(), spacing: 12)
             ], spacing: 12) {
-                ForEach(displayCategories) { category in
+                ForEach(cachedCategories) { category in
                     CategoryCard(category: category) {
                         selectedDisplayCategory = category
                     }
