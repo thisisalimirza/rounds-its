@@ -32,6 +32,7 @@ struct ContentView: View {
     @State private var showingStreakRecovery = false
     @State private var streakRecoveryChecked = false
     @State private var showingWhatsNew = false
+    @State private var showingRoadmap = false
     @StateObject private var whatsNewManager = WhatsNewManager.shared
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
@@ -205,6 +206,10 @@ struct ContentView: View {
                     .presentationDetents([.large])
                     .interactiveDismissDisabled()
                 }
+            }
+            .sheet(isPresented: $showingRoadmap) {
+                RoadmapSignupView()
+                    .presentationDetents([.large])
             }
             .onAppear {
                 AnalyticsManager.shared.trackAppLaunch()
@@ -383,6 +388,13 @@ struct ContentView: View {
             Spacer()
 
             VStack(spacing: 12) {
+                // Roadmap & Early Access - prominently placed at top
+                if !RoadmapEmailManager.shared.hasSignedUp {
+                    RoadmapCard {
+                        showingRoadmap = true
+                    }
+                }
+
                 PunchyMenuItem(icon: "gearshape.fill", title: "Settings", subtitle: "Preferences & account", color: .gray) {
                     showingAbout = true
                 }
@@ -395,6 +407,18 @@ struct ContentView: View {
                     PunchyMenuItem(icon: "crown.fill", title: "Upgrade to Pro", subtitle: "Unlock all features", color: .orange) {
                         showingPaywall = true
                     }
+                }
+
+                // Show a subtle "signed up" indicator after signup
+                if RoadmapEmailManager.shared.hasSignedUp {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        Text("You're on the early access list")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 8)
                 }
             }
             .padding(.horizontal, 20)
