@@ -281,30 +281,56 @@ final class PlayerStats {
         }
     }
     
-    /// Try to use a streak freeze to protect the streak
-    /// Returns true if freeze was used
-    func useStreakFreezeIfAvailable(isPro: Bool) -> Bool {
-        guard isPro, streakFreezesAvailable > 0, !streakFreezeUsedToday else {
+    /// Check if user can save their streak with a freeze
+    /// Returns true if: they have a streak, missed a day, have freezes available, and are Pro
+    func canSaveStreak(isPro: Bool) -> Bool {
+        guard isPro,
+              currentStreak > 0,
+              streakFreezesAvailable > 0,
+              !streakFreezeUsedToday,
+              let lastPlayed = lastPlayedDate else {
             return false
         }
-        
-        streakFreezesAvailable -= 1
-        streakFreezeUsedToday = true
-        return true
-    }
-    
-    /// Check if streak would break and if freeze is available
-    func wouldStreakBreak() -> Bool {
-        guard currentStreak > 0, let lastPlayed = lastPlayedDate else {
-            return false
-        }
-        
+
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
         let daysSinceLastPlayed = calendar.dateComponents([.day], from: lastPlayedDay, to: today).day ?? 0
-        
-        return daysSinceLastPlayed > 1
+
+        // Can only save if missed exactly 1 day (gap of 2 days)
+        return daysSinceLastPlayed == 2
+    }
+
+    /// Manually use a streak freeze to save the streak
+    /// Call this when user taps "Save My Streak" button
+    /// Returns true if successful
+    func saveStreakWithFreeze(isPro: Bool) -> Bool {
+        guard canSaveStreak(isPro: isPro) else {
+            return false
+        }
+
+        streakFreezesAvailable -= 1
+        streakFreezeUsedToday = true
+        // Update lastPlayedDate to yesterday so streak continues normally
+        let calendar = Calendar.current
+        if let yesterday = calendar.date(byAdding: .day, value: -1, to: Date()) {
+            lastPlayedDate = yesterday
+        }
+        return true
+    }
+
+    /// Check if streak is about to be lost (missed a day but no freeze used yet)
+    func isStreakAtRisk() -> Bool {
+        guard currentStreak > 0, let lastPlayed = lastPlayedDate else {
+            return false
+        }
+
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
+        let daysSinceLastPlayed = calendar.dateComponents([.day], from: lastPlayedDay, to: today).day ?? 0
+
+        return daysSinceLastPlayed >= 2
     }
     
     func recordGame(won: Bool, guessCount: Int, score: Int, isPro: Bool = false) {
@@ -341,16 +367,10 @@ final class PlayerStats {
                     currentStreak += 1
                     maxStreak = max(maxStreak, currentStreak)
                 } else if daysBetween > 1 {
-                    // Gap of more than 1 day - check if streak freeze can save us
-                    if useStreakFreezeIfAvailable(isPro: isPro) {
-                        // Streak freeze saved the streak! Continue as if no gap
-                        currentStreak += 1
-                        maxStreak = max(maxStreak, currentStreak)
-                    } else {
-                        // No freeze available - reset streak to 1
-                        currentStreak = 1
-                        maxStreak = max(maxStreak, currentStreak)
-                    }
+                    // Gap of more than 1 day - streak breaks (unless user manually used freeze earlier)
+                    // The freeze must be used BEFORE playing, not automatically during play
+                    currentStreak = 1
+                    maxStreak = max(maxStreak, currentStreak)
                 }
             } else {
                 // First game ever - start streak at 1

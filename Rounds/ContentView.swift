@@ -27,11 +27,14 @@ struct ContentView: View {
     @State private var showingAchievements = false
     @State private var showingCategoryAnalytics = false
     @State private var showingLeaderboard = false
-    
+    @State private var selectedTab: HomeTab = .play
+    @State private var playButtonScale: CGFloat = 1.0
+    @State private var showingStreakRecovery = false
+    @State private var streakRecoveryChecked = false
+
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
-    
+
     private var stats: PlayerStats {
-        // Ensure stats exist, create if needed
         if let existingStats = playerStats.first {
             return existingStats
         } else {
@@ -41,46 +44,45 @@ struct ContentView: View {
             return newStats
         }
     }
-    
+
     private var hasPlayedDailyToday: Bool {
         stats.hasPlayedDailyCaseToday()
     }
-    
+
     private var achievementBadgeText: String {
         let unlockedCount = achievementProgressList.first?.unlockedAchievements.count ?? 0
         let totalCount = Achievement.allCases.count
         return "\(unlockedCount)/\(totalCount)"
     }
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background gradient
+                // Adaptive gradient background (light/dark mode)
                 LinearGradient(
                     colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
                 .ignoresSafeArea()
-                
+
                 VStack(spacing: 0) {
-                    Spacer()
-                    
-                    // Logo and Title
-                    VStack(spacing: 6) {
-                        Image(systemName: "cross.case.fill")
-                            .font(.system(size: 52))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+                    // MARK: - Compact Header
+                    HStack {
+                        // Logo + Title
+                        HStack(spacing: 10) {
+                            Image(systemName: "cross.case.fill")
+                                .font(.system(size: 28))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.blue, .purple],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
                                 )
-                            )
-                        
-                        HStack(spacing: 8) {
+
                             Text("Rounds")
-                                .font(.system(size: 38, weight: .bold, design: .rounded))
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
                                 .foregroundStyle(
                                     LinearGradient(
                                         colors: [.blue, .purple],
@@ -88,197 +90,42 @@ struct ContentView: View {
                                         endPoint: .trailing
                                     )
                                 )
-                            
+
                             if subscriptionManager.isProUser {
-                                ProBadge(size: .medium)
-                                    .transition(.scale.combined(with: .opacity))
+                                ProBadge(size: .small)
                             }
-                        }
-                        
-                        Text("Master USMLE Step 1")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: subscriptionManager.isProUser)
-                    
-                    Spacer()
-                        .frame(height: 16)
-                    
-                    // Combined Streak & Stats Card
-                    CompactStreakStatsView(stats: stats)
-                        .padding(.horizontal)
-                        .id(stats.currentStreak) // Force refresh when streak changes
-                    
-                    Spacer()
-                        .frame(height: 14)
-                    
-                    // Main Menu Buttons
-                    VStack(spacing: 12) {
-                        Button {
-                            if hasPlayedDailyToday {
-                                showingDailyCompleteAlert = true
-                            } else {
-                                startNewGame()
-                            }
-                        } label: {
-                            if hasPlayedDailyToday {
-                                // Completed state
-                                HStack(spacing: 8) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.title3)
-                                    Text("Daily Case Complete")
-                                }
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color.green.opacity(0.15))
-                                .foregroundStyle(.green)
-                                .cornerRadius(12)
-                            } else {
-                                // Play state
-                                Label("Play Daily Case", systemImage: "play.fill")
-                                    .font(.headline)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 16)
-                                    .background(Color.blue)
-                                    .foregroundStyle(.white)
-                                    .cornerRadius(12)
-                            }
-                        }
-                        
-                        Button {
-                            if subscriptionManager.isProUser {
-                                startRandomGame()
-                            } else {
-                                showingPaywall = true
-                            }
-                        } label: {
-                            HStack {
-                                Label("Random Case", systemImage: "shuffle")
-                                if !subscriptionManager.isProUser {
-                                    ProBadge(size: .small)
-                                }
-                            }
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(subscriptionManager.isProUser ? Color.purple : Color.purple.opacity(0.5))
-                            .foregroundStyle(.white)
-                            .cornerRadius(12)
-                        }
-                        
-                        Button {
-                            showingCaseBrowser = true
-                        } label: {
-                            HStack {
-                                Label("Browse Cases", systemImage: "list.bullet.clipboard")
-                                if !subscriptionManager.isProUser {
-                                    ProBadge(size: .small)
-                                }
-                            }
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(subscriptionManager.isProUser ? Color.green : Color.green.opacity(0.5))
-                            .foregroundStyle(.white)
-                            .cornerRadius(12)
-                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    Spacer()
-                        .frame(height: 12)
-                    
-                    // Feature Cards Grid
-                    LazyVGrid(columns: [
-                        GridItem(.flexible(), spacing: 12),
-                        GridItem(.flexible(), spacing: 12)
-                    ], spacing: 12) {
-                        // Case History
-                        FeatureCardButton(
-                            icon: "clock.arrow.circlepath",
-                            title: "History",
-                            color: .cyan,
-                            isPro: true,
-                            isProUser: subscriptionManager.isProUser
-                        ) {
-                            if subscriptionManager.isProUser {
-                                showingCaseHistory = true
-                            } else {
-                                showingPaywall = true
-                            }
-                        }
-                        
-                        // Category Analytics
-                        FeatureCardButton(
-                            icon: "chart.pie.fill",
-                            title: "Analytics",
-                            color: .indigo,
-                            isPro: true,
-                            isProUser: subscriptionManager.isProUser
-                        ) {
-                            if subscriptionManager.isProUser {
-                                showingCategoryAnalytics = true
-                            } else {
-                                showingPaywall = true
-                            }
-                        }
-                        
-                        // Achievements
-                        FeatureCardButton(
-                            icon: "trophy.fill",
-                            title: "Badges",
-                            color: .yellow,
-                            badgeText: achievementBadgeText
-                        ) {
-                            showingAchievements = true
                         }
 
-                        // Leaderboard
-                        FeatureCardButton(
-                            icon: "medal.fill",
-                            title: "Leaderboard",
-                            color: .orange
-                        ) {
-                            showingLeaderboard = true
-                        }
+                        Spacer()
+
+                        // Streak Pill
+                        StreakPillAdaptive(streak: stats.currentStreak, freezes: stats.streakFreezesAvailable, isPro: subscriptionManager.isProUser)
                     }
-                    .padding(.horizontal)
-                    
-                    Spacer()
-                        .frame(height: 12)
-                    
-                    // Bottom Action Buttons (secondary)
-                    HStack(spacing: 8) {
-                        SecondaryButton(
-                            icon: "chart.bar.fill",
-                            title: "Stats",
-                            color: .blue
-                        ) {
-                            showingStats = true
-                        }
-                        
-                        SecondaryButton(
-                            icon: "gearshape.fill",
-                            title: "Settings",
-                            color: .gray
-                        ) {
-                            showingAbout = true
-                        }
-                        
-                        SecondaryButton(
-                            icon: "envelope.fill",
-                            title: "Feedback",
-                            color: .green
-                        ) {
-                            showingFeedback = true
-                        }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                    .padding(.bottom, 12)
+
+                    // MARK: - Main Content (Tab-based)
+                    TabView(selection: $selectedTab) {
+                        // PLAY TAB
+                        playTabContent
+                            .tag(HomeTab.play)
+
+                        // PROGRESS TAB
+                        progressTabContent
+                            .tag(HomeTab.progress)
+
+                        // MORE TAB
+                        moreTabContent
+                            .tag(HomeTab.more)
                     }
-                    .padding(.horizontal)
-                    
-                    Spacer()
+                    .tabViewStyle(.page(indexDisplayMode: .never))
+
+                    // MARK: - Bottom Tab Bar
+                    HomeTabBar(selectedTab: $selectedTab)
+                        .padding(.bottom, 8)
                 }
-                .adaptiveContentWidth() // Apply iPad-friendly centering
+                .adaptiveContentWidth()
             }
             .navigationDestination(isPresented: $showingGame) {
                 if let currentCase = currentCase {
@@ -312,9 +159,7 @@ struct ContentView: View {
             .sheet(isPresented: $showingPaywall) {
                 RoundsPaywallView(
                     onPurchaseCompleted: { _ in
-                        // Show confetti celebration
                         showingConfetti = true
-                        // Hide confetti after 3 seconds
                         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                             showingConfetti = false
                         }
@@ -332,22 +177,202 @@ struct ContentView: View {
             .overlay {
                 ConfettiView(isActive: $showingConfetti)
             }
-            .alert("Daily Case Complete! ✅", isPresented: $showingDailyCompleteAlert) {
-                Button("View Stats") {
-                    showingStats = true
-                }
+            .alert("Daily Case Complete!", isPresented: $showingDailyCompleteAlert) {
                 Button("Play Random Case") {
                     startRandomGame()
                 }
                 Button("OK", role: .cancel) { }
             } message: {
-                Text("You've already completed today's daily case! Come back tomorrow for a new challenge, or play a random case now.")
+                Text("Come back tomorrow for a new challenge, or play a random case now.")
+            }
+            .sheet(isPresented: $showingStreakRecovery) {
+                StreakRecoverySheet(
+                    streak: stats.currentStreak,
+                    onSaveStreak: {
+                        _ = stats.saveStreakWithFreeze(isPro: subscriptionManager.isProUser)
+                        try? modelContext.save()
+                    }
+                )
+                .presentationDetents([.medium])
             }
             .onAppear {
-                // Track analytics
                 AnalyticsManager.shared.trackAppLaunch()
                 SessionTracker.shared.startSession()
+
+                // Check if user needs to save their streak (only once per app launch)
+                if !streakRecoveryChecked {
+                    streakRecoveryChecked = true
+                    stats.checkWeeklyStreakFreezeReset(isPro: subscriptionManager.isProUser)
+                    if stats.canSaveStreak(isPro: subscriptionManager.isProUser) {
+                        showingStreakRecovery = true
+                    }
+                }
             }
+        }
+    }
+
+    // MARK: - Play Tab Content
+    private var playTabContent: some View {
+        VStack(spacing: 16) {
+            Spacer()
+
+            // Daily Case Number
+            Text("Case #\(Self.getDailyCaseNumber())")
+                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .tracking(2)
+
+            // HERO: Daily Case Button
+            Button {
+                if hasPlayedDailyToday {
+                    showingDailyCompleteAlert = true
+                } else {
+                    startNewGame()
+                }
+            } label: {
+                HeroDailyCaseButton(
+                    isCompleted: hasPlayedDailyToday,
+                    streak: stats.currentStreak
+                )
+            }
+            .scaleEffect(playButtonScale)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
+                    playButtonScale = hasPlayedDailyToday ? 1.0 : 1.02
+                }
+            }
+
+            // Secondary Actions
+            HStack(spacing: 12) {
+                Button {
+                    if subscriptionManager.isProUser {
+                        startRandomGame()
+                    } else {
+                        showingPaywall = true
+                    }
+                } label: {
+                    PunchyActionButton(
+                        icon: "shuffle",
+                        title: "Random Case",
+                        color: .purple,
+                        isLocked: !subscriptionManager.isProUser
+                    )
+                }
+
+                Button {
+                    showingCaseBrowser = true
+                } label: {
+                    PunchyActionButton(
+                        icon: "list.bullet.clipboard",
+                        title: "Browse Cases",
+                        color: .green,
+                        isLocked: !subscriptionManager.isProUser
+                    )
+                }
+            }
+            .padding(.horizontal, 20)
+
+            // Fun Section: Leaderboard & Badges
+            HStack(spacing: 12) {
+                PunchyFeatureCard(
+                    icon: "trophy.fill",
+                    title: "Leaderboard",
+                    color: .orange
+                ) {
+                    showingLeaderboard = true
+                }
+
+                PunchyFeatureCard(
+                    icon: "medal.fill",
+                    title: "Badges",
+                    badgeText: achievementBadgeText,
+                    color: .yellow
+                ) {
+                    showingAchievements = true
+                }
+            }
+            .padding(.horizontal, 20)
+
+            Spacer()
+        }
+    }
+
+    // MARK: - Progress Tab Content
+    private var progressTabContent: some View {
+        VStack(spacing: 16) {
+            Spacer()
+
+            // Compact Streak Display
+            CompactStreakCard(stats: stats, isPro: subscriptionManager.isProUser)
+                .padding(.horizontal, 20)
+
+            // Stats Grid (3 items - Statistics, Analytics, History)
+            VStack(spacing: 12) {
+                HStack(spacing: 12) {
+                    PunchyFeatureCard(
+                        icon: "chart.bar.fill",
+                        title: "Statistics",
+                        color: .blue
+                    ) {
+                        showingStats = true
+                    }
+
+                    PunchyFeatureCard(
+                        icon: "chart.pie.fill",
+                        title: "Analytics",
+                        color: .indigo,
+                        isLocked: !subscriptionManager.isProUser
+                    ) {
+                        if subscriptionManager.isProUser {
+                            showingCategoryAnalytics = true
+                        } else {
+                            showingPaywall = true
+                        }
+                    }
+                }
+
+                PunchyFeatureCard(
+                    icon: "clock.arrow.circlepath",
+                    title: "Case History",
+                    color: .cyan,
+                    isLocked: !subscriptionManager.isProUser
+                ) {
+                    if subscriptionManager.isProUser {
+                        showingCaseHistory = true
+                    } else {
+                        showingPaywall = true
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+
+            Spacer()
+        }
+    }
+
+    // MARK: - More Tab Content
+    private var moreTabContent: some View {
+        VStack(spacing: 16) {
+            Spacer()
+
+            VStack(spacing: 12) {
+                PunchyMenuItem(icon: "gearshape.fill", title: "Settings", subtitle: "Preferences & account", color: .gray) {
+                    showingAbout = true
+                }
+
+                PunchyMenuItem(icon: "envelope.fill", title: "Feedback", subtitle: "Send us your thoughts", color: .green) {
+                    showingFeedback = true
+                }
+
+                if !subscriptionManager.isProUser {
+                    PunchyMenuItem(icon: "crown.fill", title: "Upgrade to Pro", subtitle: "Unlock all features", color: .orange) {
+                        showingPaywall = true
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+
+            Spacer()
         }
     }
     
@@ -407,11 +432,489 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Quick Stat View
+// MARK: - Home Tab Enum
+enum HomeTab: String, CaseIterable {
+    case play = "Play"
+    case progress = "Progress"
+    case more = "More"
+
+    var icon: String {
+        switch self {
+        case .play: return "play.circle.fill"
+        case .progress: return "chart.line.uptrend.xyaxis"
+        case .more: return "ellipsis.circle.fill"
+        }
+    }
+}
+
+// MARK: - Home Tab Bar (Adaptive)
+struct HomeTabBar: View {
+    @Binding var selectedTab: HomeTab
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(HomeTab.allCases, id: \.self) { tab in
+                Button {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        selectedTab = tab
+                    }
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: tab.icon)
+                            .font(.system(size: 22))
+                            .symbolRenderingMode(.hierarchical)
+
+                        Text(tab.rawValue)
+                            .font(.system(size: 10, weight: .medium))
+                    }
+                    .foregroundStyle(selectedTab == tab ? .blue : .secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(.systemBackground))
+                .shadow(color: .black.opacity(0.1), radius: 10, y: 2)
+        )
+        .padding(.horizontal, 40)
+    }
+}
+
+// MARK: - Streak Pill Adaptive
+struct StreakPillAdaptive: View {
+    let streak: Int
+    let freezes: Int
+    let isPro: Bool
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text("🔥")
+                .font(.system(size: 16))
+
+            Text("\(streak)")
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundStyle(.orange)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(
+            Capsule()
+                .fill(Color(.systemBackground))
+                .shadow(color: .orange.opacity(0.2), radius: 4, y: 2)
+        )
+    }
+}
+
+// MARK: - Hero Daily Case Button (Adaptive)
+struct HeroDailyCaseButton: View {
+    let isCompleted: Bool
+    let streak: Int
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if isCompleted {
+                // Completed State
+                ZStack {
+                    Circle()
+                        .fill(Color.green.opacity(0.15))
+                        .frame(width: 80, height: 80)
+
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundStyle(.green)
+                }
+
+                Text("Daily Complete!")
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(.green)
+
+                Text("Come back tomorrow")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            } else {
+                // Play State
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [.blue, .cyan],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 80, height: 80)
+                        .shadow(color: .blue.opacity(0.4), radius: 12, x: 0, y: 6)
+
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.white)
+                        .offset(x: 2)
+                }
+
+                Text("Play Daily Case")
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+
+                if streak > 0 {
+                    Text("Keep your \(streak)-day streak alive!")
+                        .font(.subheadline)
+                        .foregroundStyle(.orange)
+                } else {
+                    Text("Start your streak today")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 24)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(.systemBackground))
+                .shadow(color: isCompleted ? .green.opacity(0.15) : .blue.opacity(0.15), radius: 12, y: 4)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(isCompleted ? Color.green.opacity(0.3) : Color.blue.opacity(0.3), lineWidth: 1)
+        )
+        .padding(.horizontal, 20)
+    }
+}
+
+// MARK: - Punchy Action Button
+struct PunchyActionButton: View {
+    let icon: String
+    let title: String
+    let color: Color
+    var isLocked: Bool = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: isLocked ? "lock.fill" : icon)
+                .font(.system(size: 16, weight: .semibold))
+
+            Text(title)
+                .font(.system(size: 14, weight: .semibold))
+
+            if isLocked {
+                ProBadge(size: .small)
+            }
+        }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(isLocked ? color.opacity(0.5) : color)
+        )
+        .opacity(isLocked ? 0.8 : 1)
+    }
+}
+
+// MARK: - Punchy Feature Card
+struct PunchyFeatureCard: View {
+    let icon: String
+    let title: String
+    var badgeText: String? = nil
+    let color: Color
+    var isLocked: Bool = false
+    var action: (() -> Void)? = nil
+
+    var body: some View {
+        Button(action: { action?() }) {
+            VStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [color.opacity(0.3), color.opacity(0.15)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 40, height: 40)
+
+                    Image(systemName: isLocked ? "lock.fill" : icon)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(isLocked ? .gray : color)
+                }
+
+                HStack(spacing: 4) {
+                    Text(title)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(isLocked ? .secondary : .primary)
+                        .lineLimit(1)
+
+                    if let badge = badgeText {
+                        Text(badge)
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(color)
+                    } else if isLocked {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 8))
+                            .foregroundStyle(.orange)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: color.opacity(0.15), radius: 6, y: 3)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(color.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .opacity(isLocked ? 0.7 : 1)
+    }
+}
+
+// MARK: - Compact Streak Card (Progress Tab)
+struct CompactStreakCard: View {
+    let stats: PlayerStats
+    let isPro: Bool
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                HStack(spacing: 12) {
+                    Text("🔥")
+                        .font(.system(size: 40))
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text("\(stats.currentStreak)")
+                                .font(.system(size: 36, weight: .bold, design: .rounded))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.orange, .red],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                            Text("Day Streak")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Text(streakMessage)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                // Best streak
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(stats.maxStreak)")
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .foregroundStyle(.orange.opacity(0.6))
+                    Text("best")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            // Weekly Heatmap
+            HStack(spacing: 6) {
+                ForEach((0..<7).reversed(), id: \.self) { dayIndex in
+                    VStack(spacing: 4) {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(colorForDay(dayIndex))
+                            .frame(height: 28)
+
+                        Text(dayLabel(for: dayIndex))
+                            .font(.system(size: 8, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            // Quick stats
+            HStack(spacing: 0) {
+                QuickStat(label: "Played", value: "\(stats.gamesPlayed)")
+                    .frame(maxWidth: .infinity)
+                Divider().frame(height: 24)
+                QuickStat(label: "Win Rate", value: "\(stats.winPercentage)%")
+                    .frame(maxWidth: .infinity)
+                Divider().frame(height: 24)
+                QuickStat(label: "Best", value: "\(stats.maxStreak)")
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+                .shadow(color: .orange.opacity(0.1), radius: 8, y: 3)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+        )
+    }
+
+    private var streakMessage: String {
+        if stats.currentStreak == 0 { return "Start today! 💪" }
+        else if stats.currentStreak == 1 { return "Great start! 🌟" }
+        else if stats.currentStreak < 7 { return "On fire! 🚀" }
+        else if stats.currentStreak < 30 { return "Amazing! 🎯" }
+        else { return "Legendary! 👑" }
+    }
+
+    private func colorForDay(_ dayIndex: Int) -> Color {
+        guard stats.lastPlayedDate != nil else { return Color(.systemGray5) }
+        if stats.currentStreak > 0 && dayIndex < stats.currentStreak {
+            let intensity = 1.0 - (Double(dayIndex) * 0.12)
+            return Color.orange.opacity(max(0.6, intensity))
+        }
+        return Color(.systemGray5)
+    }
+
+    private func dayLabel(for index: Int) -> String {
+        let calendar = Calendar.current
+        let date = calendar.date(byAdding: .day, value: -index, to: Date()) ?? Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE"
+        return formatter.string(from: date).prefix(1).uppercased()
+    }
+}
+
+// MARK: - Punchy Menu Item
+struct PunchyMenuItem: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(0.15))
+                        .frame(width: 44, height: 44)
+
+                    Image(systemName: icon)
+                        .font(.system(size: 18))
+                        .foregroundStyle(color)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 16, weight: .semibold))
+
+                    Text(subtitle)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: color.opacity(0.1), radius: 6, y: 2)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Streak Recovery Sheet
+struct StreakRecoverySheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let streak: Int
+    let onSaveStreak: () -> Void
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            // Warning icon
+            ZStack {
+                Circle()
+                    .fill(Color.orange.opacity(0.15))
+                    .frame(width: 100, height: 100)
+
+                Text("🔥")
+                    .font(.system(size: 50))
+            }
+
+            VStack(spacing: 8) {
+                Text("Your Streak is at Risk!")
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+
+                Text("You missed a day, but you can save your \(streak)-day streak!")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+
+            VStack(spacing: 12) {
+                // Save streak button
+                Button {
+                    onSaveStreak()
+                    dismiss()
+                } label: {
+                    HStack {
+                        Image(systemName: "checkmark.shield.fill")
+                        Text("Save My Streak")
+                    }
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(
+                        LinearGradient(
+                            colors: [.orange, .red],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(14)
+                }
+
+                // Skip button
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Let it go")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 40)
+
+            Text("Pro members get 1 streak save per week")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Quick Stat View (kept for compatibility)
 struct QuickStat: View {
     let label: String
     let value: String
-    
+
     var body: some View {
         VStack(spacing: 2) {
             Text(value)
@@ -424,7 +927,12 @@ struct QuickStat: View {
     }
 }
 
-// MARK: - Feature Card Button
+// MARK: - Legacy Views (kept for compatibility)
+struct CompactStreakStatsView: View {
+    let stats: PlayerStats
+    var body: some View { EmptyView() }
+}
+
 struct FeatureCardButton: View {
     let icon: String
     let title: String
@@ -433,262 +941,15 @@ struct FeatureCardButton: View {
     var isProUser: Bool = true
     var badgeText: String? = nil
     let action: () -> Void
-    
-    private var isLocked: Bool {
-        isPro && !isProUser
-    }
-    
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 6) {
-                ZStack {
-                    // Background circle with gradient
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [color.opacity(0.3), color.opacity(0.15)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 40, height: 40)
-                    
-                    Image(systemName: isLocked ? "lock.fill" : icon)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(isLocked ? .gray : color)
-                }
-                
-                // Title with optional badge/indicator inline
-                HStack(spacing: 4) {
-                    Text(title)
-                        .font(.caption2)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(isLocked ? .secondary : .primary)
-                        .lineLimit(1)
-                    
-                    // Small badge or PRO indicator inline
-                    if let badge = badgeText {
-                        Text(badge)
-                            .font(.system(size: 8, weight: .bold))
-                            .foregroundStyle(color)
-                    } else if isLocked {
-                        Image(systemName: "crown.fill")
-                            .font(.system(size: 8))
-                            .foregroundStyle(.orange)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .padding(.horizontal, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: color.opacity(0.15), radius: 6, x: 0, y: 3)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(color.opacity(0.2), lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-        .opacity(isLocked ? 0.7 : 1.0)
-    }
+    var body: some View { EmptyView() }
 }
 
-// MARK: - Secondary Button (for Stats, Settings, Feedback)
 struct SecondaryButton: View {
     let icon: String
     let title: String
     let color: Color
     let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(color)
-                
-                Text(title)
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(.systemGray6).opacity(0.8))
-            )
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Compact Streak & Stats View
-struct CompactStreakStatsView: View {
-    let stats: PlayerStats
-    private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
-    
-    var body: some View {
-        VStack(spacing: 10) {
-            // Streak Section - Compact
-            HStack(spacing: 10) {
-                // Fire emoji
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [.orange.opacity(0.3), .red.opacity(0.3)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 50, height: 50)
-                    
-                    Text("🔥")
-                        .font(.system(size: 30))
-                }
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text("\(stats.currentStreak)")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.orange, .red],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                        Text("Day Streak")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    HStack(spacing: 8) {
-                        Text(streakMessage)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        
-                        // Streak Freeze indicator for Pro users
-                        if subscriptionManager.isProUser && stats.streakFreezesAvailable > 0 {
-                            HStack(spacing: 3) {
-                                Image(systemName: "snowflake")
-                                    .font(.system(size: 10))
-                                Text("\(stats.streakFreezesAvailable)")
-                                    .font(.caption2)
-                                    .fontWeight(.semibold)
-                            }
-                            .foregroundStyle(.cyan)
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 2)
-                            .background(Color.cyan.opacity(0.15))
-                            .cornerRadius(6)
-                        }
-                    }
-                }
-                
-                Spacer()
-            }
-            
-            // Compact Heatmap
-            if stats.gamesPlayed > 0 {
-                HStack(spacing: 4) {
-                    ForEach((0..<7).reversed(), id: \.self) { dayIndex in
-                        VStack(spacing: 2) {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(colorForDay(dayIndex, stats: stats))
-                                .frame(width: 36, height: 36)
-                            
-                            Text(dayLabel(for: dayIndex))
-                                .font(.system(size: 8))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-            
-            // Stats Row - Compact
-            HStack(spacing: 0) {
-                QuickStat(label: "Played", value: "\(stats.gamesPlayed)")
-                    .frame(maxWidth: .infinity)
-                
-                Divider()
-                    .frame(height: 30)
-                
-                QuickStat(label: "Win Rate", value: "\(stats.winPercentage)%")
-                    .frame(maxWidth: .infinity)
-                
-                Divider()
-                    .frame(height: 30)
-                
-                QuickStat(label: "Best", value: "\(stats.maxStreak)")
-                    .frame(maxWidth: .infinity)
-            }
-        }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
-        )
-    }
-    
-    private var streakMessage: String {
-        if stats.currentStreak == 0 {
-            return "Start today! 💪"
-        } else if stats.currentStreak == 1 {
-            return "Great start! 🌟"
-        } else if stats.currentStreak < 7 {
-            return "On fire! 🚀"
-        } else if stats.currentStreak < 30 {
-            return "Amazing! 🎯"
-        } else {
-            return "Legendary! 👑"
-        }
-    }
-    
-    private func colorForDay(_ dayIndex: Int, stats: PlayerStats) -> Color {
-        // dayIndex 0 = today, 1 = yesterday, 2 = 2 days ago, etc.
-        
-        guard let lastPlayed = stats.lastPlayedDate else {
-            return Color(.systemGray5)
-        }
-        
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
-        let daysSinceLastPlayed = calendar.dateComponents([.day], from: lastPlayedDay, to: today).day ?? 0
-        
-        // If current streak is active
-        if stats.currentStreak > 0 {
-            // Show the last N days as active where N = currentStreak
-            // For example: if streak is 3, show today, yesterday, and 2 days ago as active
-            if dayIndex < stats.currentStreak {
-                // More recent days are brighter
-                let intensity = 1.0 - (Double(dayIndex) * 0.12)
-                return Color.orange.opacity(max(0.6, intensity))
-            }
-        } else {
-            // No streak, but we might have played recently
-            // Show last played day if within the 7-day window
-            if dayIndex == daysSinceLastPlayed && dayIndex < 7 {
-                return Color.gray.opacity(0.5)
-            }
-        }
-        
-        return Color(.systemGray5)
-    }
-    
-    private func dayLabel(for index: Int) -> String {
-        let calendar = Calendar.current
-        let date = calendar.date(byAdding: .day, value: -index, to: Date()) ?? Date()
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEE"
-        return formatter.string(from: date).prefix(1).uppercased()
-    }
+    var body: some View { EmptyView() }
 }
 
 // MARK: - Gamified Streak Card (Keep for backwards compatibility)
