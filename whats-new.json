@@ -1,0 +1,30 @@
+{
+  "version": "1.3.0",
+  "lastUpdated": "2025-02-12",
+  "showToVersionsBelow": "1.3.0",
+  "title": "What's New in Rounds",
+  "features": [
+    {
+      "icon": "trophy.fill",
+      "title": "Global Leaderboard",
+      "description": "Compete with medical students worldwide! See rankings by school and climb to the top."
+    },
+    {
+      "icon": "square.and.arrow.up",
+      "title": "Challenge Friends",
+      "description": "Share cases directly with friends via deep links. They can play the exact same case!"
+    },
+    {
+      "icon": "flame.fill",
+      "title": "Streak Freezes",
+      "description": "Pro users get weekly streak freezes to protect their progress when life gets busy."
+    },
+    {
+      "icon": "sparkles",
+      "title": "Redesigned Home",
+      "description": "Fresh new look with easier navigation. Swipe between Play, Progress, and More tabs."
+    }
+  ],
+  "footer": "Thanks for playing Rounds! Your feedback helps us improve.",
+  "dismissButtonText": "Let's Go!"
+}

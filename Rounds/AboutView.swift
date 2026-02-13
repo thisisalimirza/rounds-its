@@ -21,6 +21,8 @@ struct AboutView: View {
     @State private var editedDisplayName = ""
     @State private var notificationsEnabled = false
     @State private var showingHowToPlay = false
+    @State private var showingWhatsNew = false
+    @StateObject private var whatsNewManager = WhatsNewManager.shared
     @AppStorage("dailyReminderHour") private var reminderHour = 19
     @AppStorage("dailyReminderMinute") private var reminderMinute = 0
     @AppStorage("hideCategoryLabel") private var hideCategoryLabel = false
@@ -92,6 +94,7 @@ struct AboutView: View {
                 // MARK: - Help Section
                 Section {
                     howToPlayRow
+                    whatsNewRow
                     feedbackRow
                 } header: {
                     Label("Help", systemImage: "questionmark.circle")
@@ -147,6 +150,14 @@ struct AboutView: View {
         }
         .sheet(isPresented: $showingHowToPlay) {
             HowToPlaySheet()
+        }
+        .sheet(isPresented: $showingWhatsNew) {
+            if let data = whatsNewManager.whatsNewData {
+                WhatsNewView(data: data) {
+                    whatsNewManager.markAsSeen()
+                }
+                .presentationDetents([.large])
+            }
         }
         .alert("Edit Display Name", isPresented: $showingEditDisplayName) {
             TextField("Display Name", text: $editedDisplayName)
@@ -363,6 +374,27 @@ struct AboutView: View {
         } label: {
             HStack {
                 Label("How to Play", systemImage: "book.fill")
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+
+    // MARK: - What's New Row
+
+    private var whatsNewRow: some View {
+        Button {
+            Task {
+                await whatsNewManager.checkForWhatsNew()
+                whatsNewManager.forceShow()
+                showingWhatsNew = true
+            }
+        } label: {
+            HStack {
+                Label("What's New", systemImage: "sparkles")
                     .foregroundStyle(.primary)
                 Spacer()
                 Image(systemName: "chevron.right")

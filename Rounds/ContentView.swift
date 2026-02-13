@@ -31,6 +31,8 @@ struct ContentView: View {
     @State private var playButtonScale: CGFloat = 1.0
     @State private var showingStreakRecovery = false
     @State private var streakRecoveryChecked = false
+    @State private var showingWhatsNew = false
+    @StateObject private var whatsNewManager = WhatsNewManager.shared
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
 
@@ -195,6 +197,15 @@ struct ContentView: View {
                 )
                 .presentationDetents([.medium])
             }
+            .sheet(isPresented: $showingWhatsNew) {
+                if let data = whatsNewManager.whatsNewData {
+                    WhatsNewView(data: data) {
+                        whatsNewManager.markAsSeen()
+                    }
+                    .presentationDetents([.large])
+                    .interactiveDismissDisabled()
+                }
+            }
             .onAppear {
                 AnalyticsManager.shared.trackAppLaunch()
                 SessionTracker.shared.startSession()
@@ -210,6 +221,15 @@ struct ContentView: View {
 
                 // Check for deep linked case
                 checkForDeepLinkedCase()
+            }
+            .task {
+                // Check for What's New content (runs async on appear)
+                await whatsNewManager.checkForWhatsNew()
+                if whatsNewManager.shouldShowWhatsNew {
+                    // Small delay to let other UI settle
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    showingWhatsNew = true
+                }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                 // Also check when app becomes active (in case opened via URL while running)
