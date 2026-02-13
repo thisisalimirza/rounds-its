@@ -2,23 +2,36 @@
 //  AboutView.swift
 //  Rounds
 //
-//  Created by Ali Mirza on 12/9/25.
+//  Settings and About screen
 //
 
 import SwiftUI
+import SwiftData
 import UserNotifications
 
 struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @Query private var leaderboardProfiles: [LeaderboardProfile]
     @State private var showingFeedback = false
     @State private var showingSubscription = false
+    @State private var showingLeaderboardSetup = false
+    @State private var showingLeaveLeaderboardAlert = false
+    @State private var showingEditDisplayName = false
+    @State private var editedDisplayName = ""
     @State private var notificationsEnabled = false
+    @State private var showingHowToPlay = false
     @AppStorage("dailyReminderHour") private var reminderHour = 19
     @AppStorage("dailyReminderMinute") private var reminderMinute = 0
     @AppStorage("hideCategoryLabel") private var hideCategoryLabel = false
-    
+    @AppStorage("hasSeenLeaderboardPrompt") private var hasSeenLeaderboardPrompt = false
+
+    private var leaderboardProfile: LeaderboardProfile? {
+        leaderboardProfiles.first
+    }
+
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
-    
+
     // Computed property for the reminder time binding
     private var reminderTime: Binding<Date> {
         Binding(
@@ -32,352 +45,83 @@ struct AboutView: View {
                 let components = Calendar.current.dateComponents([.hour, .minute], from: newDate)
                 reminderHour = components.hour ?? 19
                 reminderMinute = components.minute ?? 0
-                // Reschedule notification with new time
                 NotificationManager.scheduleDailyReminder(hour: reminderHour, minute: reminderMinute)
             }
         )
     }
-    
+
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // App Icon and Title
-                    VStack(spacing: 16) {
-                        Image(systemName: "cross.case.fill")
-                            .font(.system(size: 80))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                        
-                        Text("Rounds")
-                            .font(.largeTitle)
-                            .bold()
-                        
-                        Text("Version 1.0")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+            List {
+                // MARK: - Account Section
+                Section {
+                    subscriptionRow
+                } header: {
+                    Label("Account", systemImage: "person.crop.circle")
+                }
+
+                // MARK: - Leaderboard Section
+                Section {
+                    if let profile = leaderboardProfile {
+                        leaderboardProfileRows(profile: profile)
+                    } else {
+                        joinLeaderboardRow
                     }
-                    .padding(.top)
-                    
-                    // How to Play
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("How to Play")
-                            .font(.title2)
-                            .bold()
-                        
-                        InstructionRow(
-                            icon: "1.circle.fill",
-                            title: "Read the Clinical Clues",
-                            description: "Start with the first hint and read the patient presentation."
-                        )
-                        
-                        InstructionRow(
-                            icon: "2.circle.fill",
-                            title: "Make Your Diagnosis",
-                            description: "Enter your diagnosis guess. You have 5 attempts total."
-                        )
-                        
-                        InstructionRow(
-                            icon: "3.circle.fill",
-                            title: "Progressive Hints",
-                            description: "After each wrong guess, a new clinical clue is revealed automatically. Once all clues are revealed, your next guess is your final chance."
-                        )
-                        
-                        InstructionRow(
-                            icon: "exclamationmark.circle.fill",
-                            title: "Final Guess",
-                            description: "When all hints are revealed, you get one last attempt. If it's wrong, the answer is revealed and the round ends."
-                        )
-                        
-                        InstructionRow(
-                            icon: "4.circle.fill",
-                            title: "Earn Points",
-                            description: "Fewer guesses and hints = higher score! 500 base points - 100 per guess - 50 per extra hint."
-                        )
-                        
-                        InstructionRow(
-                            icon: "5.circle.fill",
-                            title: "Build Your Streak",
-                            description: "Play daily to maintain your winning streak and track your progress."
-                        )
+                } header: {
+                    Label("Leaderboard", systemImage: "trophy.fill")
+                } footer: {
+                    if leaderboardProfile != nil {
+                        Text("Your display name and school are visible to other players on the leaderboard.")
                     }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(16)
-                    
-                    // About Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("About Rounds")
-                            .font(.title2)
-                            .bold()
-                        
-                        Text("Rounds is a medical diagnosis game designed to help medical students master USMLE Step 1 high-yield topics through engaging gameplay. Each case presents progressive clinical clues that guide you toward the correct diagnosis.")
-                            .font(.body)
-                            .foregroundStyle(.secondary)
-                        
-                        Text("Practice pattern recognition, clinical reasoning, and diagnostic skills while having fun!")
-                            .font(.body)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(16)
-                    
-                    // Categories Covered
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Categories Covered")
-                            .font(.title2)
-                            .bold()
-                        
-                        LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: 12) {
-                            CategoryTag(name: "Cardiology", color: .red)
-                            CategoryTag(name: "Neurology", color: .purple)
-                            CategoryTag(name: "Pulmonology", color: .blue)
-                            CategoryTag(name: "Gastroenterology", color: .orange)
-                            CategoryTag(name: "Endocrinology", color: .green)
-                            CategoryTag(name: "Nephrology", color: .cyan)
-                            CategoryTag(name: "Hematology", color: .pink)
-                            CategoryTag(name: "Infectious Disease", color: .yellow)
-                            CategoryTag(name: "Rheumatology", color: .indigo)
-                            CategoryTag(name: "Psychiatry", color: .mint)
-                        }
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(16)
-                    
-                    // Subscription Section
-                    VStack(spacing: 12) {
-                        Button {
-                            showingSubscription = true
-                        } label: {
-                            HStack {
-                                Image(systemName: subscriptionManager.isProUser ? "crown.fill" : "arrow.up.circle.fill")
-                                    .foregroundStyle(subscriptionManager.isProUser ? .yellow : .blue)
-                                
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(subscriptionManager.isProUser ? "Manage Subscription" : "Upgrade to Pro")
-                                        .font(.headline)
-                                        .foregroundStyle(.primary)
-                                    
-                                    Text(subscriptionManager.isProUser ? subscriptionManager.getSubscriptionSource() : "Unlock unlimited cases and features")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                
-                                Spacer()
-                                
-                                Image(systemName: "chevron.right")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .padding()
-                            .background(Color(.systemGray5))
-                            .cornerRadius(12)
-                        }
-                    }
-                    
-                    // Notification Settings Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        Label("Daily Reminder", systemImage: "bell.badge.fill")
-                            .font(.headline)
-                            .foregroundStyle(.blue)
-                        
-                        VStack(spacing: 16) {
-                            Toggle(isOn: $notificationsEnabled) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Enable Notifications")
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-                                    Text("Get a daily reminder to keep your streak alive")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            .tint(.blue)
-                            .onChange(of: notificationsEnabled) { _, newValue in
-                                if newValue {
-                                    NotificationManager.requestAuthorization { granted in
-                                        if granted {
-                                            NotificationManager.scheduleDailyReminder(hour: reminderHour, minute: reminderMinute)
-                                        } else {
-                                            notificationsEnabled = false
-                                        }
-                                    }
-                                } else {
-                                    NotificationManager.cancelAll()
-                                }
-                            }
-                            
-                            if notificationsEnabled {
-                                Divider()
-                                
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Reminder Time")
-                                            .font(.subheadline)
-                                            .fontWeight(.medium)
-                                        Text("When would you like to be reminded?")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    DatePicker(
-                                        "",
-                                        selection: reminderTime,
-                                        displayedComponents: .hourAndMinute
-                                    )
-                                    .labelsHidden()
-                                    .tint(.blue)
-                                }
-                            }
-                        }
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(16)
-                    
-                    // Gameplay Settings Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        Label("Gameplay", systemImage: "gamecontroller.fill")
-                            .font(.headline)
-                            .foregroundStyle(.purple)
-                        
-                        VStack(spacing: 16) {
-                            Toggle(isOn: $hideCategoryLabel) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Hide Category Label")
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-                                    Text("Hide the specialty tag (e.g. \"Cardiology\") during cases for a harder challenge")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            .tint(.purple)
-                        }
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(16)
-                    
-                    Button {
-                        showingFeedback = true
-                    } label: {
-                        Label("Send Feedback", systemImage: "paperplane.fill")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color(.systemGray5))
-                            .foregroundStyle(.primary)
-                            .cornerRadius(12)
-                    }
-                    
-                    // Medical Disclaimer
-                    VStack(alignment: .leading, spacing: 12) {
-                        Label("Important Disclaimer", systemImage: "exclamationmark.triangle.fill")
-                            .font(.headline)
-                            .foregroundStyle(.orange)
-                        
-                        Text("Rounds is for educational and study purposes only. It is not intended to diagnose, treat, cure, or prevent any disease or medical condition. The content provided should not be used as a substitute for professional medical advice, diagnosis, or treatment.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        
-                        Text("Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition. Never disregard professional medical advice or delay in seeking it because of something you have learned in this app.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding()
-                    .background(Color.orange.opacity(0.1))
-                    .cornerRadius(12)
-                    
-                    // Support Links
-                    VStack(spacing: 12) {
-                        Link(destination: URL(string: "https://braskgroup.com/rounds.html")!) {
-                            HStack {
-                                Image(systemName: "hand.raised.fill")
-                                Text("Privacy Policy")
-                                Spacer()
-                                Image(systemName: "arrow.up.right")
-                                    .font(.caption)
-                            }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .foregroundStyle(.primary)
-                            .cornerRadius(10)
-                        }
-                        
-                        Link(destination: URL(string: "https://braskgroup.com/rounds.html")!) {
-                            HStack {
-                                Image(systemName: "doc.text.fill")
-                                Text("Terms of Service")
-                                Spacer()
-                                Image(systemName: "arrow.up.right")
-                                    .font(.caption)
-                            }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .foregroundStyle(.primary)
-                            .cornerRadius(10)
-                        }
-                        
-                        Link(destination: URL(string: "mailto:support@braskgroup.com?subject=Rounds%20Support")!) {
-                            HStack {
-                                Image(systemName: "envelope.fill")
-                                Text("Contact Support")
-                                Spacer()
-                                Image(systemName: "arrow.up.right")
-                                    .font(.caption)
-                            }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .foregroundStyle(.primary)
-                            .cornerRadius(10)
-                        }
-                        
-                        Link(destination: URL(string: "https://braskgroup.com")!) {
-                            HStack {
-                                Image(systemName: "building.2.fill")
-                                Text("More from Brask Group")
-                                Spacer()
-                                Image(systemName: "arrow.up.right")
-                                    .font(.caption)
-                            }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .foregroundStyle(.primary)
-                            .cornerRadius(10)
-                        }
-                    }
-                    
-                    // Footer
+                }
+
+                // MARK: - Notifications Section
+                Section {
+                    notificationRows
+                } header: {
+                    Label("Notifications", systemImage: "bell.badge.fill")
+                }
+
+                // MARK: - Gameplay Section
+                Section {
+                    gameplayRows
+                } header: {
+                    Label("Gameplay", systemImage: "gamecontroller.fill")
+                }
+
+                // MARK: - Help Section
+                Section {
+                    howToPlayRow
+                    feedbackRow
+                } header: {
+                    Label("Help", systemImage: "questionmark.circle")
+                }
+
+                // MARK: - About Section
+                Section {
+                    aboutAppRow
+                    supportLinksRows
+                } header: {
+                    Label("About", systemImage: "info.circle")
+                }
+
+                // MARK: - Legal Section
+                Section {
+                    legalRows
+                } header: {
+                    Label("Legal", systemImage: "doc.text")
+                } footer: {
                     VStack(spacing: 8) {
                         Text("Made with ❤️ for medical students")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        
                         Text("© 2025 Brask Group LLC")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        
-                        Text("Brask Group LLC dba Rounds")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                        Text("Version 1.0")
                     }
-                    .padding(.vertical)
+                    .font(.caption)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 16)
                 }
-                .padding()
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -398,36 +142,559 @@ struct AboutView: View {
                 RoundsPaywallView()
             }
         }
+        .sheet(isPresented: $showingLeaderboardSetup) {
+            LeaderboardProfileSetupView()
+        }
+        .sheet(isPresented: $showingHowToPlay) {
+            HowToPlaySheet()
+        }
+        .alert("Edit Display Name", isPresented: $showingEditDisplayName) {
+            TextField("Display Name", text: $editedDisplayName)
+            Button("Cancel", role: .cancel) { }
+            Button("Save") {
+                saveDisplayName()
+            }
+        } message: {
+            Text("Enter your new display name for the leaderboard.")
+        }
+        .alert("Leave Leaderboard?", isPresented: $showingLeaveLeaderboardAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Leave", role: .destructive) {
+                leaveLeaderboard()
+            }
+        } message: {
+            Text("Your scores will be removed from all leaderboards. You can rejoin anytime.")
+        }
         .onAppear {
-            // Check current notification authorization status
-            UNUserNotificationCenter.current().getNotificationSettings { settings in
-                DispatchQueue.main.async {
-                    notificationsEnabled = settings.authorizationStatus == .authorized
+            checkNotificationStatus()
+        }
+    }
+
+    // MARK: - Subscription Row
+
+    private var subscriptionRow: some View {
+        Button {
+            showingSubscription = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: subscriptionManager.isProUser ? "crown.fill" : "arrow.up.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(subscriptionManager.isProUser ? .yellow : .blue)
+                    .frame(width: 32)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(subscriptionManager.isProUser ? "Rounds Pro" : "Upgrade to Pro")
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+
+                    Text(subscriptionManager.isProUser ? subscriptionManager.getSubscriptionSource() : "Unlock unlimited cases & features")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .listRowBackground(
+            subscriptionManager.isProUser
+                ? Color.yellow.opacity(0.1)
+                : Color(.systemBackground)
+        )
+    }
+
+    // MARK: - Leaderboard Profile Rows
+
+    @ViewBuilder
+    private func leaderboardProfileRows(profile: LeaderboardProfile) -> some View {
+        // Display Name (editable)
+        Button {
+            editedDisplayName = profile.displayName
+            showingEditDisplayName = true
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Display Name")
+                        .font(.body)
+                        .foregroundStyle(.primary)
+                    Text(profile.displayName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Text("Edit")
+                    .font(.caption)
+                    .foregroundStyle(.blue)
+            }
+        }
+
+        // School (read-only)
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("School")
+                    .font(.body)
+                Text(profile.schoolName)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+
+        // Visibility Toggle
+        Toggle(isOn: Binding(
+            get: { profile.visibilityLevel == .global },
+            set: { newValue in
+                profile.visibilityLevel = newValue ? .global : .schoolOnly
+                try? modelContext.save()
+                syncProfileToCloudKit(profile: profile)
+            }
+        )) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Public Leaderboards")
+                    .font(.body)
+                Text(profile.visibilityLevel == .global
+                     ? "Visible on state & national boards"
+                     : "Only visible at your school")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .tint(.orange)
+
+        // Leave Leaderboard
+        Button(role: .destructive) {
+            showingLeaveLeaderboardAlert = true
+        } label: {
+            HStack {
+                Text("Leave Leaderboard")
+                Spacer()
+            }
+        }
+    }
+
+    // MARK: - Join Leaderboard Row
+
+    private var joinLeaderboardRow: some View {
+        Button {
+            showingLeaderboardSetup = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "trophy.fill")
+                    .font(.title2)
+                    .foregroundStyle(.orange)
+                    .frame(width: 32)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Join Leaderboard")
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+                    Text("Compete with classmates & nationwide")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+
+    // MARK: - Notification Rows
+
+    @ViewBuilder
+    private var notificationRows: some View {
+        Toggle(isOn: $notificationsEnabled) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Daily Reminder")
+                    .font(.body)
+                Text("Get reminded to keep your streak alive")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .tint(.blue)
+        .onChange(of: notificationsEnabled) { _, newValue in
+            handleNotificationToggle(newValue)
+        }
+
+        if notificationsEnabled {
+            DatePicker(selection: reminderTime, displayedComponents: .hourAndMinute) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Reminder Time")
+                        .font(.body)
+                    Text("When to send the daily reminder")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .tint(.blue)
+        }
+    }
+
+    // MARK: - Gameplay Rows
+
+    @ViewBuilder
+    private var gameplayRows: some View {
+        Toggle(isOn: $hideCategoryLabel) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Hide Category Label")
+                    .font(.body)
+                Text("Don't show specialty (e.g., Cardiology) during cases")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .tint(.purple)
+    }
+
+    // MARK: - How to Play Row
+
+    private var howToPlayRow: some View {
+        Button {
+            showingHowToPlay = true
+        } label: {
+            HStack {
+                Label("How to Play", systemImage: "book.fill")
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+
+    // MARK: - Feedback Row
+
+    private var feedbackRow: some View {
+        Button {
+            showingFeedback = true
+        } label: {
+            HStack {
+                Label("Send Feedback", systemImage: "paperplane.fill")
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+
+    // MARK: - About App Row
+
+    private var aboutAppRow: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "cross.case.fill")
+                .font(.title2)
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.blue, .purple],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 32)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Rounds")
+                    .font(.body)
+                    .fontWeight(.medium)
+                Text("Master USMLE Step 1 through daily clinical case challenges")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    // MARK: - Support Links Rows
+
+    @ViewBuilder
+    private var supportLinksRows: some View {
+        Link(destination: URL(string: "mailto:support@braskgroup.com?subject=Rounds%20Support")!) {
+            HStack {
+                Label("Contact Support", systemImage: "envelope.fill")
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+
+        Link(destination: URL(string: "https://braskgroup.com")!) {
+            HStack {
+                Label("More from Brask Group", systemImage: "building.2.fill")
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+
+    // MARK: - Legal Rows
+
+    @ViewBuilder
+    private var legalRows: some View {
+        Link(destination: URL(string: "https://braskgroup.com/rounds.html")!) {
+            HStack {
+                Label("Privacy Policy", systemImage: "hand.raised.fill")
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+
+        Link(destination: URL(string: "https://braskgroup.com/rounds.html")!) {
+            HStack {
+                Label("Terms of Service", systemImage: "doc.text.fill")
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+
+        // Medical Disclaimer
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Medical Disclaimer", systemImage: "exclamationmark.triangle.fill")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(.orange)
+
+            Text("Rounds is for educational purposes only. It is not intended to diagnose, treat, cure, or prevent any disease. Always seek professional medical advice.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 4)
+    }
+
+    // MARK: - Helper Functions
+
+    private func checkNotificationStatus() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                notificationsEnabled = settings.authorizationStatus == .authorized
+            }
+        }
+    }
+
+    private func handleNotificationToggle(_ enabled: Bool) {
+        if enabled {
+            NotificationManager.requestAuthorization { granted in
+                if granted {
+                    NotificationManager.scheduleDailyReminder(hour: reminderHour, minute: reminderMinute)
+                } else {
+                    notificationsEnabled = false
+                }
+            }
+        } else {
+            NotificationManager.cancelAll()
+        }
+    }
+
+    private func saveDisplayName() {
+        guard let profile = leaderboardProfile,
+              !editedDisplayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+
+        profile.displayName = editedDisplayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        try? modelContext.save()
+        syncProfileToCloudKit(profile: profile)
+    }
+
+    private func syncProfileToCloudKit(profile: LeaderboardProfile) {
+        Task {
+            let statsDescriptor = FetchDescriptor<PlayerStats>()
+            if let stats = try? modelContext.fetch(statsDescriptor).first {
+                try? await LeaderboardManager.shared.syncProfile(
+                    profile: profile,
+                    totalScore: stats.totalScore,
+                    gamesPlayed: stats.gamesPlayed,
+                    gamesWon: stats.gamesWon
+                )
+            }
+        }
+    }
+
+    private func leaveLeaderboard() {
+        guard let profile = leaderboardProfile else { return }
+
+        Task {
+            try? await LeaderboardManager.shared.deleteProfile(profile: profile)
+        }
+        modelContext.delete(profile)
+        try? modelContext.save()
+        hasSeenLeaderboardPrompt = false
+    }
+}
+
+// MARK: - How to Play Sheet
+
+struct HowToPlaySheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    // Header
+                    VStack(spacing: 12) {
+                        Image(systemName: "cross.case.fill")
+                            .font(.system(size: 60))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+
+                        Text("How to Play Rounds")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top)
+
+                    // Instructions
+                    VStack(alignment: .leading, spacing: 20) {
+                        InstructionRow(
+                            icon: "1.circle.fill",
+                            title: "Read the Clinical Clues",
+                            description: "Start with the first hint and read the patient presentation carefully."
+                        )
+
+                        InstructionRow(
+                            icon: "2.circle.fill",
+                            title: "Make Your Diagnosis",
+                            description: "Enter your diagnosis guess. You have 5 attempts total."
+                        )
+
+                        InstructionRow(
+                            icon: "3.circle.fill",
+                            title: "Progressive Hints",
+                            description: "After each wrong guess, a new clinical clue is revealed automatically."
+                        )
+
+                        InstructionRow(
+                            icon: "4.circle.fill",
+                            title: "Final Guess",
+                            description: "When all hints are revealed, you get one last attempt."
+                        )
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(16)
+
+                    // Scoring
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Scoring")
+                            .font(.headline)
+
+                        VStack(spacing: 12) {
+                            ScoreInfoRow(label: "Base Score", value: "500 pts", color: .green)
+                            ScoreInfoRow(label: "Per Wrong Guess", value: "-100 pts", color: .red)
+                            ScoreInfoRow(label: "Per Extra Hint", value: "-50 pts", color: .orange)
+                        }
+
+                        Text("First hint is free. Fewer guesses and hints = higher score!")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(16)
+
+                    // Categories
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Medical Categories")
+                            .font(.headline)
+
+                        LazyVGrid(columns: [
+                            GridItem(.flexible()),
+                            GridItem(.flexible())
+                        ], spacing: 8) {
+                            CategoryTag(name: "Cardiology", color: .red)
+                            CategoryTag(name: "Neurology", color: .purple)
+                            CategoryTag(name: "Pulmonology", color: .blue)
+                            CategoryTag(name: "Gastroenterology", color: .orange)
+                            CategoryTag(name: "Endocrinology", color: .green)
+                            CategoryTag(name: "Hematology", color: .pink)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(16)
+                }
+                .padding()
+            }
+            .navigationTitle("How to Play")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
                 }
             }
         }
     }
 }
 
+// MARK: - Score Info Row
+
+struct ScoreInfoRow: View {
+    let label: String
+    let value: String
+    let color: Color
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.subheadline)
+            Spacer()
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(color)
+        }
+    }
+}
+
 // MARK: - Instruction Row
+
 struct InstructionRow: View {
     let icon: String
     let title: String
     let description: String
-    
+
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundStyle(.blue)
                 .frame(width: 32)
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.headline)
-                
-                Text(description)
                     .font(.subheadline)
+                    .fontWeight(.semibold)
+
+                Text(description)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
@@ -435,10 +702,11 @@ struct InstructionRow: View {
 }
 
 // MARK: - Category Tag
+
 struct CategoryTag: View {
     let name: String
     let color: Color
-    
+
     var body: some View {
         Text(name)
             .font(.caption)

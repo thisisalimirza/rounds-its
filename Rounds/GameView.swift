@@ -37,6 +37,7 @@ struct AdaptiveContentWidthModifier: ViewModifier {
 
 struct GameView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query private var leaderboardProfiles: [LeaderboardProfile]
     @State private var currentCase: MedicalCase
     @State private var gameSession: GameSession
     @State private var currentGuess = ""
@@ -52,9 +53,15 @@ struct GameView: View {
     @State private var showConfetti = false
     @State private var showingAchievementUnlock = false
     @State private var unlockedAchievement: Achievement?
+    @State private var showingLeaderboardSetup = false
     @FocusState private var isTextFieldFocused: Bool
     @AppStorage("hideCategoryLabel") private var hideCategoryLabel = false
+    @AppStorage("hasSeenLeaderboardPrompt") private var hasSeenLeaderboardPrompt = false
     let isDailyCase: Bool
+
+    private var leaderboardProfile: LeaderboardProfile? {
+        leaderboardProfiles.first
+    }
     
     init(medicalCase: MedicalCase, isDailyCase: Bool = false) {
         _currentCase = State(initialValue: medicalCase)
@@ -217,6 +224,22 @@ struct GameView: View {
         .sheet(isPresented: $showingLevelUp) {
             if let level = newLevel {
                 LevelUpView(level: level)
+            }
+        }
+        .sheet(isPresented: $showingLeaderboardSetup) {
+            LeaderboardProfileSetupView { profile in
+                // Profile created - sync initial score
+                Task {
+                    let descriptor = FetchDescriptor<PlayerStats>()
+                    if let stats = try? modelContext.fetch(descriptor).first {
+                        await LeaderboardManager.shared.syncScoreIfNeeded(
+                            profile: profile,
+                            totalScore: stats.totalScore,
+                            gamesPlayed: stats.gamesPlayed,
+                            gamesWon: stats.gamesWon
+                        )
+                    }
+                }
             }
         }
     }
@@ -582,9 +605,33 @@ struct GameView: View {
             score: gameSession.score,
             isDaily: isDailyCase
         )
-        
+
         // Request review after wins
         AppStoreReviewManager.shared.gameCompleted(won: won)
+
+        // Leaderboard: Sync score or prompt for setup
+        if won {
+            let statsDescriptor = FetchDescriptor<PlayerStats>()
+            if let currentStats = try? modelContext.fetch(statsDescriptor).first {
+                if let profile = leaderboardProfile {
+                    // Sync score to CloudKit
+                    Task {
+                        await LeaderboardManager.shared.syncScoreIfNeeded(
+                            profile: profile,
+                            totalScore: currentStats.totalScore,
+                            gamesPlayed: currentStats.gamesPlayed,
+                            gamesWon: currentStats.gamesWon
+                        )
+                    }
+                } else if !hasSeenLeaderboardPrompt && currentStats.gamesWon == 1 {
+                    // First win and no profile - prompt for leaderboard setup
+                    hasSeenLeaderboardPrompt = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                        showingLeaderboardSetup = true
+                    }
+                }
+            }
+        }
     }
     
     private func checkAchievements(stats: PlayerStats, won: Bool, hintsUsed: Int) {

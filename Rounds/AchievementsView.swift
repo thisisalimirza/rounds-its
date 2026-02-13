@@ -190,11 +190,11 @@ enum AchievementRarity: String {
 
 @Model
 final class AchievementProgress {
-    var unlockedAchievements: [String]  // Achievement rawValues
-    var firstHintWinCount: Int
-    var categoryStats: [String: CategoryStat]  // Category name -> stats
+    var unlockedAchievements: [String] = []  // Achievement rawValues
+    var firstHintWinCount: Int = 0
+    var categoryStats: [String: CategoryStat] = [:]  // Category name -> stats
     var lastStreakFreezeReset: Date?
-    var streakFreezesAvailable: Int
+    var streakFreezesAvailable: Int = 0
     
     init() {
         self.unlockedAchievements = []

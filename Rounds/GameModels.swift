@@ -12,13 +12,13 @@ import CryptoKit
 // MARK: - Medical Case
 @Model
 final class MedicalCase {
-    var id: UUID
-    var diagnosis: String
-    var alternativeNames: [String] // Accept alternative spellings/names
-    var hints: [String] // 5 progressive hints
-    var category: String // e.g., "Cardiology", "Neurology"
-    var difficulty: Int // 1-5
-    var dateAdded: Date
+    var id: UUID = UUID()
+    var diagnosis: String = ""
+    var alternativeNames: [String] = [] // Accept alternative spellings/names
+    var hints: [String] = [] // 5 progressive hints
+    var category: String = "" // e.g., "Cardiology", "Neurology"
+    var difficulty: Int = 3 // 1-5
+    var dateAdded: Date = Date()
     
     init(diagnosis: String, alternativeNames: [String] = [], hints: [String], category: String, difficulty: Int = 3) {
         // Generate a deterministic UUID from the diagnosis so the same case always has the same ID
@@ -86,7 +86,7 @@ final class MedicalCase {
 }
 
 // MARK: - Game State
-enum GameState: Codable, Equatable, Sendable {
+enum GameState: String, Codable, Equatable, Sendable {
     case playing
     case won
     case lost
@@ -110,30 +110,36 @@ struct GuessResult: Identifiable, Codable {
 // MARK: - Game Session
 @Model
 final class GameSession {
-    var id: UUID
-    var caseID: UUID
-    var guesses: [String] // Store guess strings
-    var hintsRevealed: Int
-    var hintsRevealedAtWin: Int // Track how many hints were visible when they won (for scoring)
-    var gameState: GameState
-    var timestamp: Date
-    var score: Int // Points based on guesses used
-    
+    var id: UUID = UUID()
+    var caseID: UUID = UUID()
+    var guesses: [String] = [] // Store guess strings
+    var hintsRevealed: Int = 1
+    var hintsRevealedAtWin: Int = 0 // Track how many hints were visible when they won (for scoring)
+    var gameStateRaw: String = "playing" // Store as String for CloudKit compatibility
+    var timestamp: Date = Date()
+    var score: Int = 0 // Points based on guesses used
+
     var maxGuesses: Int {
         return 5
     }
-    
+
     var maxHints: Int {
         return 5
     }
-    
+
+    // Computed property to access as enum
+    var gameState: GameState {
+        get { GameState(rawValue: gameStateRaw) ?? .playing }
+        set { gameStateRaw = newValue.rawValue }
+    }
+
     init(caseID: UUID) {
         self.id = UUID()
         self.caseID = caseID
         self.guesses = []
         self.hintsRevealed = 1 // Start with first hint visible
         self.hintsRevealedAtWin = 0 // Will be set when player wins
-        self.gameState = .playing
+        self.gameStateRaw = GameState.playing.rawValue
         self.timestamp = Date()
         self.score = 0
     }
@@ -209,20 +215,20 @@ final class GameSession {
 // MARK: - Player Statistics
 @Model
 final class PlayerStats {
-    var gamesPlayed: Int
-    var gamesWon: Int
-    var currentStreak: Int
-    var maxStreak: Int
-    var totalScore: Int
-    var guessDistribution: [Int] // Index = number of guesses (0-4 for 1-5 guesses)
+    var gamesPlayed: Int = 0
+    var gamesWon: Int = 0
+    var currentStreak: Int = 0
+    var maxStreak: Int = 0
+    var totalScore: Int = 0
+    var guessDistribution: [Int] = [0, 0, 0, 0, 0] // Index = number of guesses (0-4 for 1-5 guesses)
     var lastPlayedDate: Date?
     var lastDailyCasePlayed: String? // Store date string like "2025-12-13"
-    var favoriteCaseIDs: [String] // Store UUIDs as strings
-    
+    var favoriteCaseIDs: [String] = [] // Store UUIDs as strings
+
     // Streak Freeze (Pro Feature)
-    var streakFreezesAvailable: Int
+    var streakFreezesAvailable: Int = 1
     var lastStreakFreezeReset: Date?
-    var streakFreezeUsedToday: Bool
+    var streakFreezeUsedToday: Bool = false
     
     // Computed property for current training level
     var trainingLevel: MedicalTrainingLevel {
@@ -420,18 +426,18 @@ final class PlayerStats {
 // MARK: - Case History Entry
 @Model
 final class CaseHistoryEntry {
-    var id: UUID
-    var caseID: UUID
-    var diagnosis: String
-    var category: String
-    var difficulty: Int
-    var wasCorrect: Bool
-    var guessCount: Int
-    var score: Int
-    var hintsUsed: Int
-    var playedAt: Date
-    var guesses: [String]
-    var wasDailyCase: Bool
+    var id: UUID = UUID()
+    var caseID: UUID = UUID()
+    var diagnosis: String = ""
+    var category: String = ""
+    var difficulty: Int = 3
+    var wasCorrect: Bool = false
+    var guessCount: Int = 0
+    var score: Int = 0
+    var hintsUsed: Int = 0
+    var playedAt: Date = Date()
+    var guesses: [String] = []
+    var wasDailyCase: Bool = false
     
     init(
         caseID: UUID,
@@ -457,6 +463,219 @@ final class CaseHistoryEntry {
         self.playedAt = Date()
         self.guesses = guesses
         self.wasDailyCase = wasDailyCase
+    }
+}
+
+// MARK: - Leaderboard Visibility Level
+
+enum LeaderboardVisibility: String, Codable, CaseIterable {
+    case schoolOnly = "school"
+    case global = "global"
+
+    var displayName: String {
+        switch self {
+        case .schoolOnly: return "School Only"
+        case .global: return "Global"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .schoolOnly:
+            return "Only students at your school will see your name"
+        case .global:
+            return "Your name will appear on state, national, and global leaderboards"
+        }
+    }
+}
+
+// MARK: - Leaderboard Scope
+
+enum LeaderboardScope: String, CaseIterable {
+    case school = "School"
+    case state = "State"
+    case country = "Country"
+    case national = "National"
+    case global = "Global"
+
+    var icon: String {
+        switch self {
+        case .school: return "building.columns.fill"
+        case .state: return "map.fill"
+        case .country: return "flag.fill"
+        case .national: return "flag.filled.and.flag.crossed"
+        case .global: return "globe.americas.fill"
+        }
+    }
+}
+
+// MARK: - Leaderboard Profile (Local Cache)
+
+@Model
+final class LeaderboardProfile {
+    var playerID: String = UUID().uuidString
+    var displayName: String = ""
+    var schoolID: String = ""
+    var schoolName: String = ""
+    var state: String = ""
+    var country: String = "US"
+    var isInternational: Bool = false
+    var visibilityLevelRaw: String = LeaderboardVisibility.schoolOnly.rawValue
+    var lastSyncedScore: Int = 0
+    var lastSyncedAt: Date?
+    var cloudKitRecordID: String?
+
+    init(
+        playerID: String = UUID().uuidString,
+        displayName: String,
+        schoolID: String,
+        schoolName: String,
+        state: String,
+        country: String = "US",
+        isInternational: Bool = false,
+        visibilityLevel: LeaderboardVisibility = .schoolOnly
+    ) {
+        self.playerID = playerID
+        self.displayName = displayName
+        self.schoolID = schoolID
+        self.schoolName = schoolName
+        self.state = state
+        self.country = country
+        self.isInternational = isInternational
+        self.visibilityLevelRaw = visibilityLevel.rawValue
+        self.lastSyncedScore = 0
+        self.lastSyncedAt = nil
+        self.cloudKitRecordID = nil
+    }
+}
+
+// MARK: - LeaderboardProfile Computed Properties (Extension)
+// Computed properties in extensions are NOT processed by SwiftData's schema reflection
+
+extension LeaderboardProfile {
+    /// Convenience to access visibility as enum
+    var visibilityLevel: LeaderboardVisibility {
+        get { LeaderboardVisibility(rawValue: visibilityLevelRaw) ?? .schoolOnly }
+        set { visibilityLevelRaw = newValue.rawValue }
+    }
+
+    /// Get the appropriate scopes for this player
+    var availableScopes: [LeaderboardScope] {
+        if isInternational {
+            return [.school, .country, .global]
+        } else {
+            return [.school, .state, .national, .global]
+        }
+    }
+}
+
+// MARK: - Leaderboard Entry (For Display)
+
+struct LeaderboardEntry: Identifiable, Equatable {
+    let id: String
+    let playerID: String
+    let displayName: String
+    let schoolID: String
+    let schoolName: String
+    let state: String
+    let country: String
+    let totalScore: Int
+    let gamesPlayed: Int
+    let gamesWon: Int
+    let rank: Int
+    let isCurrentUser: Bool
+
+    var winPercentage: Int {
+        guard gamesPlayed > 0 else { return 0 }
+        return Int((Double(gamesWon) / Double(gamesPlayed)) * 100)
+    }
+
+    var averageScore: Int {
+        guard gamesWon > 0 else { return 0 }
+        return totalScore / gamesWon
+    }
+
+    /// Get training level based on total score
+    var trainingLevel: MedicalTrainingLevel {
+        MedicalTrainingLevel.level(for: totalScore)
+    }
+}
+
+// MARK: - School Ranking Entry (Aggregated)
+
+struct SchoolRankingEntry: Identifiable, Equatable {
+    let id: String // schoolID
+    let schoolID: String
+    let schoolName: String
+    let state: String
+    let country: String
+    let totalScore: Int // Sum of all students' scores
+    let studentCount: Int
+    let totalGamesPlayed: Int
+    let totalGamesWon: Int
+    let rank: Int
+    let isCurrentUserSchool: Bool
+
+    var averageScore: Int {
+        guard studentCount > 0 else { return 0 }
+        return totalScore / studentCount
+    }
+
+    var averageGamesPlayed: Double {
+        guard studentCount > 0 else { return 0 }
+        return Double(totalGamesPlayed) / Double(studentCount)
+    }
+
+    var winPercentage: Int {
+        guard totalGamesPlayed > 0 else { return 0 }
+        return Int((Double(totalGamesWon) / Double(totalGamesPlayed)) * 100)
+    }
+
+    /// Formatted win rate for display (e.g., "75%")
+    var winRate: String {
+        "\(winPercentage)%"
+    }
+
+    /// Formatted average score per student for display
+    var avgScorePerStudent: String {
+        "\(averageScore)"
+    }
+
+    /// Create from a group of LeaderboardEntry items
+    static func aggregate(entries: [LeaderboardEntry], rank: Int, currentUserSchoolID: String?) -> SchoolRankingEntry? {
+        guard let first = entries.first else { return nil }
+
+        let totalScore = entries.reduce(0) { $0 + $1.totalScore }
+        let totalGamesPlayed = entries.reduce(0) { $0 + $1.gamesPlayed }
+        let totalGamesWon = entries.reduce(0) { $0 + $1.gamesWon }
+
+        return SchoolRankingEntry(
+            id: first.schoolID,
+            schoolID: first.schoolID,
+            schoolName: first.schoolName,
+            state: first.state,
+            country: first.country,
+            totalScore: totalScore,
+            studentCount: entries.count,
+            totalGamesPlayed: totalGamesPlayed,
+            totalGamesWon: totalGamesWon,
+            rank: rank,
+            isCurrentUserSchool: first.schoolID == currentUserSchoolID
+        )
+    }
+}
+
+// MARK: - Leaderboard View Mode
+
+enum LeaderboardViewMode: String, CaseIterable {
+    case individuals = "Individuals"
+    case schools = "Schools"
+
+    var icon: String {
+        switch self {
+        case .individuals: return "person.fill"
+        case .schools: return "building.columns.fill"
+        }
     }
 }
 

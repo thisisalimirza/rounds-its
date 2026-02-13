@@ -13,7 +13,6 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var playerStats: [PlayerStats]
     @Query private var achievementProgressList: [AchievementProgress]
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var currentCase: MedicalCase?
     @State private var isDailyCase = false
     @State private var showingGame = false
@@ -27,8 +26,7 @@ struct ContentView: View {
     @State private var showingCaseHistory = false
     @State private var showingAchievements = false
     @State private var showingCategoryAnalytics = false
-    @State private var showOnboarding = false
-    @State private var hasCheckedOnboarding = false // Track if we've already checked this session
+    @State private var showingLeaderboard = false
     
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     
@@ -194,7 +192,6 @@ struct ContentView: View {
                     // Feature Cards Grid
                     LazyVGrid(columns: [
                         GridItem(.flexible(), spacing: 12),
-                        GridItem(.flexible(), spacing: 12),
                         GridItem(.flexible(), spacing: 12)
                     ], spacing: 12) {
                         // Case History
@@ -235,6 +232,15 @@ struct ContentView: View {
                             badgeText: achievementBadgeText
                         ) {
                             showingAchievements = true
+                        }
+
+                        // Leaderboard
+                        FeatureCardButton(
+                            icon: "medal.fill",
+                            title: "Leaderboard",
+                            color: .orange
+                        ) {
+                            showingLeaderboard = true
                         }
                     }
                     .padding(.horizontal)
@@ -291,6 +297,9 @@ struct ContentView: View {
             .sheet(isPresented: $showingCategoryAnalytics) {
                 CategoryAnalyticsView()
             }
+            .sheet(isPresented: $showingLeaderboard) {
+                LeaderboardView()
+            }
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
@@ -320,10 +329,6 @@ struct ContentView: View {
                     }
                 )
             }
-            .sheet(isPresented: $showOnboarding) {
-                OnboardingView()
-                    .interactiveDismissDisabled() // Prevent accidental swipe to dismiss
-            }
             .overlay {
                 ConfettiView(isActive: $showingConfetti)
             }
@@ -342,14 +347,6 @@ struct ContentView: View {
                 // Track analytics
                 AnalyticsManager.shared.trackAppLaunch()
                 SessionTracker.shared.startSession()
-                
-                // Show onboarding for first-time users (only check once per app launch)
-                if !hasCompletedOnboarding && !hasCheckedOnboarding {
-                    hasCheckedOnboarding = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        showOnboarding = true
-                    }
-                }
             }
         }
     }

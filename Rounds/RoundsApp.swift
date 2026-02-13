@@ -25,7 +25,8 @@ struct RoundsApp: App {
             GameSession.self,
             PlayerStats.self,
             CaseHistoryEntry.self,
-            AchievementProgress.self
+            AchievementProgress.self,
+            LeaderboardProfile.self
         ])
 
         // Use a stable URL so we can remove incompatible stores and retry
@@ -56,8 +57,15 @@ struct RoundsApp: App {
 
         // 3) Final fallback: in-memory store so the app can launch
         let memoryConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-        let fallback = try! ModelContainer(for: schema, configurations: [memoryConfig])
-        return fallback
+        do {
+            let fallback = try ModelContainer(for: schema, configurations: [memoryConfig])
+            return fallback
+        } catch {
+            // Print the actual error so we can diagnose
+            print("❌ SwiftData ModelContainer Error: \(error)")
+            print("❌ Error Description: \(error.localizedDescription)")
+            fatalError("Failed to create ModelContainer: \(error)")
+        }
     }()
 
     var body: some Scene {
@@ -77,26 +85,30 @@ struct RoundsApp: App {
                 }
                 .sheet(isPresented: $showOnboarding) {
                     OnboardingView()
+                        .interactiveDismissDisabled() // Prevent accidental swipe dismissal
                 }
         }
         .modelContainer(sharedModelContainer)
     }
     
-    // MARK: - Seed Data
+    // MARK: - Seed Data & Migration
     private static func seedDataIfNeeded(container: ModelContainer) {
         let context = ModelContext(container)
-        
+
+        // Run one-time migration for schema changes (v1.1)
+        migrateIfNeeded(context: context)
+
         // Check if we already have cases
         let descriptor = FetchDescriptor<MedicalCase>()
         let existingCases = (try? context.fetch(descriptor)) ?? []
-        
+
         if existingCases.isEmpty {
             // Add sample cases from library
             let sampleCases = CaseLibrary.getSampleCases()
             for medicalCase in sampleCases {
                 context.insert(medicalCase)
             }
-            
+
             try? context.save()
         }
         else {
@@ -109,16 +121,49 @@ struct RoundsApp: App {
                 try? context.save()
             }
         }
-        
+
         // Initialize player stats if needed
         let statsDescriptor = FetchDescriptor<PlayerStats>()
         let existingStats = (try? context.fetch(statsDescriptor)) ?? []
-        
+
         if existingStats.isEmpty {
             let newStats = PlayerStats()
             context.insert(newStats)
             try? context.save()
         }
+    }
+
+    // MARK: - Schema Migration
+
+    /// Handles one-time migrations when updating from older app versions
+    /// Version 1.1: GameSession.gameState renamed to gameStateRaw (String) for CloudKit compatibility
+    private static func migrateIfNeeded(context: ModelContext) {
+        let migrationKey = "hasCompletedMigration_v1_1"
+
+        // Check if migration already completed
+        guard !UserDefaults.standard.bool(forKey: migrationKey) else { return }
+
+        // Migration v1.1: Clear old GameSession records
+        // The gameState property was renamed to gameStateRaw with a type change.
+        // GameSession only stores in-progress games (not history), so clearing is safe.
+        // User's stats, streaks, and case history are preserved in PlayerStats and CaseHistoryEntry.
+        do {
+            let sessionDescriptor = FetchDescriptor<GameSession>()
+            let oldSessions = try context.fetch(sessionDescriptor)
+
+            for session in oldSessions {
+                context.delete(session)
+            }
+
+            try context.save()
+            print("Migration v1.1: Cleared \(oldSessions.count) old game sessions")
+        } catch {
+            print("Migration v1.1: Error clearing sessions - \(error.localizedDescription)")
+            // Continue anyway - the app should still work, old sessions just won't load properly
+        }
+
+        // Mark migration as complete
+        UserDefaults.standard.set(true, forKey: migrationKey)
     }
 }
 
