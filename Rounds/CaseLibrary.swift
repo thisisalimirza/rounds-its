@@ -680,7 +680,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Atrial Fibrillation",
                 alternativeNames: ["AFib", "AF"],
@@ -694,7 +694,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Acute Rheumatic Fever",
                 alternativeNames: ["ARF"],
@@ -708,7 +708,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cardiac Tamponade",
                 alternativeNames: ["Pericardial Tamponade"],
@@ -722,7 +722,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Dilated Cardiomyopathy",
                 alternativeNames: ["DCM"],
@@ -736,7 +736,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Mitral Regurgitation",
                 alternativeNames: ["MR", "Mitral Insufficiency"],
@@ -750,7 +750,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Aortic Stenosis",
                 alternativeNames: ["AS"],
@@ -764,7 +764,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Ventricular Septal Defect",
                 alternativeNames: ["VSD"],
@@ -778,7 +778,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Coarctation of the Aorta",
                 alternativeNames: ["Aortic Coarctation"],
@@ -792,7 +792,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tetralogy of Fallot",
                 alternativeNames: ["TOF", "Tet Spells"],
@@ -806,7 +806,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 3
             ),
-
+            
             // PULMONOLOGY (10 cases)
             MedicalCase(
                 diagnosis: "Chronic Obstructive Pulmonary Disease",
@@ -821,7 +821,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tension Pneumothorax",
                 alternativeNames: ["Tension PTX"],
@@ -835,7 +835,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cystic Fibrosis",
                 alternativeNames: ["CF"],
@@ -849,7 +849,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Idiopathic Pulmonary Fibrosis",
                 alternativeNames: ["IPF", "Usual Interstitial Pneumonia"],
@@ -863,7 +863,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Community-Acquired Pneumonia",
                 alternativeNames: ["CAP", "Pneumonia"],
@@ -877,7 +877,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tuberculosis",
                 alternativeNames: ["TB", "Pulmonary TB"],
@@ -891,7 +891,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Sleep Apnea",
                 alternativeNames: ["Obstructive Sleep Apnea", "OSA"],
@@ -905,7 +905,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Lung Adenocarcinoma",
                 alternativeNames: ["Lung Cancer", "Bronchogenic Carcinoma"],
@@ -919,7 +919,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Alpha-1 Antitrypsin Deficiency",
                 alternativeNames: ["A1AT Deficiency"],
@@ -933,7 +933,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Aspiration Pneumonia",
                 alternativeNames: ["Chemical Pneumonitis"],
@@ -947,7 +947,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 2
             ),
-
+            
             // GASTROENTEROLOGY (10 cases)
             MedicalCase(
                 diagnosis: "Ulcerative Colitis",
@@ -962,7 +962,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Celiac Disease",
                 alternativeNames: ["Celiac Sprue", "Gluten-Sensitive Enteropathy"],
@@ -976,7 +976,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Acute Cholecystitis",
                 alternativeNames: ["Cholecystitis"],
@@ -990,7 +990,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hepatic Encephalopathy",
                 alternativeNames: ["Hepatic Coma"],
@@ -1004,7 +1004,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Peptic Ulcer Disease",
                 alternativeNames: ["PUD", "Gastric Ulcer", "Duodenal Ulcer"],
@@ -1018,7 +1018,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Esophageal Varices",
                 alternativeNames: ["Variceal Bleeding"],
@@ -1032,7 +1032,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Diverticulitis",
                 alternativeNames: ["Colonic Diverticulitis"],
@@ -1046,7 +1046,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Appendicitis",
                 alternativeNames: ["Acute Appendicitis"],
@@ -1060,7 +1060,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Primary Sclerosing Cholangitis",
                 alternativeNames: ["PSC"],
@@ -1074,7 +1074,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Alcoholic Hepatitis",
                 alternativeNames: ["Alcoholic Liver Disease"],
@@ -1088,7 +1088,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 2
             ),
-
+            
             // NEPHROLOGY (10 cases)
             MedicalCase(
                 diagnosis: "Nephrotic Syndrome",
@@ -1103,7 +1103,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "IgA Nephropathy",
                 alternativeNames: ["Berger Disease"],
@@ -1117,7 +1117,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Acute Tubular Necrosis",
                 alternativeNames: ["ATN"],
@@ -1131,7 +1131,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Polycystic Kidney Disease",
                 alternativeNames: ["PKD", "ADPKD"],
@@ -1145,7 +1145,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Goodpasture Syndrome",
                 alternativeNames: ["Anti-GBM Disease"],
@@ -1159,7 +1159,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Acute Interstitial Nephritis",
                 alternativeNames: ["AIN"],
@@ -1173,7 +1173,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Renal Artery Stenosis",
                 alternativeNames: ["RAS"],
@@ -1187,7 +1187,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Nephrolithiasis",
                 alternativeNames: ["Kidney Stones", "Renal Calculi"],
@@ -1201,7 +1201,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Membranous Nephropathy",
                 alternativeNames: ["Membranous GN"],
@@ -1215,7 +1215,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hemolytic Uremic Syndrome",
                 alternativeNames: ["HUS"],
@@ -1229,7 +1229,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 3
             ),
-
+            
             // ENDOCRINOLOGY (10 cases)
             MedicalCase(
                 diagnosis: "Hypothyroidism",
@@ -1244,7 +1244,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Graves Disease",
                 alternativeNames: ["Hyperthyroidism", "Thyrotoxicosis"],
@@ -1258,7 +1258,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cushing Syndrome",
                 alternativeNames: ["Hypercortisolism"],
@@ -1272,7 +1272,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Addison Disease",
                 alternativeNames: ["Primary Adrenal Insufficiency"],
@@ -1286,7 +1286,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Diabetes Insipidus",
                 alternativeNames: ["DI"],
@@ -1300,7 +1300,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "SIADH",
                 alternativeNames: ["Syndrome of Inappropriate ADH"],
@@ -1314,7 +1314,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Pheochromocytoma",
                 alternativeNames: ["Adrenal Paraganglioma"],
@@ -1328,7 +1328,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hyperparathyroidism",
                 alternativeNames: ["Primary Hyperparathyroidism"],
@@ -1342,7 +1342,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Acromegaly",
                 alternativeNames: ["Growth Hormone Excess"],
@@ -1356,7 +1356,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Type 2 Diabetes Mellitus",
                 alternativeNames: ["T2DM", "Diabetes"],
@@ -1370,7 +1370,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 2
             ),
-
+            
             // NEUROLOGY (10 cases)
             MedicalCase(
                 diagnosis: "Parkinson Disease",
@@ -1385,7 +1385,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Alzheimer Disease",
                 alternativeNames: ["AD", "Dementia"],
@@ -1399,7 +1399,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Ischemic Stroke",
                 alternativeNames: ["CVA", "Cerebrovascular Accident"],
@@ -1413,7 +1413,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Migraine",
                 alternativeNames: ["Migraine Headache"],
@@ -1427,7 +1427,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Temporal Arteritis",
                 alternativeNames: ["Giant Cell Arteritis", "GCA"],
@@ -1441,7 +1441,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Seizure Disorder",
                 alternativeNames: ["Epilepsy"],
@@ -1455,7 +1455,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Huntington Disease",
                 alternativeNames: ["HD"],
@@ -1469,7 +1469,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Bell's Palsy",
                 alternativeNames: ["Idiopathic Facial Nerve Palsy"],
@@ -1483,7 +1483,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Amyotrophic Lateral Sclerosis",
                 alternativeNames: ["ALS", "Lou Gehrig Disease"],
@@ -1497,7 +1497,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Pseudotumor Cerebri",
                 alternativeNames: ["Idiopathic Intracranial Hypertension"],
@@ -1511,7 +1511,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 3
             ),
-
+            
             // HEMATOLOGY/ONCOLOGY (10 cases)
             MedicalCase(
                 diagnosis: "Iron Deficiency Anemia",
@@ -1526,7 +1526,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vitamin B12 Deficiency",
                 alternativeNames: ["Pernicious Anemia"],
@@ -1540,7 +1540,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Acute Myeloid Leukemia",
                 alternativeNames: ["AML"],
@@ -1554,7 +1554,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Acute Lymphoblastic Leukemia",
                 alternativeNames: ["ALL"],
@@ -1568,7 +1568,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Chronic Myeloid Leukemia",
                 alternativeNames: ["CML"],
@@ -1582,7 +1582,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hodgkin Lymphoma",
                 alternativeNames: ["Hodgkin Disease"],
@@ -1596,7 +1596,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Non-Hodgkin Lymphoma",
                 alternativeNames: ["NHL"],
@@ -1610,7 +1610,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hemophilia A",
                 alternativeNames: ["Factor VIII Deficiency"],
@@ -1624,7 +1624,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Von Willebrand Disease",
                 alternativeNames: ["vWD"],
@@ -1638,7 +1638,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Disseminated Intravascular Coagulation",
                 alternativeNames: ["DIC"],
@@ -1652,7 +1652,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             // RHEUMATOLOGY/IMMUNOLOGY (10 cases)
             MedicalCase(
                 diagnosis: "Rheumatoid Arthritis",
@@ -1667,7 +1667,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Osteoarthritis",
                 alternativeNames: ["OA", "Degenerative Joint Disease"],
@@ -1681,7 +1681,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Gout",
                 alternativeNames: ["Gouty Arthritis"],
@@ -1695,7 +1695,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Pseudogout",
                 alternativeNames: ["CPPD", "Calcium Pyrophosphate Deposition"],
@@ -1709,7 +1709,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Ankylosing Spondylitis",
                 alternativeNames: ["AS"],
@@ -1723,7 +1723,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Reactive Arthritis",
                 alternativeNames: ["Reiter Syndrome"],
@@ -1737,7 +1737,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Sjogren Syndrome",
                 alternativeNames: ["Sjogren's"],
@@ -1751,7 +1751,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Polymyalgia Rheumatica",
                 alternativeNames: ["PMR"],
@@ -1765,7 +1765,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Scleroderma",
                 alternativeNames: ["Systemic Sclerosis"],
@@ -1779,7 +1779,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Dermatomyositis",
                 alternativeNames: ["DM"],
@@ -1793,7 +1793,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 3
             ),
-
+            
             // INFECTIOUS DISEASE (10 cases)
             MedicalCase(
                 diagnosis: "HIV/AIDS",
@@ -1808,7 +1808,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Infectious Mononucleosis",
                 alternativeNames: ["Mono", "Kissing Disease"],
@@ -1822,7 +1822,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Lyme Disease",
                 alternativeNames: ["Borreliosis"],
@@ -1836,7 +1836,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Septic Arthritis",
                 alternativeNames: ["Bacterial Arthritis"],
@@ -1850,7 +1850,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Clostridium difficile Colitis",
                 alternativeNames: ["C. diff", "Pseudomembranous Colitis"],
@@ -1864,7 +1864,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Toxic Shock Syndrome",
                 alternativeNames: ["TSS"],
@@ -1878,7 +1878,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Rocky Mountain Spotted Fever",
                 alternativeNames: ["RMSF"],
@@ -1892,7 +1892,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Osteomyelitis",
                 alternativeNames: ["Bone Infection"],
@@ -1906,7 +1906,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Candidiasis",
                 alternativeNames: ["Thrush", "Yeast Infection"],
@@ -1920,7 +1920,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Pneumocystis Pneumonia",
                 alternativeNames: ["PCP", "PJP"],
@@ -1934,7 +1934,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             // DERMATOLOGY (5 cases)
             MedicalCase(
                 diagnosis: "Psoriasis",
@@ -1949,7 +1949,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Melanoma",
                 alternativeNames: ["Malignant Melanoma"],
@@ -1963,7 +1963,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Basal Cell Carcinoma",
                 alternativeNames: ["BCC"],
@@ -1977,7 +1977,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Eczema",
                 alternativeNames: ["Atopic Dermatitis"],
@@ -1991,7 +1991,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Stevens-Johnson Syndrome",
                 alternativeNames: ["SJS", "Toxic Epidermal Necrolysis"],
@@ -2005,7 +2005,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 4
             ),
-
+            
             // OPHTHALMOLOGY (3 cases)
             MedicalCase(
                 diagnosis: "Glaucoma",
@@ -2020,7 +2020,7 @@ class CaseLibrary {
                 category: "Ophthalmology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cataract",
                 alternativeNames: ["Lens Opacity"],
@@ -2034,7 +2034,7 @@ class CaseLibrary {
                 category: "Ophthalmology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Retinal Detachment",
                 alternativeNames: ["RD"],
@@ -2048,7 +2048,7 @@ class CaseLibrary {
                 category: "Ophthalmology",
                 difficulty: 3
             ),
-
+            
             // OBSTETRICS/GYNECOLOGY (5 cases)
             MedicalCase(
                 diagnosis: "Preeclampsia",
@@ -2063,7 +2063,7 @@ class CaseLibrary {
                 category: "Obstetrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Ectopic Pregnancy",
                 alternativeNames: ["Tubal Pregnancy"],
@@ -2077,7 +2077,7 @@ class CaseLibrary {
                 category: "Obstetrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Polycystic Ovary Syndrome",
                 alternativeNames: ["PCOS"],
@@ -2091,7 +2091,7 @@ class CaseLibrary {
                 category: "Gynecology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Endometriosis",
                 alternativeNames: [],
@@ -2105,7 +2105,7 @@ class CaseLibrary {
                 category: "Gynecology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Placenta Previa",
                 alternativeNames: [],
@@ -2119,7 +2119,7 @@ class CaseLibrary {
                 category: "Obstetrics",
                 difficulty: 3
             ),
-
+            
             // PEDIATRICS (7 cases)
             MedicalCase(
                 diagnosis: "Kawasaki Disease",
@@ -2134,7 +2134,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Croup",
                 alternativeNames: ["Laryngotracheobronchitis"],
@@ -2148,7 +2148,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Epiglottitis",
                 alternativeNames: ["Supraglottitis"],
@@ -2162,7 +2162,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Intussusception",
                 alternativeNames: [],
@@ -2176,7 +2176,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Pyloric Stenosis",
                 alternativeNames: ["Infantile Hypertrophic Pyloric Stenosis"],
@@ -2190,7 +2190,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Respiratory Distress Syndrome",
                 alternativeNames: ["RDS", "Hyaline Membrane Disease"],
@@ -2204,7 +2204,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Neonatal Jaundice",
                 alternativeNames: ["Hyperbilirubinemia of the Newborn"],
@@ -2218,7 +2218,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 2
             ),
-
+            
             // PSYCHIATRY (5 cases)
             MedicalCase(
                 diagnosis: "Schizophrenia",
@@ -2233,7 +2233,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Bipolar Disorder",
                 alternativeNames: ["Manic Depression"],
@@ -2247,7 +2247,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Generalized Anxiety Disorder",
                 alternativeNames: ["GAD"],
@@ -2261,7 +2261,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Panic Disorder",
                 alternativeNames: ["Panic Attacks"],
@@ -2275,7 +2275,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Anorexia Nervosa",
                 alternativeNames: ["Anorexia"],
@@ -2316,7 +2316,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Takotsubo Cardiomyopathy",
                 alternativeNames: ["Stress Cardiomyopathy", "Broken Heart Syndrome"],
@@ -2330,7 +2330,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Mitral Stenosis",
                 alternativeNames: ["MS"],
@@ -2344,7 +2344,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Aortic Regurgitation",
                 alternativeNames: ["AR", "Aortic Insufficiency"],
@@ -2358,7 +2358,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Atrial Septal Defect",
                 alternativeNames: ["ASD"],
@@ -2372,7 +2372,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Patent Ductus Arteriosus",
                 alternativeNames: ["PDA"],
@@ -2386,7 +2386,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Dressler Syndrome",
                 alternativeNames: ["Post-MI Pericarditis"],
@@ -2400,7 +2400,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Myocarditis",
                 alternativeNames: ["Viral Myocarditis"],
@@ -2414,7 +2414,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 3
             ),
-
+            
             // PULMONOLOGY (8 cases)
             MedicalCase(
                 diagnosis: "Pulmonary Hypertension",
@@ -2429,7 +2429,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Bronchiectasis",
                 alternativeNames: [],
@@ -2443,7 +2443,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hypersensitivity Pneumonitis",
                 alternativeNames: ["Extrinsic Allergic Alveolitis"],
@@ -2457,7 +2457,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Acute Respiratory Distress Syndrome",
                 alternativeNames: ["ARDS"],
@@ -2471,7 +2471,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Silicosis",
                 alternativeNames: ["Pneumoconiosis"],
@@ -2485,7 +2485,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Asbestosis",
                 alternativeNames: [],
@@ -2499,7 +2499,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Small Cell Lung Cancer",
                 alternativeNames: ["SCLC", "Oat Cell Carcinoma"],
@@ -2513,7 +2513,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Goodpasture Syndrome",
                 alternativeNames: ["Anti-GBM Disease"],
@@ -2527,7 +2527,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 4
             ),
-
+            
             // GASTROENTEROLOGY (10 cases)
             MedicalCase(
                 diagnosis: "Achalasia",
@@ -2542,7 +2542,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Mallory-Weiss Tear",
                 alternativeNames: [],
@@ -2556,7 +2556,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Zenker Diverticulum",
                 alternativeNames: ["Pharyngeal Pouch"],
@@ -2570,7 +2570,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Barrett Esophagus",
                 alternativeNames: ["Barrett's"],
@@ -2584,7 +2584,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Primary Biliary Cholangitis",
                 alternativeNames: ["PBC", "Primary Biliary Cirrhosis"],
@@ -2598,7 +2598,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Whipple Disease",
                 alternativeNames: [],
@@ -2612,7 +2612,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hemochromatosis",
                 alternativeNames: ["Iron Overload"],
@@ -2626,7 +2626,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Wilson Disease",
                 alternativeNames: ["Hepatolenticular Degeneration"],
@@ -2640,7 +2640,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Budd-Chiari Syndrome",
                 alternativeNames: ["Hepatic Vein Thrombosis"],
@@ -2654,7 +2654,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Spontaneous Bacterial Peritonitis",
                 alternativeNames: ["SBP"],
@@ -2668,7 +2668,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             // NEPHROLOGY (8 cases)
             MedicalCase(
                 diagnosis: "Alport Syndrome",
@@ -2683,7 +2683,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Fanconi Syndrome",
                 alternativeNames: [],
@@ -2697,7 +2697,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Bartter Syndrome",
                 alternativeNames: [],
@@ -2711,7 +2711,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Gitelman Syndrome",
                 alternativeNames: [],
@@ -2725,7 +2725,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Minimal Change Disease",
                 alternativeNames: ["MCD"],
@@ -2739,7 +2739,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Focal Segmental Glomerulosclerosis",
                 alternativeNames: ["FSGS"],
@@ -2753,7 +2753,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Post-Streptococcal Glomerulonephritis",
                 alternativeNames: ["PSGN"],
@@ -2767,7 +2767,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Liddle Syndrome",
                 alternativeNames: ["Pseudohyperaldosteronism"],
@@ -2781,7 +2781,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 4
             ),
-
+            
             // ENDOCRINOLOGY (8 cases)
             MedicalCase(
                 diagnosis: "Conn Syndrome",
@@ -2796,7 +2796,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hyperaldosteronism Secondary",
                 alternativeNames: ["Secondary Hyperaldosteronism"],
@@ -2810,7 +2810,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Carcinoid Syndrome",
                 alternativeNames: ["Carcinoid Tumor"],
@@ -2824,7 +2824,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Zollinger-Ellison Syndrome",
                 alternativeNames: ["Gastrinoma"],
@@ -2838,7 +2838,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Multiple Endocrine Neoplasia Type 1",
                 alternativeNames: ["MEN1", "Wermer Syndrome"],
@@ -2852,7 +2852,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Multiple Endocrine Neoplasia Type 2",
                 alternativeNames: ["MEN2"],
@@ -2866,7 +2866,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Sheehan Syndrome",
                 alternativeNames: ["Postpartum Pituitary Necrosis"],
@@ -2880,7 +2880,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Craniopharyngioma",
                 alternativeNames: [],
@@ -2894,7 +2894,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             // NEUROLOGY (10 cases)
             MedicalCase(
                 diagnosis: "Normal Pressure Hydrocephalus",
@@ -2909,7 +2909,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Wernicke Encephalopathy",
                 alternativeNames: ["Wernicke-Korsakoff Syndrome"],
@@ -2923,7 +2923,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Central Pontine Myelinolysis",
                 alternativeNames: ["Osmotic Demyelination Syndrome"],
@@ -2937,7 +2937,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Trigeminal Neuralgia",
                 alternativeNames: ["Tic Douloureux"],
@@ -2951,7 +2951,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Creutzfeldt-Jakob Disease",
                 alternativeNames: ["CJD", "Prion Disease"],
@@ -2965,7 +2965,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Friedreich Ataxia",
                 alternativeNames: [],
@@ -2979,7 +2979,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Charcot-Marie-Tooth Disease",
                 alternativeNames: ["Hereditary Motor and Sensory Neuropathy"],
@@ -2993,7 +2993,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Syringomyelia",
                 alternativeNames: ["Syrinx"],
@@ -3007,7 +3007,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Posterior Fossa Malformations - Chiari",
                 alternativeNames: ["Chiari Malformation"],
@@ -3021,7 +3021,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Lambert-Eaton Myasthenic Syndrome",
                 alternativeNames: ["LEMS"],
@@ -3035,7 +3035,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 4
             ),
-
+            
             // HEMATOLOGY/ONCOLOGY (10 cases)
             MedicalCase(
                 diagnosis: "Thalassemia",
@@ -3050,7 +3050,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Glucose-6-Phosphate Dehydrogenase Deficiency",
                 alternativeNames: ["G6PD Deficiency"],
@@ -3064,7 +3064,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hereditary Spherocytosis",
                 alternativeNames: [],
@@ -3078,7 +3078,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Paroxysmal Nocturnal Hemoglobinuria",
                 alternativeNames: ["PNH"],
@@ -3092,7 +3092,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Polycythemia Vera",
                 alternativeNames: ["PV"],
@@ -3106,7 +3106,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Essential Thrombocythemia",
                 alternativeNames: ["ET"],
@@ -3120,7 +3120,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Myelofibrosis",
                 alternativeNames: ["Primary Myelofibrosis"],
@@ -3134,7 +3134,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Multiple Myeloma",
                 alternativeNames: ["Plasma Cell Myeloma"],
@@ -3148,7 +3148,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Waldenstrom Macroglobulinemia",
                 alternativeNames: [],
@@ -3162,7 +3162,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Thrombotic Thrombocytopenic Purpura",
                 alternativeNames: ["TTP"],
@@ -3176,7 +3176,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             // RHEUMATOLOGY/IMMUNOLOGY (6 cases)
             MedicalCase(
                 diagnosis: "Behçet Disease",
@@ -3191,7 +3191,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Kawasaki Disease",
                 alternativeNames: ["Mucocutaneous Lymph Node Syndrome"],
@@ -3205,7 +3205,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Mixed Connective Tissue Disease",
                 alternativeNames: ["MCTD"],
@@ -3219,7 +3219,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Giant Cell Arteritis",
                 alternativeNames: ["Temporal Arteritis", "GCA"],
@@ -3233,7 +3233,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Takayasu Arteritis",
                 alternativeNames: ["Pulseless Disease"],
@@ -3247,7 +3247,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Polyarteritis Nodosa",
                 alternativeNames: ["PAN"],
@@ -3261,7 +3261,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 4
             ),
-
+            
             // INFECTIOUS DISEASE (6 cases)
             MedicalCase(
                 diagnosis: "Malaria",
@@ -3276,7 +3276,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Toxoplasmosis",
                 alternativeNames: [],
@@ -3290,7 +3290,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cryptococcal Meningitis",
                 alternativeNames: ["Cryptococcosis"],
@@ -3304,7 +3304,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Histoplasmosis",
                 alternativeNames: [],
@@ -3318,7 +3318,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Coccidioidomycosis",
                 alternativeNames: ["Valley Fever"],
@@ -3332,7 +3332,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Blastomycosis",
                 alternativeNames: [],
@@ -3346,7 +3346,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             // DERMATOLOGY (4 cases)
             MedicalCase(
                 diagnosis: "Squamous Cell Carcinoma",
@@ -3361,7 +3361,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Pemphigus Vulgaris",
                 alternativeNames: [],
@@ -3375,7 +3375,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Bullous Pemphigoid",
                 alternativeNames: [],
@@ -3389,7 +3389,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Erythema Multiforme",
                 alternativeNames: ["EM"],
@@ -3403,7 +3403,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 2
             ),
-
+            
             // PEDIATRICS (6 cases)
             MedicalCase(
                 diagnosis: "Hirschsprung Disease",
@@ -3418,7 +3418,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Necrotizing Enterocolitis",
                 alternativeNames: ["NEC"],
@@ -3432,7 +3432,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Retinopathy of Prematurity",
                 alternativeNames: ["ROP"],
@@ -3446,7 +3446,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "DiGeorge Syndrome",
                 alternativeNames: ["22q11.2 Deletion Syndrome"],
@@ -3460,7 +3460,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Wiskott-Aldrich Syndrome",
                 alternativeNames: ["WAS"],
@@ -3474,7 +3474,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tetralogy of Fallot - Tet Spell",
                 alternativeNames: ["Hypercyanotic Spell"],
@@ -3488,7 +3488,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 3
             ),
-
+            
             // OPHTHALMOLOGY (2 cases)
             MedicalCase(
                 diagnosis: "Macular Degeneration",
@@ -3503,7 +3503,7 @@ class CaseLibrary {
                 category: "Ophthalmology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Diabetic Retinopathy",
                 alternativeNames: [],
@@ -3517,7 +3517,7 @@ class CaseLibrary {
                 category: "Ophthalmology",
                 difficulty: 2
             ),
-
+            
             // PSYCHIATRY (2 cases)
             MedicalCase(
                 diagnosis: "Obsessive-Compulsive Disorder",
@@ -3532,7 +3532,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Post-Traumatic Stress Disorder",
                 alternativeNames: ["PTSD"],
@@ -3546,7 +3546,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 2
             ),
-
+            
             // OBSTETRICS (2 cases)
             MedicalCase(
                 diagnosis: "HELLP Syndrome",
@@ -3561,7 +3561,7 @@ class CaseLibrary {
                 category: "Obstetrics",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Placental Abruption",
                 alternativeNames: ["Abruptio Placentae"],
@@ -3589,7 +3589,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Pulmonic Stenosis",
                 alternativeNames: ["PS"],
@@ -3603,7 +3603,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Brugada Syndrome",
                 alternativeNames: [],
@@ -3617,7 +3617,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Long QT Syndrome",
                 alternativeNames: ["LQTS"],
@@ -3631,7 +3631,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Transposition of Great Arteries",
                 alternativeNames: ["TGA", "D-TGA"],
@@ -3645,7 +3645,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Eisenmenger Syndrome",
                 alternativeNames: [],
@@ -3659,7 +3659,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Sick Sinus Syndrome",
                 alternativeNames: ["Sinus Node Dysfunction"],
@@ -3673,7 +3673,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 3
             ),
-
+            
             // PULMONOLOGY (7 cases)
             MedicalCase(
                 diagnosis: "Mesothelioma",
@@ -3688,7 +3688,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Pancoast Tumor",
                 alternativeNames: ["Superior Sulcus Tumor"],
@@ -3702,7 +3702,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Wegener Granulomatosis",
                 alternativeNames: ["Granulomatosis with Polyangiitis", "GPA"],
@@ -3716,7 +3716,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Churg-Strauss Syndrome",
                 alternativeNames: ["Eosinophilic Granulomatosis with Polyangiitis", "EGPA"],
@@ -3730,7 +3730,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Kartagener Syndrome",
                 alternativeNames: ["Primary Ciliary Dyskinesia"],
@@ -3744,7 +3744,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hamartoma",
                 alternativeNames: ["Pulmonary Hamartoma"],
@@ -3758,7 +3758,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Loeffler Syndrome",
                 alternativeNames: ["Simple Pulmonary Eosinophilia"],
@@ -3772,7 +3772,7 @@ class CaseLibrary {
                 category: "Pulmonology",
                 difficulty: 3
             ),
-
+            
             // GASTROENTEROLOGY (8 cases)
             MedicalCase(
                 diagnosis: "Peutz-Jeghers Syndrome",
@@ -3787,7 +3787,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Familial Adenomatous Polyposis",
                 alternativeNames: ["FAP"],
@@ -3801,7 +3801,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Lynch Syndrome",
                 alternativeNames: ["Hereditary Nonpolyposis Colorectal Cancer", "HNPCC"],
@@ -3815,7 +3815,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Ogilvie Syndrome",
                 alternativeNames: ["Acute Colonic Pseudo-obstruction"],
@@ -3829,7 +3829,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tropical Sprue",
                 alternativeNames: [],
@@ -3843,7 +3843,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Ischemic Colitis",
                 alternativeNames: [],
@@ -3857,7 +3857,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Carcinoid Tumor",
                 alternativeNames: ["Neuroendocrine Tumor"],
@@ -3871,7 +3871,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Mesenteric Ischemia",
                 alternativeNames: ["Acute Mesenteric Ischemia"],
@@ -3885,7 +3885,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 3
             ),
-
+            
             // NEPHROLOGY (7 cases)
             MedicalCase(
                 diagnosis: "Rapidly Progressive Glomerulonephritis",
@@ -3900,7 +3900,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Diabetic Nephropathy",
                 alternativeNames: ["Diabetic Kidney Disease"],
@@ -3914,7 +3914,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hypertensive Nephropathy",
                 alternativeNames: ["Hypertensive Nephrosclerosis"],
@@ -3928,7 +3928,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Contrast-Induced Nephropathy",
                 alternativeNames: ["CIN"],
@@ -3942,7 +3942,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Rhabdomyolysis",
                 alternativeNames: [],
@@ -3956,7 +3956,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tumor Lysis Syndrome",
                 alternativeNames: ["TLS"],
@@ -3970,7 +3970,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Medullary Sponge Kidney",
                 alternativeNames: [],
@@ -3984,7 +3984,7 @@ class CaseLibrary {
                 category: "Nephrology",
                 difficulty: 3
             ),
-
+            
             // ENDOCRINOLOGY (7 cases)
             MedicalCase(
                 diagnosis: "Insulinoma",
@@ -3999,7 +3999,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Glucagonoma",
                 alternativeNames: [],
@@ -4013,7 +4013,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "VIPoma",
                 alternativeNames: ["Verner-Morrison Syndrome"],
@@ -4027,7 +4027,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Congenital Adrenal Hyperplasia",
                 alternativeNames: ["CAH"],
@@ -4041,7 +4041,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Klinefelter Syndrome",
                 alternativeNames: ["47,XXY"],
@@ -4055,7 +4055,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Turner Syndrome",
                 alternativeNames: ["45,X"],
@@ -4069,7 +4069,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Prolactinoma",
                 alternativeNames: ["Pituitary Adenoma"],
@@ -4083,7 +4083,7 @@ class CaseLibrary {
                 category: "Endocrinology",
                 difficulty: 2
             ),
-
+            
             // NEUROLOGY (8 cases)
             MedicalCase(
                 diagnosis: "Vertebrobasilar Insufficiency",
@@ -4098,7 +4098,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cavernous Sinus Thrombosis",
                 alternativeNames: ["CST"],
@@ -4112,7 +4112,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Subdural Hematoma",
                 alternativeNames: ["SDH"],
@@ -4126,7 +4126,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Epidural Hematoma",
                 alternativeNames: ["EDH"],
@@ -4140,7 +4140,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Transient Ischemic Attack",
                 alternativeNames: ["TIA", "Mini-Stroke"],
@@ -4154,7 +4154,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Benign Essential Tremor",
                 alternativeNames: ["Essential Tremor"],
@@ -4168,7 +4168,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Neurofibromatosis Type 1",
                 alternativeNames: ["NF1", "Von Recklinghausen Disease"],
@@ -4182,7 +4182,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tuberous Sclerosis",
                 alternativeNames: ["TSC"],
@@ -4196,7 +4196,7 @@ class CaseLibrary {
                 category: "Neurology",
                 difficulty: 3
             ),
-
+            
             // HEMATOLOGY/ONCOLOGY (8 cases)
             MedicalCase(
                 diagnosis: "Aplastic Anemia",
@@ -4211,7 +4211,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Myelodysplastic Syndrome",
                 alternativeNames: ["MDS", "Preleukemia"],
@@ -4225,7 +4225,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hairy Cell Leukemia",
                 alternativeNames: ["HCL"],
@@ -4239,7 +4239,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Chronic Lymphocytic Leukemia",
                 alternativeNames: ["CLL"],
@@ -4253,7 +4253,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Langerhans Cell Histiocytosis",
                 alternativeNames: ["Histiocytosis X"],
@@ -4267,7 +4267,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Bernard-Soulier Syndrome",
                 alternativeNames: [],
@@ -4281,7 +4281,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Glanzmann Thrombasthenia",
                 alternativeNames: [],
@@ -4295,7 +4295,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Factor V Leiden",
                 alternativeNames: ["Activated Protein C Resistance"],
@@ -4309,7 +4309,7 @@ class CaseLibrary {
                 category: "Hematology",
                 difficulty: 3
             ),
-
+            
             // RHEUMATOLOGY/IMMUNOLOGY (7 cases)
             MedicalCase(
                 diagnosis: "Relapsing Polychondritis",
@@ -4324,7 +4324,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Adult-Onset Still Disease",
                 alternativeNames: ["AOSD"],
@@ -4338,7 +4338,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Felty Syndrome",
                 alternativeNames: [],
@@ -4352,7 +4352,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Henoch-Schönlein Purpura",
                 alternativeNames: ["IgA Vasculitis"],
@@ -4366,7 +4366,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Microscopic Polyangiitis",
                 alternativeNames: ["MPA"],
@@ -4380,7 +4380,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cryoglobulinemia",
                 alternativeNames: [],
@@ -4394,7 +4394,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Antiphospholipid Syndrome",
                 alternativeNames: ["APS"],
@@ -4408,7 +4408,7 @@ class CaseLibrary {
                 category: "Rheumatology",
                 difficulty: 3
             ),
-
+            
             // INFECTIOUS DISEASE (7 cases)
             MedicalCase(
                 diagnosis: "Actinomycosis",
@@ -4423,7 +4423,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Nocardiosis",
                 alternativeNames: [],
@@ -4437,7 +4437,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cat Scratch Disease",
                 alternativeNames: ["Bartonella Henselae"],
@@ -4451,7 +4451,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Erythema Migrans",
                 alternativeNames: ["Lyme Disease Primary"],
@@ -4465,7 +4465,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Scarlet Fever",
                 alternativeNames: ["Scarlatina"],
@@ -4479,7 +4479,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Roseola Infantum",
                 alternativeNames: ["Exanthem Subitum", "Sixth Disease"],
@@ -4493,7 +4493,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hand-Foot-Mouth Disease",
                 alternativeNames: ["HFMD"],
@@ -4507,7 +4507,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             // DERMATOLOGY (5 cases)
             MedicalCase(
                 diagnosis: "Acanthosis Nigricans",
@@ -4522,7 +4522,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Pityriasis Rosea",
                 alternativeNames: [],
@@ -4536,7 +4536,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Seborrheic Keratosis",
                 alternativeNames: [],
@@ -4550,7 +4550,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Actinic Keratosis",
                 alternativeNames: ["Solar Keratosis"],
@@ -4564,7 +4564,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Dermatitis Herpetiformis",
                 alternativeNames: [],
@@ -4578,7 +4578,7 @@ class CaseLibrary {
                 category: "Dermatology",
                 difficulty: 3
             ),
-
+            
             // PEDIATRICS (6 cases)
             MedicalCase(
                 diagnosis: "Bronchiolitis",
@@ -4593,7 +4593,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Kernicterus",
                 alternativeNames: ["Bilirubin Encephalopathy"],
@@ -4607,7 +4607,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Erb Palsy",
                 alternativeNames: ["Erb-Duchenne Palsy"],
@@ -4621,7 +4621,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tracheoesophageal Fistula",
                 alternativeNames: ["TEF"],
@@ -4635,7 +4635,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hypertrophic Pyloric Stenosis - Late Presentation",
                 alternativeNames: ["Pyloric Stenosis"],
@@ -4649,7 +4649,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Congenital Hypothyroidism",
                 alternativeNames: ["Cretinism"],
@@ -4663,7 +4663,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 2
             ),
-
+            
             // OPHTHALMOLOGY (2 cases)
             MedicalCase(
                 diagnosis: "Central Retinal Artery Occlusion",
@@ -4678,7 +4678,7 @@ class CaseLibrary {
                 category: "Ophthalmology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Papilledema",
                 alternativeNames: ["Optic Disc Swelling"],
@@ -4692,7 +4692,7 @@ class CaseLibrary {
                 category: "Ophthalmology",
                 difficulty: 2
             ),
-
+            
             // PSYCHIATRY (3 cases)
             MedicalCase(
                 diagnosis: "Somatization Disorder",
@@ -4707,7 +4707,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Conversion Disorder",
                 alternativeNames: ["Functional Neurological Disorder"],
@@ -4721,7 +4721,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tourette Syndrome",
                 alternativeNames: ["TS"],
@@ -4735,7 +4735,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 2
             ),
-
+            
             // OBSTETRICS (2 cases)
             MedicalCase(
                 diagnosis: "Gestational Trophoblastic Disease",
@@ -4750,7 +4750,7 @@ class CaseLibrary {
                 category: "Obstetrics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Chorioamnionitis",
                 alternativeNames: ["Intraamniotic Infection"],
@@ -4764,7 +4764,7 @@ class CaseLibrary {
                 category: "Obstetrics",
                 difficulty: 2
             ),
-
+            
             // MUSCULOSKELETAL (5 cases)
             MedicalCase(
                 diagnosis: "Osgood-Schlatter Disease",
@@ -4779,7 +4779,7 @@ class CaseLibrary {
                 category: "Orthopedics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Slipped Capital Femoral Epiphysis",
                 alternativeNames: ["SCFE"],
@@ -4793,7 +4793,7 @@ class CaseLibrary {
                 category: "Orthopedics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Legg-Calvé-Perthes Disease",
                 alternativeNames: ["Perthes Disease"],
@@ -4807,7 +4807,7 @@ class CaseLibrary {
                 category: "Orthopedics",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Developmental Dysplasia of the Hip",
                 alternativeNames: ["DDH", "Congenital Hip Dislocation"],
@@ -4821,7 +4821,7 @@ class CaseLibrary {
                 category: "Orthopedics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Compartment Syndrome",
                 alternativeNames: ["Acute Compartment Syndrome"],
@@ -4849,7 +4849,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Maple Syrup Urine Disease",
                 alternativeNames: ["MSUD"],
@@ -4863,7 +4863,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Homocystinuria",
                 alternativeNames: [],
@@ -4877,7 +4877,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Alkaptonuria",
                 alternativeNames: ["Ochronosis"],
@@ -4891,7 +4891,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cystinuria",
                 alternativeNames: [],
@@ -4905,7 +4905,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hartnup Disease",
                 alternativeNames: [],
@@ -4919,7 +4919,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Albinism",
                 alternativeNames: ["Oculocutaneous Albinism"],
@@ -4933,7 +4933,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tyrosinemia Type I",
                 alternativeNames: [],
@@ -4947,7 +4947,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Methylmalonic Acidemia",
                 alternativeNames: ["MMA"],
@@ -4961,7 +4961,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Propionic Acidemia",
                 alternativeNames: [],
@@ -4975,7 +4975,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             // BIOCHEMISTRY/GENETICS - CARBOHYDRATE DISORDERS (8 cases)
             MedicalCase(
                 diagnosis: "Galactosemia",
@@ -4990,7 +4990,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hereditary Fructose Intolerance",
                 alternativeNames: [],
@@ -5004,7 +5004,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Essential Fructosuria",
                 alternativeNames: [],
@@ -5018,7 +5018,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Von Gierke Disease",
                 alternativeNames: ["Glycogen Storage Disease Type I"],
@@ -5032,7 +5032,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Pompe Disease",
                 alternativeNames: ["Glycogen Storage Disease Type II"],
@@ -5046,7 +5046,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cori Disease",
                 alternativeNames: ["Glycogen Storage Disease Type III"],
@@ -5060,7 +5060,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "McArdle Disease",
                 alternativeNames: ["Glycogen Storage Disease Type V"],
@@ -5074,7 +5074,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Lactase Deficiency",
                 alternativeNames: ["Lactose Intolerance"],
@@ -5088,7 +5088,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 2
             ),
-
+            
             // BIOCHEMISTRY/GENETICS - LIPID DISORDERS (8 cases)
             MedicalCase(
                 diagnosis: "Familial Hypercholesterolemia",
@@ -5103,7 +5103,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Familial Dysbetalipoproteinemia",
                 alternativeNames: ["Type III Hyperlipoproteinemia"],
@@ -5117,7 +5117,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tangier Disease",
                 alternativeNames: [],
@@ -5131,7 +5131,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Gaucher Disease",
                 alternativeNames: [],
@@ -5145,7 +5145,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Niemann-Pick Disease",
                 alternativeNames: [],
@@ -5159,7 +5159,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tay-Sachs Disease",
                 alternativeNames: [],
@@ -5173,7 +5173,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Fabry Disease",
                 alternativeNames: [],
@@ -5187,7 +5187,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Krabbe Disease",
                 alternativeNames: ["Globoid Cell Leukodystrophy"],
@@ -5201,7 +5201,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             // BIOCHEMISTRY/GENETICS - PURINE/PYRIMIDINE DISORDERS (4 cases)
             MedicalCase(
                 diagnosis: "Lesch-Nyhan Syndrome",
@@ -5216,7 +5216,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Orotic Aciduria",
                 alternativeNames: [],
@@ -5230,7 +5230,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Adenosine Deaminase Deficiency",
                 alternativeNames: ["ADA Deficiency"],
@@ -5244,7 +5244,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Xeroderma Pigmentosum",
                 alternativeNames: ["XP"],
@@ -5258,7 +5258,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             // BIOCHEMISTRY/GENETICS - MITOCHONDRIAL/OTHER (5 cases)
             MedicalCase(
                 diagnosis: "MELAS Syndrome",
@@ -5273,7 +5273,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Kartagener Syndrome Ciliary Defect",
                 alternativeNames: ["Primary Ciliary Dyskinesia"],
@@ -5287,7 +5287,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Chediak-Higashi Syndrome",
                 alternativeNames: [],
@@ -5301,7 +5301,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Menkes Disease",
                 alternativeNames: ["Kinky Hair Disease"],
@@ -5315,7 +5315,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Mucopolysaccharidosis Type I",
                 alternativeNames: ["Hurler Syndrome"],
@@ -5329,7 +5329,7 @@ class CaseLibrary {
                 category: "Biochemistry",
                 difficulty: 3
             ),
-
+            
             // IMMUNODEFICIENCIES (12 cases)
             MedicalCase(
                 diagnosis: "Severe Combined Immunodeficiency",
@@ -5344,7 +5344,7 @@ class CaseLibrary {
                 category: "Immunology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "X-Linked Agammaglobulinemia",
                 alternativeNames: ["Bruton Agammaglobulinemia"],
@@ -5358,7 +5358,7 @@ class CaseLibrary {
                 category: "Immunology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Common Variable Immunodeficiency",
                 alternativeNames: ["CVID"],
@@ -5372,7 +5372,7 @@ class CaseLibrary {
                 category: "Immunology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Selective IgA Deficiency",
                 alternativeNames: [],
@@ -5386,7 +5386,7 @@ class CaseLibrary {
                 category: "Immunology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hyper-IgM Syndrome",
                 alternativeNames: [],
@@ -5400,7 +5400,7 @@ class CaseLibrary {
                 category: "Immunology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Chronic Granulomatous Disease",
                 alternativeNames: ["CGD"],
@@ -5414,7 +5414,7 @@ class CaseLibrary {
                 category: "Immunology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Leukocyte Adhesion Deficiency",
                 alternativeNames: ["LAD"],
@@ -5428,7 +5428,7 @@ class CaseLibrary {
                 category: "Immunology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Job Syndrome",
                 alternativeNames: ["Hyper-IgE Syndrome"],
@@ -5442,7 +5442,7 @@ class CaseLibrary {
                 category: "Immunology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Ataxia-Telangiectasia",
                 alternativeNames: [],
@@ -5456,7 +5456,7 @@ class CaseLibrary {
                 category: "Immunology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Complement C5-C9 Deficiency",
                 alternativeNames: ["Terminal Complement Deficiency"],
@@ -5470,7 +5470,7 @@ class CaseLibrary {
                 category: "Immunology",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hereditary Angioedema",
                 alternativeNames: ["C1 Esterase Inhibitor Deficiency"],
@@ -5484,7 +5484,7 @@ class CaseLibrary {
                 category: "Immunology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "IL-12 Receptor Deficiency",
                 alternativeNames: [],
@@ -5498,7 +5498,7 @@ class CaseLibrary {
                 category: "Immunology",
                 difficulty: 4
             ),
-
+            
             // INFECTIOUS DISEASE - STIs (10 cases)
             MedicalCase(
                 diagnosis: "Primary Syphilis",
@@ -5513,7 +5513,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Secondary Syphilis",
                 alternativeNames: ["Syphilis Stage 2"],
@@ -5527,7 +5527,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tertiary Syphilis",
                 alternativeNames: ["Syphilis Stage 3"],
@@ -5541,7 +5541,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Gonorrhea",
                 alternativeNames: ["Neisseria Gonorrhoeae"],
@@ -5555,7 +5555,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Chlamydia Trachomatis",
                 alternativeNames: ["Chlamydia"],
@@ -5569,7 +5569,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Chancroid",
                 alternativeNames: ["Haemophilus Ducreyi"],
@@ -5583,7 +5583,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Lymphogranuloma Venereum",
                 alternativeNames: ["LGV"],
@@ -5597,7 +5597,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Granuloma Inguinale",
                 alternativeNames: ["Donovanosis"],
@@ -5611,7 +5611,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Genital Herpes",
                 alternativeNames: ["HSV-2"],
@@ -5625,7 +5625,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Human Papillomavirus",
                 alternativeNames: ["HPV", "Genital Warts"],
@@ -5639,7 +5639,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             // INFECTIOUS DISEASE - HEPATITIS (8 cases)
             MedicalCase(
                 diagnosis: "Hepatitis A",
@@ -5654,7 +5654,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hepatitis B - Acute",
                 alternativeNames: ["HBV"],
@@ -5668,7 +5668,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hepatitis B - Chronic",
                 alternativeNames: ["Chronic HBV"],
@@ -5682,7 +5682,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hepatitis C",
                 alternativeNames: ["HCV"],
@@ -5696,7 +5696,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hepatitis D",
                 alternativeNames: ["HDV", "Delta Hepatitis"],
@@ -5710,7 +5710,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hepatitis E",
                 alternativeNames: ["HEV"],
@@ -5724,7 +5724,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Fulminant Hepatic Failure",
                 alternativeNames: ["Acute Liver Failure"],
@@ -5738,7 +5738,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Autoimmune Hepatitis",
                 alternativeNames: [],
@@ -5752,7 +5752,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             // TOXICOLOGY (15 cases)
             MedicalCase(
                 diagnosis: "Acetaminophen Toxicity",
@@ -5767,7 +5767,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Salicylate Toxicity",
                 alternativeNames: ["Aspirin Overdose"],
@@ -5781,7 +5781,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Opioid Overdose",
                 alternativeNames: ["Heroin Overdose"],
@@ -5795,7 +5795,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Benzodiazepine Overdose",
                 alternativeNames: [],
@@ -5809,7 +5809,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Tricyclic Antidepressant Toxicity",
                 alternativeNames: ["TCA Overdose"],
@@ -5823,7 +5823,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Organophosphate Poisoning",
                 alternativeNames: ["Insecticide Toxicity"],
@@ -5837,7 +5837,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Carbon Monoxide Poisoning",
                 alternativeNames: ["CO Poisoning"],
@@ -5851,7 +5851,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cyanide Poisoning",
                 alternativeNames: [],
@@ -5865,7 +5865,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Methanol Toxicity",
                 alternativeNames: [],
@@ -5879,7 +5879,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Ethylene Glycol Toxicity",
                 alternativeNames: ["Antifreeze Poisoning"],
@@ -5893,7 +5893,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Lead Poisoning",
                 alternativeNames: ["Plumbism"],
@@ -5907,7 +5907,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Mercury Poisoning",
                 alternativeNames: [],
@@ -5921,7 +5921,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Arsenic Poisoning",
                 alternativeNames: [],
@@ -5935,7 +5935,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Iron Toxicity",
                 alternativeNames: ["Iron Overdose"],
@@ -5949,7 +5949,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Isoniazid Toxicity",
                 alternativeNames: ["INH Overdose"],
@@ -5963,7 +5963,7 @@ class CaseLibrary {
                 category: "Toxicology",
                 difficulty: 3
             ),
-
+            
             // VITAMIN/MINERAL DEFICIENCIES (15 cases)
             MedicalCase(
                 diagnosis: "Vitamin A Deficiency",
@@ -5978,7 +5978,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vitamin B1 Deficiency",
                 alternativeNames: ["Thiamine Deficiency", "Beriberi"],
@@ -5992,7 +5992,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vitamin B2 Deficiency",
                 alternativeNames: ["Riboflavin Deficiency"],
@@ -6006,7 +6006,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vitamin B3 Deficiency",
                 alternativeNames: ["Niacin Deficiency", "Pellagra"],
@@ -6020,7 +6020,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vitamin B5 Deficiency",
                 alternativeNames: ["Pantothenic Acid Deficiency"],
@@ -6034,7 +6034,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 4
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vitamin B6 Deficiency",
                 alternativeNames: ["Pyridoxine Deficiency"],
@@ -6048,7 +6048,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vitamin B7 Deficiency",
                 alternativeNames: ["Biotin Deficiency"],
@@ -6062,7 +6062,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vitamin B9 Deficiency",
                 alternativeNames: ["Folate Deficiency"],
@@ -6076,7 +6076,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vitamin C Deficiency",
                 alternativeNames: ["Scurvy"],
@@ -6090,7 +6090,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vitamin D Deficiency",
                 alternativeNames: ["Rickets", "Osteomalacia"],
@@ -6104,7 +6104,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vitamin E Deficiency",
                 alternativeNames: ["Tocopherol Deficiency"],
@@ -6118,7 +6118,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vitamin K Deficiency",
                 alternativeNames: [],
@@ -6132,7 +6132,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Zinc Deficiency",
                 alternativeNames: [],
@@ -6146,7 +6146,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Copper Deficiency",
                 alternativeNames: [],
@@ -6160,7 +6160,7 @@ class CaseLibrary {
                 category: "Nutrition",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Selenium Deficiency",
                 alternativeNames: ["Keshan Disease"],
@@ -6188,7 +6188,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cryptosporidiosis",
                 alternativeNames: ["Cryptosporidium"],
@@ -6202,7 +6202,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Amebiasis",
                 alternativeNames: ["Entamoeba Histolytica"],
@@ -6216,7 +6216,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Trichomoniasis",
                 alternativeNames: ["Trichomonas Vaginalis"],
@@ -6230,7 +6230,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Pinworm Infection",
                 alternativeNames: ["Enterobiasis", "Enterobius Vermicularis"],
@@ -6244,7 +6244,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Ascariasis",
                 alternativeNames: ["Ascaris Lumbricoides"],
@@ -6258,7 +6258,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hookworm Infection",
                 alternativeNames: ["Ancylostoma", "Necator"],
@@ -6272,7 +6272,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Neurocysticercosis",
                 alternativeNames: ["Taenia Solium", "Cysticercosis"],
@@ -6286,7 +6286,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Schistosomiasis",
                 alternativeNames: ["Bilharzia"],
@@ -6300,7 +6300,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Leishmaniasis - Visceral",
                 alternativeNames: ["Kala-azar"],
@@ -6314,7 +6314,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cutaneous Leishmaniasis",
                 alternativeNames: [],
@@ -6328,7 +6328,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Chagas Disease",
                 alternativeNames: ["American Trypanosomiasis"],
@@ -6342,7 +6342,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "African Sleeping Sickness",
                 alternativeNames: ["African Trypanosomiasis"],
@@ -6356,7 +6356,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Strongyloidiasis",
                 alternativeNames: ["Strongyloides Stercoralis"],
@@ -6370,7 +6370,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Trichinellosis",
                 alternativeNames: ["Trichinella Spiralis"],
@@ -6384,7 +6384,7 @@ class CaseLibrary {
                 category: "Infectious Disease",
                 difficulty: 3
             ),
-
+            
             // GENETIC SYNDROMES (10 cases)
             MedicalCase(
                 diagnosis: "Fragile X Syndrome",
@@ -6399,7 +6399,7 @@ class CaseLibrary {
                 category: "Genetics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Prader-Willi Syndrome",
                 alternativeNames: [],
@@ -6413,7 +6413,7 @@ class CaseLibrary {
                 category: "Genetics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Angelman Syndrome",
                 alternativeNames: ["Happy Puppet Syndrome"],
@@ -6427,7 +6427,7 @@ class CaseLibrary {
                 category: "Genetics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Achondroplasia",
                 alternativeNames: [],
@@ -6441,7 +6441,7 @@ class CaseLibrary {
                 category: "Genetics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Marfan Syndrome",
                 alternativeNames: [],
@@ -6455,7 +6455,7 @@ class CaseLibrary {
                 category: "Genetics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Ehlers-Danlos Syndrome",
                 alternativeNames: ["EDS"],
@@ -6469,7 +6469,7 @@ class CaseLibrary {
                 category: "Genetics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Osteogenesis Imperfecta",
                 alternativeNames: ["Brittle Bone Disease"],
@@ -6483,7 +6483,7 @@ class CaseLibrary {
                 category: "Genetics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Duchenne Muscular Dystrophy",
                 alternativeNames: ["DMD"],
@@ -6497,7 +6497,7 @@ class CaseLibrary {
                 category: "Genetics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Becker Muscular Dystrophy",
                 alternativeNames: ["BMD"],
@@ -6511,7 +6511,7 @@ class CaseLibrary {
                 category: "Genetics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Myotonic Dystrophy",
                 alternativeNames: [],
@@ -6525,7 +6525,7 @@ class CaseLibrary {
                 category: "Genetics",
                 difficulty: 3
             ),
-
+            
             // REPRODUCTIVE/UROLOGY (12 cases)
             MedicalCase(
                 diagnosis: "Benign Prostatic Hyperplasia",
@@ -6540,7 +6540,7 @@ class CaseLibrary {
                 category: "Urology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Prostate Cancer",
                 alternativeNames: ["Prostate Adenocarcinoma"],
@@ -6554,7 +6554,7 @@ class CaseLibrary {
                 category: "Urology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Testicular Seminoma",
                 alternativeNames: [],
@@ -6568,7 +6568,7 @@ class CaseLibrary {
                 category: "Urology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Testicular Non-Seminomatous Germ Cell Tumor",
                 alternativeNames: ["NSGCT"],
@@ -6582,7 +6582,7 @@ class CaseLibrary {
                 category: "Urology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Ovarian Cancer",
                 alternativeNames: ["Epithelial Ovarian Cancer"],
@@ -6596,7 +6596,7 @@ class CaseLibrary {
                 category: "Gynecology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cervical Intraepithelial Neoplasia",
                 alternativeNames: ["CIN", "Cervical Dysplasia"],
@@ -6610,7 +6610,7 @@ class CaseLibrary {
                 category: "Gynecology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Invasive Cervical Cancer",
                 alternativeNames: ["Cervical Squamous Cell Carcinoma"],
@@ -6624,7 +6624,7 @@ class CaseLibrary {
                 category: "Gynecology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Breast Cancer",
                 alternativeNames: ["Invasive Ductal Carcinoma"],
@@ -6638,7 +6638,7 @@ class CaseLibrary {
                 category: "Oncology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Epididymitis",
                 alternativeNames: [],
@@ -6652,7 +6652,7 @@ class CaseLibrary {
                 category: "Urology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Testicular Torsion",
                 alternativeNames: [],
@@ -6666,7 +6666,7 @@ class CaseLibrary {
                 category: "Urology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Varicocele",
                 alternativeNames: [],
@@ -6680,7 +6680,7 @@ class CaseLibrary {
                 category: "Urology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hydrocele",
                 alternativeNames: [],
@@ -6694,7 +6694,7 @@ class CaseLibrary {
                 category: "Urology",
                 difficulty: 2
             ),
-
+            
             // ENT (6 cases)
             MedicalCase(
                 diagnosis: "Meniere Disease",
@@ -6709,7 +6709,7 @@ class CaseLibrary {
                 category: "ENT",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vestibular Schwannoma",
                 alternativeNames: ["Acoustic Neuroma"],
@@ -6723,7 +6723,7 @@ class CaseLibrary {
                 category: "ENT",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Acute Otitis Media",
                 alternativeNames: ["AOM"],
@@ -6737,7 +6737,7 @@ class CaseLibrary {
                 category: "ENT",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Otitis Externa",
                 alternativeNames: ["Swimmer's Ear"],
@@ -6751,7 +6751,7 @@ class CaseLibrary {
                 category: "ENT",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Acute Bacterial Sinusitis",
                 alternativeNames: [],
@@ -6765,7 +6765,7 @@ class CaseLibrary {
                 category: "ENT",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Allergic Rhinitis",
                 alternativeNames: ["Hay Fever"],
@@ -6779,7 +6779,7 @@ class CaseLibrary {
                 category: "ENT",
                 difficulty: 2
             ),
-
+            
             // PHARMACOLOGY (20 cases)
             MedicalCase(
                 diagnosis: "Warfarin Therapy",
@@ -6794,7 +6794,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Heparin-Induced Thrombocytopenia",
                 alternativeNames: ["HIT"],
@@ -6808,7 +6808,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Statin-Induced Myopathy",
                 alternativeNames: [],
@@ -6822,7 +6822,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "ACE Inhibitor Side Effects",
                 alternativeNames: [],
@@ -6836,7 +6836,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Beta-Blocker Toxicity",
                 alternativeNames: [],
@@ -6850,7 +6850,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Digoxin Toxicity",
                 alternativeNames: [],
@@ -6864,7 +6864,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Lithium Toxicity",
                 alternativeNames: [],
@@ -6878,7 +6878,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Phenytoin Side Effects",
                 alternativeNames: ["Dilantin"],
@@ -6892,7 +6892,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Methotrexate Toxicity",
                 alternativeNames: [],
@@ -6906,7 +6906,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Aminoglycoside Toxicity",
                 alternativeNames: ["Gentamicin", "Tobramycin"],
@@ -6920,7 +6920,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vancomycin Red Man Syndrome",
                 alternativeNames: [],
@@ -6934,7 +6934,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Rifampin Side Effects",
                 alternativeNames: [],
@@ -6948,7 +6948,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Fluoroquinolone Side Effects",
                 alternativeNames: ["Ciprofloxacin", "Levofloxacin"],
@@ -6962,7 +6962,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Sulfonamide Hypersensitivity",
                 alternativeNames: ["Sulfa Allergy"],
@@ -6976,7 +6976,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Amphotericin B Toxicity",
                 alternativeNames: ["Ampho-terrible"],
@@ -6990,7 +6990,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Bleomycin Pulmonary Toxicity",
                 alternativeNames: [],
@@ -7004,7 +7004,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Doxorubicin Cardiotoxicity",
                 alternativeNames: ["Adriamycin"],
@@ -7018,7 +7018,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Vincristine Neurotoxicity",
                 alternativeNames: [],
@@ -7032,7 +7032,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cisplatin Toxicity",
                 alternativeNames: [],
@@ -7046,7 +7046,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cyclophosphamide Toxicity",
                 alternativeNames: [],
@@ -7060,7 +7060,7 @@ class CaseLibrary {
                 category: "Pharmacology",
                 difficulty: 3
             ),
-
+            
             // PSYCHIATRY/BEHAVIORAL (6 cases)
             MedicalCase(
                 diagnosis: "Alcohol Withdrawal",
@@ -7075,7 +7075,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Bulimia Nervosa",
                 alternativeNames: [],
@@ -7089,7 +7089,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Attention-Deficit Hyperactivity Disorder",
                 alternativeNames: ["ADHD"],
@@ -7103,7 +7103,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Autism Spectrum Disorder",
                 alternativeNames: ["ASD"],
@@ -7117,7 +7117,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Neuroleptic Malignant Syndrome",
                 alternativeNames: ["NMS"],
@@ -7131,7 +7131,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 3
             ),
-
+            
             MedicalCase(
                 diagnosis: "Serotonin Syndrome",
                 alternativeNames: [],
@@ -7145,7 +7145,7 @@ class CaseLibrary {
                 category: "Psychiatry",
                 difficulty: 3
             ),
-
+            
             // VASCULAR (8 cases)
             MedicalCase(
                 diagnosis: "Deep Vein Thrombosis",
@@ -7160,7 +7160,7 @@ class CaseLibrary {
                 category: "Vascular",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Peripheral Arterial Disease",
                 alternativeNames: ["PAD"],
@@ -7174,7 +7174,7 @@ class CaseLibrary {
                 category: "Vascular",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Abdominal Aortic Aneurysm",
                 alternativeNames: ["AAA"],
@@ -7188,7 +7188,7 @@ class CaseLibrary {
                 category: "Vascular",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Varicose Veins",
                 alternativeNames: [],
@@ -7202,7 +7202,7 @@ class CaseLibrary {
                 category: "Vascular",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Hypovolemic Shock",
                 alternativeNames: [],
@@ -7216,7 +7216,7 @@ class CaseLibrary {
                 category: "Critical Care",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Cardiogenic Shock",
                 alternativeNames: [],
@@ -7230,7 +7230,7 @@ class CaseLibrary {
                 category: "Critical Care",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Septic Shock",
                 alternativeNames: ["Distributive Shock"],
@@ -7244,7 +7244,7 @@ class CaseLibrary {
                 category: "Critical Care",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Obstructive Shock",
                 alternativeNames: [],
@@ -7258,7 +7258,7 @@ class CaseLibrary {
                 category: "Critical Care",
                 difficulty: 2
             ),
-
+            
             // EMBRYOLOGY (6 cases)
             MedicalCase(
                 diagnosis: "Patent Foramen Ovale",
@@ -7273,7 +7273,7 @@ class CaseLibrary {
                 category: "Cardiology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Meckel Diverticulum",
                 alternativeNames: [],
@@ -7287,7 +7287,7 @@ class CaseLibrary {
                 category: "Gastroenterology",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Omphalocele",
                 alternativeNames: [],
@@ -7301,7 +7301,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Gastroschisis",
                 alternativeNames: [],
@@ -7315,7 +7315,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Duodenal Atresia",
                 alternativeNames: [],
@@ -7329,7 +7329,7 @@ class CaseLibrary {
                 category: "Pediatrics",
                 difficulty: 2
             ),
-
+            
             MedicalCase(
                 diagnosis: "Biliary Atresia",
                 alternativeNames: [],
@@ -7342,6 +7342,1176 @@ class CaseLibrary {
                 ],
                 category: "Pediatrics",
                 difficulty: 3
+            ),
+            MedicalCase(
+                diagnosis: "Pheochromocytoma",
+                alternativeNames: ["Adrenal Medulla Tumor", "10% Tumor"],
+                hints: [
+                    "35-year-old male with episodic headaches and palpitations",
+                    "Paroxysmal spells of sweating and anxiety",
+                    "Marked hypertension (200/110 mmHg) during episodes",
+                    "Elevated urinary vanillylmandelic acid (VMA) and metanephrines",
+                    "Chromaffin cell tumor derived from neural crest cells"
+                ],
+                category: "Endocrinology",
+                difficulty: 3),
+            
+            MedicalCase(
+                diagnosis: "Cystic Fibrosis",
+                alternativeNames: ["Mucoviscidosis", "CF"],
+                hints: [
+                    "2-year-old boy with recurrent pneumonia and foul-smelling stools",
+                    "Failure to thrive despite a healthy appetite",
+                    "Nasal polyps and digital clubbing on exam",
+                    "Sweat chloride concentration > 60 mEq/L",
+                    "Phe508 deletion in the CFTR gene on chromosome 7"
+                ],
+                category: "Pulmonology / Genetics",
+                difficulty: 2),
+            
+            MedicalCase(
+                diagnosis: "Multiple Myeloma",
+                alternativeNames: ["Plasma Cell Myeloma", "Kahler Disease"],
+                hints: [
+                    "68-year-old female with persistent lower back pain and fatigue",
+                    "Normocytic anemia and recurrent infections",
+                    "Hypercalcemia and 'punched-out' lytic bone lesions on X-ray",
+                    "Serum protein electrophoresis (SPEP) shows an M-spike",
+                    "Bence-Jones proteins (Ig light chains) found in urine"
+                ],
+                category: "Hematology / Oncology",
+                difficulty: 3),
+            
+            MedicalCase(
+                diagnosis: "Goodpasture Syndrome",
+                alternativeNames: ["Anti-GBM Disease"],
+                hints: [
+                    "25-year-old male presenting with hemoptysis and hematuria",
+                    "Shortness of breath and bilateral pulmonary infiltrates",
+                    "Crescentic glomerulonephritis on renal biopsy",
+                    "Linear immunofluorescence of IgG along the glomerular basement membrane",
+                    "Antibodies against the alpha-3 chain of Type IV collagen"
+                ],
+                category: "Nephrology",
+                difficulty: 4),
+            
+            MedicalCase(
+                diagnosis: "Pyloric Stenosis",
+                alternativeNames: ["Infantile Hypertrophic Pyloric Stenosis"],
+                hints: [
+                    "3-week-old first-born male with non-bilious, projectile vomiting",
+                    "Vomiting occurs immediately after feeding; infant is 'hungry'",
+                    "Palpable 'olive-shaped' mass in the epigastrium",
+                    "Hypochloremic, hypokalemic metabolic alkalosis",
+                    "Ultrasound showing thickening and elongation of the pylorus"
+                ],
+                category: "Pediatrics / GI",
+                difficulty: 2),
+            
+            MedicalCase(
+                diagnosis: "Multiple Sclerosis",
+                alternativeNames: ["MS", "Demyelinating Disease"],
+                hints: [
+                    "28-year-old female with sudden loss of vision in one eye and pain with movement",
+                    "History of transient numbness in the legs six months ago",
+                    "Internuclear ophthalmoplegia (INO) and hyperreflexia",
+                    "MRI showing periventricular white matter plaques (Dawson fingers)",
+                    "CSF analysis revealing oligoclonal bands"
+                ],
+                category: "Neurology",
+                difficulty: 3),
+            
+            MedicalCase(
+                diagnosis: "Sarcoidosis",
+                alternativeNames: ["Besnier-Boeck-Schaumann disease"],
+                hints: [
+                    "32-year-old African American female with a dry cough and skin rashes",
+                    "Tender red nodules on the shins (erythema nodosum)",
+                    "Bilateral hilar lymphadenopathy on chest X-ray",
+                    "Elevated serum ACE levels and hypercalcemia",
+                    "Non-caseating granulomas on tissue biopsy"
+                ],
+                category: "Pulmonology / Rheumatology",
+                difficulty: 2),
+            
+            MedicalCase(
+                diagnosis: "DiGeorge Syndrome",
+                alternativeNames: ["22q11.2 Deletion Syndrome", "Catch-22"],
+                hints: [
+                    "Newborn with a cleft palate, low-set ears, and a small jaw",
+                    "Patient develops tetany (hypocalcemic seizures) shortly after birth",
+                    "Chest X-ray reveals an absent thymic shadow",
+                    "Truncus arteriosus or Tetralogy of Fallot identified on echo",
+                    "Failure of the 3rd and 4th pharyngeal pouches to develop"
+                ],
+                category: "Immunology / Genetics",
+                difficulty: 4),
+            
+            MedicalCase(
+                diagnosis: "Systemic Lupus Erythematosus",
+                alternativeNames: ["SLE", "Lupus"],
+                hints: [
+                    "24-year-old female with joint pain and a facial rash after sun exposure",
+                    "Malar (butterfly) rash sparing the nasolabial folds",
+                    "Pleural effusion and proteinuria noted on workup",
+                    "Positive ANA (sensitive) and Anti-dsDNA or Anti-Smith (specific)",
+                    "Type III hypersensitivity reaction causing immune complex deposition"
+                ],
+                category: "Rheumatology",
+                difficulty: 2),
+            
+            MedicalCase(
+                diagnosis: "Graves Disease",
+                alternativeNames: ["Basedow Disease", "Toxic Diffuse Goiter"],
+                hints: [
+                    "30-year-old female with weight loss, heat intolerance, and tremors",
+                    "Proptosis (bulging eyes) and pretibial myxedema",
+                    "Diffuse, painless enlargement of the thyroid gland (goiter)",
+                    "Low TSH and high Free T4",
+                    "Thyroid-stimulating immunoglobulin (TSI) mimicking TSH"
+                ],
+                category: "Endocrinology",
+                difficulty: 1
+            ),
+            MedicalCase(
+                    diagnosis: "Aortic Stenosis",
+                    alternativeNames: ["AS", "Calcific Aortic Valve"],
+                    hints: [
+                        "72-year-old male with syncope during his daily walk",
+                        "Exertional dyspnea and angina",
+                        "Crescendo-decrescendo systolic murmur at the right upper sternal border",
+                        "Pulsus parvus et tardus (weak, delayed carotid pulse)",
+                        "SAD triad: Syncope, Angina, Dyspnea"
+                    ],
+                    category: "Cardiology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Wernicke Encephalopathy",
+                    alternativeNames: ["Thiamine Deficiency", "Vitamin B1 Deficiency"],
+                    hints: [
+                        "45-year-old male with chronic alcohol use disorder",
+                        "Acute onset of confusion and ataxia",
+                        "Nystagmus and ophthalmoplegia on physical exam",
+                        "Symptoms improve rapidly with IV thiamine administration",
+                        "Classic triad: Ataxia, Confusion, Ophthalmoplegia"
+                    ],
+                    category: "Neurology / Nutrition",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Intussusception",
+                    alternativeNames: ["Telescoping Bowel"],
+                    hints: [
+                        "9-month-old infant with sudden, intermittent abdominal pain",
+                        "Infant draws knees to chest during episodes of crying",
+                        "'Currant jelly' stools (mucus and blood)",
+                        "Sausage-shaped mass palpable in the right upper quadrant",
+                        "Target sign seen on ultrasound; treat with air/contrast enema"
+                    ],
+                    category: "Pediatrics / GI",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Giant Cell Arteritis",
+                    alternativeNames: ["Temporal Arteritis", "GCA"],
+                    hints: [
+                        "70-year-old female with a new, unilateral headache",
+                        "Jaw claudication while chewing food",
+                        "Tenderness over the temporal area and sudden vision loss",
+                        "Markedly elevated Erythrocyte Sedimentation Rate (ESR)",
+                        "Granulomatous inflammation of large/medium arteries; risk of blindness"
+                    ],
+                    category: "Rheumatology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Minimal Change Disease",
+                    alternativeNames: ["Nil Disease", "Lipoid Nephrosis"],
+                    hints: [
+                        "5-year-old boy with sudden facial puffiness and swollen ankles",
+                        "Recent history of an upper respiratory infection",
+                        "Heavy proteinuria (>3.5g/day) with no hematuria",
+                        "Normal light microscopy; 'nil' findings",
+                        "Effacement of podocyte foot processes on electron microscopy"
+                    ],
+                    category: "Nephrology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Pseudomembranous Colitis",
+                    alternativeNames: ["C. diff Colitis", "Clostridioides difficile"],
+                    hints: [
+                        "60-year-old female with profuse watery diarrhea and cramping",
+                        "History of recent Clindamycin use for a skin infection",
+                        "Leukocytosis and fever present",
+                        "Yellowish-white plaques on colonic mucosa during colonoscopy",
+                        "Toxins A and B detected in the stool"
+                    ],
+                    category: "Infectious Disease / GI",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Wilson Disease",
+                    alternativeNames: ["Hepatolenticular Degeneration"],
+                    hints: [
+                        "18-year-old male with tremors and new-onset jaundice",
+                        "Difficulty speaking (dysarthria) and parkinsonian symptoms",
+                        "Brownish-yellow rings seen in the cornea (Kayser-Fleischer rings)",
+                        "Low serum ceruloplasmin and high urinary copper",
+                        "Mutation in ATP7B gene causing impaired copper transport"
+                    ],
+                    category: "Gastroenterology / Neurology",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Zollinger-Ellison Syndrome",
+                    alternativeNames: ["Gastrinoma"],
+                    hints: [
+                        "40-year-old male with recurrent, multiple peptic ulcers",
+                        "Ulcers are refractory to PPI therapy and located in the jejunum",
+                        "Chronic watery diarrhea and weight loss",
+                        "Significantly elevated fasting serum gastrin levels",
+                        "Positive secretin stimulation test (gastrin remains high)"
+                    ],
+                    category: "Gastroenterology / Endocrinology",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Kawasaki Disease",
+                    alternativeNames: ["Mucocutaneous Lymph Node Syndrome"],
+                    hints: [
+                        "4-year-old boy with high fever for 6 days",
+                        "Bright red 'strawberry tongue' and cracked lips",
+                        "Bilateral conjunctival injection without exudate",
+                        "Desquamation of the skin on hands and feet",
+                        "CRASH and Burn: Conjunctivitis, Rash, Adenopathy, Strawberry tongue, Hand/foot changes + Fever"
+                    ],
+                    category: "Pediatrics / Cardiology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Pneumocystis Jirovecii Pneumonia",
+                    alternativeNames: ["PCP", "Pneumocystosis"],
+                    hints: [
+                        "35-year-old male with HIV and a CD4 count of 150",
+                        "Progressive exertional dyspnea and non-productive cough",
+                        "Bilateral 'ground-glass' opacities on chest X-ray",
+                        "Silver stain (GMS) of induced sputum shows disc-shaped cysts",
+                        "Prophylaxis and treatment with Trimethoprim-Sulfamethoxazole"
+                    ],
+                    category: "Infectious Disease",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Huntington Disease",
+                    alternativeNames: ["Huntington Chorea"],
+                    hints: [
+                        "40-year-old male with involuntary jerky movements (chorea)",
+                        "Recent onset of aggression, depression, and dementia",
+                        "Family history of similar symptoms at a young age",
+                        "Atrophy of the caudate nucleus and putamen on MRI",
+                        "CAG trinucleotide repeat expansion in the HTT gene"
+                    ],
+                    category: "Neurology / Genetics",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Acromegaly",
+                    alternativeNames: ["Growth Hormone Excess"],
+                    hints: [
+                        "45-year-old female noticing her rings and shoes no longer fit",
+                        "Coarsening of facial features and a prominent jaw (prognathism)",
+                        "New-onset hypertension and Type 2 Diabetes",
+                        "Elevated Insulin-like Growth Factor 1 (IGF-1)",
+                        "Failure to suppress Growth Hormone (GH) after oral glucose load"
+                    ],
+                    category: "Endocrinology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Achalasia",
+                    alternativeNames: ["Cardiospasm"],
+                    hints: [
+                        "50-year-old male with progressive dysphagia to both solids and liquids",
+                        "Regurgitation of undigested food and weight loss",
+                        "Barium swallow shows a 'bird's beak' appearance of the esophagus",
+                        "Manometry shows failure of the lower esophageal sphincter (LES) to relax",
+                        "Loss of myenteric (Auerbach) plexus in the distal esophagus"
+                    ],
+                    category: "Gastroenterology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Celiac Disease",
+                    alternativeNames: ["Gluten-Sensitive Enteropathy"],
+                    hints: [
+                        "30-year-old female with chronic diarrhea, bloating, and dermatitis herpetiformis",
+                        "Iron deficiency anemia and vitamin D deficiency",
+                        "Blunting of intestinal villi and crypt hyperplasia on biopsy",
+                        "Positive anti-tissue transglutaminase (tTG) IgA antibodies",
+                        "Association with HLA-DQ2 and HLA-DQ8"
+                    ],
+                    category: "Gastroenterology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Ewing Sarcoma",
+                    alternativeNames: ["Small Blue Round Cell Tumor"],
+                    hints: [
+                        "12-year-old boy with localized pain and swelling in the femur",
+                        "Fever, leukocytosis, and an elevated ESR",
+                        "X-ray shows a 'moth-eaten' appearance and 'onion-skin' periosteal reaction",
+                        "Biopsy reveals small, round, blue cells",
+                        "t(11;22) translocation involving the EWS-FLI1 gene"
+                    ],
+                    category: "Orthopedics / Oncology",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Polycythemia Vera",
+                    alternativeNames: ["Primary Polycythemia"],
+                    hints: [
+                        "55-year-old male with severe itching (pruritus) after a hot shower",
+                        "Plethoric face (redness) and splenomegaly",
+                        "Increased hematocrit and hemoglobin despite normal oxygen levels",
+                        "Very low serum erythropoietin (EPO) levels",
+                        "JAK2 V617F mutation in hematopoietic stem cells"
+                    ],
+                    category: "Hematology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Membranous Nephropathy",
+                    alternativeNames: ["Membranous Glomerulonephritis"],
+                    hints: [
+                        "50-year-old male with generalized edema and frothy urine",
+                        "Associated with Hepatitis B, NSAID use, or solid tumors",
+                        "Thickened glomerular basement membrane (GBM) on light microscopy",
+                        "'Spike and dome' appearance on silver stain",
+                        "Granular deposition of IgG and C3 along the GBM"
+                    ],
+                    category: "Nephrology",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Gout",
+                    alternativeNames: ["Monosodium Urate Crystal Arthropathy"],
+                    hints: [
+                        "55-year-old male with sudden, excruciating pain in the big toe (Podagra)",
+                        "History of heavy alcohol use and high-protein diet",
+                        "Joint is red, hot, and extremely tender to touch",
+                        "Needle-shaped crystals under polarized light",
+                        "Crystals show negative birefringence (yellow when parallel to the slow wave)"
+                    ],
+                    category: "Rheumatology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Pernicious Anemia",
+                    alternativeNames: ["Vitamin B12 Deficiency", "Megaloblastic Anemia"],
+                    hints: [
+                        "60-year-old female with tingling in her feet and a smooth, sore tongue",
+                        "Increased mean corpuscular volume (MCV > 100 fL)",
+                        "Hypersegmented neutrophils on peripheral blood smear",
+                        "Degeneration of the dorsal columns of the spinal cord",
+                        "Anti-intrinsic factor or anti-parietal cell antibodies"
+                    ],
+                    category: "Hematology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Primary Biliary Cholangitis",
+                    alternativeNames: ["PBC", "Primary Biliary Cirrhosis"],
+                    hints: [
+                        "45-year-old female with severe itching and fatigue",
+                        "Physical exam shows xanthelasmas and hepatomegaly",
+                        "Elevated Alkaline Phosphatase (ALP) and Bilirubin",
+                        "Positive anti-mitochondrial antibodies (AMA)",
+                        "Autoimmune destruction of intrahepatic bile ducts"
+                    ],
+                    category: "Gastroenterology / Hepatology",
+                    difficulty: 4
+            ),
+            MedicalCase(
+                    diagnosis: "Coarctation of the Aorta",
+                    alternativeNames: ["Aortic Narrowing"],
+                    hints: [
+                        "15-year-old male with headaches and cold feet",
+                        "Brachial-femoral pulse delay",
+                        "Hypertension in arms; hypotension/weak pulses in legs",
+                        "Rib notching on X-ray and '3' sign on barium swallow",
+                        "Turner Syndrome association (45,XO)"
+                    ],
+                    category: "Cardiology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Ehlers-Danlos Syndrome",
+                    alternativeNames: ["EDS", "Hypermobility Syndrome"],
+                    hints: [
+                        "19-year-old male with multiple joint dislocations",
+                        "Hyperextensible skin and easy bruising",
+                        "Velvety skin texture and 'cigarette paper' scars",
+                        "Mitral valve prolapse and berry aneurysms",
+                        "Defect in Type V or Type III collagen synthesis"
+                    ],
+                    category: "Genetics / Connective Tissue",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Polyarteritis Nodosa",
+                    alternativeNames: ["PAN"],
+                    hints: [
+                        "45-year-old male with abdominal pain and foot drop",
+                        "Livedo reticularis (net-like rash) and fever",
+                        "Negative for ANCA; strongly associated with Hepatitis B",
+                        "String-of-beads appearance on renal artery angiogram",
+                        "Transmural necrotizing inflammation of medium-sized arteries"
+                    ],
+                    category: "Rheumatology / Vasculitis",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Minimal Change Disease",
+                    alternativeNames: ["Lipoid Nephrosis"],
+                    hints: [
+                        "4-year-old with periorbital edema after a viral cold",
+                        "Heavy proteinuria and fatty casts in urine",
+                        "Excellent response to corticosteroid therapy",
+                        "Normal light microscopy; no immune deposits",
+                        "Effacement of podocyte foot processes on EM"
+                    ],
+                    category: "Nephrology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Hirschsprung Disease",
+                    alternativeNames: ["Congenital Aganglionic Megacolon"],
+                    hints: [
+                        "48-hour-old newborn who has not passed meconium",
+                        "Abdominal distension and bilious vomiting",
+                        "Explosive release of stool on digital rectal exam",
+                        "Dilated proximal colon; narrowed distal segment",
+                        "Absence of ganglion cells in Meissner and Auerbach plexuses"
+                    ],
+                    category: "Pediatrics / GI",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Chronic Granulomatous Disease",
+                    alternativeNames: ["CGD"],
+                    hints: [
+                        "5-year-old boy with recurrent skin abscesses",
+                        "Infections with Catalase-positive organisms (S. aureus, Aspergillus)",
+                        "Abnormal Dihydrorhodamine (DHR) flow cytometry",
+                        "Negative Nitroblue Tetrazolium (NBT) dye test",
+                        "Deficiency in NADPH oxidase"
+                    ],
+                    category: "Immunology",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Osteosarcoma",
+                    alternativeNames: ["Osteogenic Sarcoma"],
+                    hints: [
+                        "16-year-old male with knee pain that wakes him at night",
+                        "Swelling above the knee; no systemic fever",
+                        "Codman triangle (periosteal elevation) on X-ray",
+                        "'Sunburst' pattern of bone spicules",
+                        "Associated with mutations in RB1 and TP53 genes"
+                    ],
+                    category: "Orthopedics / Oncology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Small Cell Lung Cancer",
+                    alternativeNames: ["Oat Cell Carcinoma"],
+                    hints: [
+                        "65-year-old heavy smoker with a central lung mass",
+                        "Hyponatremia (SIADH) or Cushingoid features (ACTH)",
+                        "Lambert-Eaton Myasthenic Syndrome (proximal weakness)",
+                        "Neuroendocrine origin; small blue cells on histology",
+                        "Often treated with chemo/radiation rather than surgery"
+                    ],
+                    category: "Pulmonology / Oncology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Granulomatosis with Polyangiitis",
+                    alternativeNames: ["Wegener Granulomatosis", "GPA"],
+                    hints: [
+                        "50-year-old male with chronic sinusitis and bloody sputum",
+                        "Hematuria and saddle-nose deformity",
+                        "C-ANCA (PR3-ANCA) positivity",
+                        "Necrotizing granulomas in upper/lower respiratory tracts",
+                        "Triad: Focal necrotizing vasculitis, lung granulomas, glomerulonephritis"
+                    ],
+                    category: "Rheumatology / Vasculitis",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Addison Disease",
+                    alternativeNames: ["Primary Adrenal Insufficiency"],
+                    hints: [
+                        "35-year-old female with weakness and salt cravings",
+                        "Hyperpigmentation of skin creases and buccal mucosa",
+                        "Hypotension, hyperkalemia, and hyponatremia",
+                        "Low morning cortisol; high ACTH",
+                        "Autoimmune destruction of the adrenal cortex"
+                    ],
+                    category: "Endocrinology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Chediak-Higashi Syndrome",
+                    alternativeNames: ["CHS"],
+                    hints: [
+                        "4-year-old with silvery-white hair (partial albinism)",
+                        "Recurrent pyogenic infections and peripheral neuropathy",
+                        "Giant granules in neutrophils on blood smear",
+                        "Easy bruising and bleeding (platelet dysfunction)",
+                        "Defect in lysosomal trafficking regulator gene (LYST)"
+                    ],
+                    category: "Immunology",
+                    difficulty: 5),
+
+                MedicalCase(
+                    diagnosis: "Hemophilia A",
+                    alternativeNames: ["Factor VIII Deficiency"],
+                    hints: [
+                        "8-year-old boy with painful swelling in the knee (hemarthrosis)",
+                        "Prolonged bleeding after dental extractions",
+                        "Isolated prolonged PTT; normal PT and bleeding time",
+                        "X-linked recessive inheritance",
+                        "Deficiency of coagulation Factor VIII"
+                    ],
+                    category: "Hematology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Diabetes Insipidus (Central)",
+                    alternativeNames: ["Neurogenic DI"],
+                    hints: [
+                        "30-year-old following head trauma with intense thirst",
+                        "Massive volumes of dilute urine (low specific gravity)",
+                        "Serum hyperosmolality; urine hypoosmolality",
+                        "Water deprivation test shows increase in urine osmolality after Desmopressin",
+                        "ADH deficiency from the posterior pituitary"
+                    ],
+                    category: "Endocrinology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Marfan Syndrome",
+                    alternativeNames: ["MFS"],
+                    hints: [
+                        "22-year-old tall male with long, thin fingers (arachnodactyly)",
+                        "Upward lens subluxation (ectopia lentis)",
+                        "Pectus excavatum and high-arched palate",
+                        "Risk of aortic dissection or mitral valve prolapse",
+                        "FBN1 gene mutation on chromosome 15 (fibrillin-1)"
+                    ],
+                    category: "Genetics / Cardiology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Glioblastoma Multiforme",
+                    alternativeNames: ["GBM", "Grade IV Astrocytoma"],
+                    hints: [
+                        "60-year-old with personality changes and new headaches",
+                        "Ring-enhancing lesion on MRI crossing the corpus callosum",
+                        "'Butterfly glioma' appearance",
+                        "Histology: Pseudopalisading necrosis and hemorrhage",
+                        "Most common malignant primary brain tumor in adults"
+                    ],
+                    category: "Neurology / Oncology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Hereditary Spherocytosis",
+                    alternativeNames: ["HS"],
+                    hints: [
+                        "25-year-old with jaundice and splenomegaly",
+                        "Small, dark red blood cells lacking central pallor",
+                        "Increased Mean Corpuscular Hemoglobin Concentration (MCHC)",
+                        "Positive osmotic fragility test",
+                        "Defect in ankyrin, spectrin, or band 3 proteins"
+                    ],
+                    category: "Hematology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Paget Disease of Bone",
+                    alternativeNames: ["Osteitis Deformans"],
+                    hints: [
+                        "70-year-old male noticing his hat size has increased",
+                        "Hearing loss and deep bone pain",
+                        "Isolated elevation of Alkaline Phosphatase (ALP)",
+                        "'Mosaic' pattern of lamellar bone (bone remodeling)",
+                        "Increased risk of high-output heart failure and osteosarcoma"
+                    ],
+                    category: "Rheumatology / Orthopedics",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Minimal Change Disease",
+                    alternativeNames: ["Lipoid Nephrosis"],
+                    hints: [
+                        "4-year-old with puffy eyes and generalized edema",
+                        "Recent viral infection or immunization",
+                        "Selective albuminuria (>3.5g/day)",
+                        "Normal light microscopy findings",
+                        "Effacement of podocyte foot processes on EM"
+                    ],
+                    category: "Nephrology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Burkitt Lymphoma",
+                    alternativeNames: ["B-cell Non-Hodgkin Lymphoma"],
+                    hints: [
+                        "8-year-old African boy with a rapidly growing jaw mass",
+                        "EBV association (endemic form)",
+                        "Histology: 'Starry sky' appearance (tingible body macrophages)",
+                        "High mitotic index and Ki-67 staining",
+                        "t(8;14) translocation of the c-myc gene"
+                    ],
+                    category: "Hematology / Oncology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Duchenne Muscular Dystrophy",
+                    alternativeNames: ["DMD"],
+                    hints: [
+                        "4-year-old boy using hands to 'climb up' his legs to stand",
+                        "Pseudohypertrophy of the calves",
+                        "Gowers sign and waddling gait",
+                        "Markedly elevated Creatine Kinase (CK)",
+                        "Frameshift mutation leading to absent dystrophin protein"
+                    ],
+                    category: "Neurology / Genetics",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Primary Sclerosing Cholangitis",
+                    alternativeNames: ["PSC"],
+                    hints: [
+                        "35-year-old male with ulcerative colitis and jaundice",
+                        "Itching, fatigue, and dark urine",
+                        "ERCP showing 'beading' of the bile ducts",
+                        "Histology: 'Onion-skin' periductal fibrosis",
+                        "p-ANCA positivity in 60-80% of cases"
+                    ],
+                    category: "Hepatology / GI",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Von Willebrand Disease",
+                    alternativeNames: ["vWD"],
+                    hints: [
+                        "18-year-old female with heavy menses and frequent nosebleeds",
+                        "Bleeding after dental work",
+                        "Increased bleeding time; normal or slightly prolonged PTT",
+                        "Abnormal ristocetin cofactor assay",
+                        "Most common inherited bleeding disorder"
+                    ],
+                    category: "Hematology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Cushing Syndrome",
+                    alternativeNames: ["Hypercortisolism"],
+                    hints: [
+                        "40-year-old with 'moon facies' and 'buffalo hump'",
+                        "Purple abdominal striae and central obesity",
+                        "Hypertension and hyperglycemia (diabetes)",
+                        "Elevated 24-hour urinary free cortisol",
+                        "Can be caused by exogenous steroids or ACTH-secreting tumor"
+                    ],
+                    category: "Endocrinology",
+                    difficulty: 1),
+
+                MedicalCase(
+                    diagnosis: "Zenker Diverticulum",
+                    alternativeNames: ["Pharyngoesophageal Diverticulum"],
+                    hints: [
+                        "75-year-old male with halitosis (bad breath) and dysphagia",
+                        "Regurgitation of undigested food while lying down",
+                        "A mass in the neck that gurgles",
+                        "Barium swallow shows a pouch in the upper esophagus",
+                        "Herniation through Killian's triangle (false diverticulum)"
+                    ],
+                    category: "Gastroenterology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Whipple Disease",
+                    alternativeNames: ["Tropheryma whipplei infection"],
+                    hints: [
+                        "55-year-old male with weight loss, diarrhea, and joint pain",
+                        "Hyperpigmentation and cardiac symptoms",
+                        "PAS-positive macrophages in the lamina propria",
+                        "Gram-positive rod-shaped intracellular bacteria",
+                        "Treatment usually involves long-term Ceftriaxone or TMP-SMX"
+                    ],
+                    category: "Infectious Disease / GI",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Psoriasis",
+                    alternativeNames: ["Psoriasis Vulgaris"],
+                    hints: [
+                        "30-year-old with silver scales on red plaques on the elbows",
+                        "Auspitz sign (pinpoint bleeding when scales are removed)",
+                        "Nail pitting and oil spots",
+                        "Histology: Munro microabscesses (neutrophils in stratum corneum)",
+                        "Association with HLA-Cw6 and psoriatic arthritis"
+                    ],
+                    category: "Dermatology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Scleroderma (Diffuse)",
+                    alternativeNames: ["Systemic Sclerosis"],
+                    hints: [
+                        "45-year-old female with stiff, tight skin on the chest and arms",
+                        "Raynaud phenomenon and heartburn (GERD)",
+                        "Pulmonary fibrosis or renal crisis",
+                        "Anti-Scl-70 (anti-DNA topoisomerase I) antibodies",
+                        "Widespread collagen deposition in skin and internal organs"
+                    ],
+                    category: "Rheumatology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Hypertrophic Cardiomyopathy",
+                    alternativeNames: ["HCM", "HOCM"],
+                    hints: [
+                        "18-year-old athlete collapses and dies during a game",
+                        "Systolic murmur that decreases with squatting",
+                        "Murmur increases with Valsalva or standing",
+                        "Asymmetric septal hypertrophy on echo",
+                        "Mutations in sarcomeric proteins (beta-myosin heavy chain)"
+                    ],
+                    category: "Cardiology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Minimal Change Disease",
+                    alternativeNames: ["Lipoid Nephrosis"],
+                    hints: [
+                        "6-year-old presenting with massive generalized edema",
+                        "Urinalysis shows 4+ protein and oval fat bodies",
+                        "Rapid response to Prednisone therapy",
+                        "Normal glomeruli on light microscopy",
+                        "Effacement of foot processes on EM"
+                    ],
+                    category: "Nephrology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Gardner Syndrome",
+                    alternativeNames: ["FAP with Extra-intestinal Manifestations"],
+                    hints: [
+                        "20-year-old with hundreds of polyps on colonoscopy",
+                        "Multiple osteomas of the jaw and skull",
+                        "Hypertrophy of retinal pigment epithelium (CHRPE)",
+                        "Desmoid tumors and impacted teeth",
+                        "Autosomal dominant mutation of the APC gene"
+                    ],
+                    category: "Gastroenterology / Genetics",
+                    difficulty: 4
+            ),
+            MedicalCase(
+                    diagnosis: "Tetralogy of Fallot",
+                    alternativeNames: ["ToF"],
+                    hints: [
+                        "Infant with cyanosis that improves when squatting ('tet spells')",
+                        "Boot-shaped heart on chest X-ray",
+                        "Right ventricular hypertrophy, Overriding aorta, VSD, Pulmonary stenosis",
+                        "Crescendo-decrescendo systolic murmur at left upper sternal border",
+                        "Derived from abnormal neural crest cell migration"
+                    ],
+                    category: "Pediatrics / Cardiology",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Cystic Fibrosis",
+                    alternativeNames: ["CF"],
+                    hints: [
+                        "Child with recurrent pulmonary infections and foul-smelling steatorrhea",
+                        "Meconium ileus noted at birth",
+                        "Chloride levels >60 mEq/L in sweat test",
+                        "PHE508 deletion in the CFTR gene on chromosome 7",
+                        "Infertility in males due to bilateral absence of vas deferens"
+                    ],
+                    category: "Genetics / Pulmonology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "DiGeorge Syndrome",
+                    alternativeNames: ["22q11.2 Deletion Syndrome"],
+                    hints: [
+                        "Neonate with hypocalcemic tetany (seizures) and cleft palate",
+                        "Absent thymic shadow on X-ray",
+                        "Recurrent viral and fungal infections (T-cell deficiency)",
+                        "Truncus arteriosus or interrupted aortic arch",
+                        "Failure of 3rd and 4th pharyngeal pouches to develop"
+                    ],
+                    category: "Immunology / Genetics",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Pheochromocytoma",
+                    alternativeNames: ["Adrenal Medulla Tumor"],
+                    hints: [
+                        "Adult with episodic 'Pounding' headache, 'Palpitations', and 'Perspiration'",
+                        "Severe hypertension that is paroxysmal",
+                        "Elevated urinary metanephrines and vanillylmandelic acid (VMA)",
+                        "Chromaffin cell tumor derived from neural crest",
+                        "Associated with MEN 2A and 2B"
+                    ],
+                    category: "Endocrinology",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Gaucher Disease",
+                    alternativeNames: ["Glucocerebrosidase Deficiency"],
+                    hints: [
+                        "Child with hepatosplenomegaly, bone pain, and pancytopenia",
+                        "Histology: Macrophages with 'crinkled paper' cytoplasm",
+                        "Most common lysosomal storage disease",
+                        "Deficiency of Glucocerebrosidase",
+                        "Accumulation of Glucocerebroside"
+                    ],
+                    category: "Genetics / Biochemistry",
+                    difficulty: 5),
+
+                MedicalCase(
+                    diagnosis: "Tay-Sachs Disease",
+                    alternativeNames: ["Hexosaminidase A Deficiency"],
+                    hints: [
+                        "6-month-old infant with developmental regression and exaggerated startle reflex",
+                        "'Cherry-red' spot on the macula",
+                        "No hepatosplenomegaly (distinguishes from Niemann-Pick)",
+                        "Lysosomes with 'onion-skin' appearance",
+                        "Deficiency of Hexosaminidase A; accumulation of GM2 ganglioside"
+                    ],
+                    category: "Genetics / Biochemistry",
+                    difficulty: 5),
+
+                MedicalCase(
+                    diagnosis: "Turner Syndrome",
+                    alternativeNames: ["45,X"],
+                    hints: [
+                        "Teenage girl with short stature and primary amenorrhea",
+                        "Webbed neck (cystic hygroma) and widely spaced nipples",
+                        "Bicuspid aortic valve or pre-ductal coarctation of the aorta",
+                        "'Streak ovaries' leading to low estrogen and high LH/FSH",
+                        "Loss of one X chromosome (non-disjunction during meiosis)"
+                    ],
+                    category: "Genetics / OBGYN",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Klinefelter Syndrome",
+                    alternativeNames: ["47,XXY"],
+                    hints: [
+                        "Tall male with small, firm testes and gynecomastia",
+                        "Infertility and increased risk of breast cancer",
+                        "Barr body present on buccal smear",
+                        "Low testosterone; elevated LH and FSH",
+                        "Dysgenesis of seminiferous tubules"
+                    ],
+                    category: "Genetics / Urology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Primary Hyperparathyroidism",
+                    alternativeNames: ["Parathyroid Adenoma"],
+                    hints: [
+                        "50-year-old with 'stones, bones, groans, and psychic overtones'",
+                        "Hypercalcemia, hypophosphatemia, and elevated ALP",
+                        "Subperiosteal bone resorption and brown tumors (osteitis fibrosa cystica)",
+                        "Increased urinary cAMP",
+                        "Usually caused by a single parathyroid adenoma"
+                    ],
+                    category: "Endocrinology",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Wilson Disease",
+                    alternativeNames: ["Hepatolenticular Degeneration"],
+                    hints: [
+                        "Young patient with liver failure and parkinsonian tremors",
+                        "Kayser-Fleischer rings in the cornea",
+                        "Low serum ceruloplasmin; high urinary copper",
+                        "Basal ganglia atrophy (lenticular nucleus)",
+                        "Defect in ATP7B copper-transporting ATPase"
+                    ],
+                    category: "Gastroenterology / Neurology",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Multiple Myeloma",
+                    alternativeNames: ["Plasma Cell Dyscrasia"],
+                    hints: [
+                        "Elderly male with bone pain and 'punched-out' lytic lesions on X-ray",
+                        "Hypercalcemia, Renal failure, Anemia, Bone lesions (CRAB)",
+                        "M-protein spike on serum protein electrophoresis",
+                        "Bence-Jones proteins in urine (Ig light chains)",
+                        "Rouleaux formation on peripheral blood smear"
+                    ],
+                    category: "Hematology / Oncology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Pyloric Stenosis",
+                    alternativeNames: ["Infantile Hypertrophic Pyloric Stenosis"],
+                    hints: [
+                        "3-week-old male with non-bilious, projectile vomiting",
+                        "'Olive-shaped' mass palpable in the epigastrium",
+                        "Hypochloremic, hypokalemic metabolic alkalosis",
+                        "String sign on barium swallow",
+                        "Hypertrophy of the pyloric sphincter"
+                    ],
+                    category: "Pediatrics / GI",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Goodpasture Syndrome",
+                    alternativeNames: ["Anti-GBM Disease"],
+                    hints: [
+                        "Young man with hemoptysis and hematuria",
+                        "Linear IgG and C3 deposition on glomerular basement membrane",
+                        "Type II hypersensitivity reaction",
+                        "Antibodies against alpha-3 chain of Type IV collagen",
+                        "Rapidly progressive glomerulonephritis (RPGN) with crescents"
+                    ],
+                    category: "Nephrology / Pulmonology",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Polycystic Kidney Disease (ADPKD)",
+                    alternativeNames: ["Adult PKD"],
+                    hints: [
+                        "40-year-old with flank pain, hematuria, and hypertension",
+                        "Bilateral palpable flank masses",
+                        "Associated with berry aneurysms and liver cysts",
+                        "Mutation in PKD1 (chromosome 16) or PKD2 (chromosome 4)",
+                        "Progressive renal failure by age 50"
+                    ],
+                    category: "Nephrology / Genetics",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Myasthenia Gravis",
+                    alternativeNames: ["MG"],
+                    hints: [
+                        "Woman with ptosis and diplopia that worsen at the end of the day",
+                        "Symptoms improve with ice pack or rest",
+                        "Antibodies against postsynaptic ACh receptors",
+                        "Associated with thymoma or thymic hyperplasia",
+                        "Edrophonium (Tensilon) test used for historical diagnosis"
+                    ],
+                    category: "Neurology / Immunology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Lambert-Eaton Myasthenic Syndrome",
+                    alternativeNames: ["LEMS"],
+                    hints: [
+                        "Patient with proximal muscle weakness that improves with use",
+                        "Associated with Small Cell Lung Cancer",
+                        "Antibodies against presynaptic voltage-gated calcium channels",
+                        "Autonomic dysfunction (dry mouth, impotence)",
+                        "Minimal response to AChE inhibitors"
+                    ],
+                    category: "Neurology / Oncology",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Hemochromatosis",
+                    alternativeNames: ["Bronze Diabetes"],
+                    hints: [
+                        "Middle-aged male with skin hyperpigmentation, diabetes, and cirrhosis",
+                        "High serum iron, high ferritin, and low TIBC",
+                        "HFE gene mutation (C282Y)",
+                        "Increased risk of hepatocellular carcinoma",
+                        "Treatment involves periodic therapeutic phlebotomy"
+                    ],
+                    category: "Gastroenterology / Genetics",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Marfan Syndrome",
+                    alternativeNames: ["MFS"],
+                    hints: [
+                        "Tall patient with long fingers, pectus excavatum, and lens dislocation",
+                        "Aortic root dilation and risk of dissection",
+                        "Mitral valve prolapse (holosystolic murmur with click)",
+                        "Defect in Fibrillin-1 (FBN1) on chromosome 15",
+                        "Cystic medial necrosis of the aorta"
+                    ],
+                    category: "Genetics / Cardiology",
+                    difficulty: 2),
+
+                MedicalCase(
+                    diagnosis: "Fragile X Syndrome",
+                    alternativeNames: ["CGG Repeat Disorder"],
+                    hints: [
+                        "Male child with intellectual disability and large ears",
+                        "Macroorchidism (enlarged testes) post-puberty",
+                        "Long face with a prominent jaw",
+                        "CGG trinucleotide repeat expansion in the FMR1 gene",
+                        "X-linked dominant inheritance with anticipation"
+                    ],
+                    category: "Genetics / Psychiatry",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Neurofibromatosis Type 1",
+                    alternativeNames: ["von Recklinghausen Disease"],
+                    hints: [
+                        "Child with café-au-lait spots and axillary freckling",
+                        "Lisch nodules (pigmented hamartomas of the iris)",
+                        "Multiple cutaneous neurofibromas",
+                        "Optic gliomas and pheochromocytomas",
+                        "NF1 gene mutation on chromosome 17"
+                    ],
+                    category: "Genetics / Dermatology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Von Hippel-Lindau Disease",
+                    alternativeNames: ["VHL"],
+                    hints: [
+                        "Patient with hemangioblastomas in the cerebellum and retina",
+                        "Bilateral renal cell carcinomas (clear cell)",
+                        "Pheochromocytomas",
+                        "Deletion of VHL gene on chromosome 3",
+                        "VHL protein normally targets HIF-1a for degradation"
+                    ],
+                    category: "Genetics / Oncology",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Sjögren Syndrome",
+                    alternativeNames: ["Sicca Syndrome"],
+                    hints: [
+                        "Woman with dry eyes (xerophthalmia) and dry mouth (xerostomia)",
+                        "Dental caries and bilateral parotid gland enlargement",
+                        "Anti-Ro (SS-A) and Anti-La (SS-B) antibodies",
+                        "Lymphocytic infiltration of exocrine glands",
+                        "Increased risk of B-cell (MALT) lymphoma"
+                    ],
+                    category: "Rheumatology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Pemphigus Vulgaris",
+                    alternativeNames: ["Acantholysis"],
+                    hints: [
+                        "Patient with painful, flaccid bullae and oral ulcers",
+                        "Positive Nikolsky sign (skin sloughs with pressure)",
+                        "Antibodies against Desmoglein-1 and Desmoglein-3",
+                        "Histology: 'Tombstone' appearance of the basal layer",
+                        "Immunofluorescence shows 'fishnet' pattern"
+                    ],
+                    category: "Dermatology",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Bullous Pemphigoid",
+                    alternativeNames: [],
+                    hints: [
+                        "Elderly patient with tense bullae; no oral involvement",
+                        "Negative Nikolsky sign",
+                        "Antibodies against hemidesmosomes (BP180/230)",
+                        "Subepidermal blisters on histology",
+                        "Immunofluorescence shows linear pattern at the epidermal-dermal junction"
+                    ],
+                    category: "Dermatology",
+                    difficulty: 3),
+
+                MedicalCase(
+                    diagnosis: "Lesch-Nyhan Syndrome",
+                    alternativeNames: ["HGPRT Deficiency"],
+                    hints: [
+                        "Male child with intellectual disability and self-mutilation (lip/finger biting)",
+                        "Orange 'sand' in the diaper (uric acid crystals)",
+                        "Gouty arthritis and choreoathetosis",
+                        "Deficiency of HGPRT (salvage pathway)",
+                        "Excessive production of uric acid"
+                    ],
+                    category: "Biochemistry / Genetics",
+                    difficulty: 5),
+
+                MedicalCase(
+                    diagnosis: "Von Gierke Disease",
+                    alternativeNames: ["GSD Type I"],
+                    hints: [
+                        "Infant with doll-like face, thin extremities, and massive hepatomegaly",
+                        "Severe fasting hypoglycemia and lactic acidosis",
+                        "Elevated uric acid (gout) and triglycerides",
+                        "Deficiency of Glucose-6-phosphatase",
+                        "Liver does not respond to glucagon"
+                    ],
+                    category: "Biochemistry",
+                    difficulty: 5),
+
+                MedicalCase(
+                    diagnosis: "Pompe Disease",
+                    alternativeNames: ["GSD Type II"],
+                    hints: [
+                        "Infant with hypertrophic cardiomyopathy and hypotonia ('floppy baby')",
+                        "Early death due to heart failure",
+                        "Deficiency of lysosomal alpha-1,4-glucosidase (acid maltase)",
+                        "PAS-positive material in lysosomes",
+                        "Pompe trashes the Pump (heart)"
+                    ],
+                    category: "Biochemistry",
+                    difficulty: 5),
+
+                MedicalCase(
+                    diagnosis: "Alkaptonuria",
+                    alternativeNames: ["Homogentisic Acid Oxidase Deficiency"],
+                    hints: [
+                        "Patient with dark connective tissue and brown-pigmented sclera",
+                        "Urine turns black when left standing",
+                        "Severe arthritis later in life",
+                        "Deficiency of homogentisate oxidase",
+                        "Disruption of tyrosine metabolism"
+                    ],
+                    category: "Biochemistry",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Galactosemia",
+                    alternativeNames: ["Classic Galactosemia"],
+                    hints: [
+                        "Neonate with jaundice, hepatomegaly, and cataracts shortly after starting milk",
+                        "Increased risk of E. coli sepsis",
+                        "Absence of galactose-1-phosphate uridyltransferase (GALT)",
+                        "Reducing substances in the urine (not glucose)",
+                        "Requires exclusion of galactose and lactose from diet"
+                    ],
+                    category: "Biochemistry / Pediatrics",
+                    difficulty: 4),
+
+                MedicalCase(
+                    diagnosis: "Wiskott-Aldrich Syndrome",
+                    alternativeNames: ["WAS"],
+                    hints: [
+                        "Male infant with eczema, recurrent infections, and small platelets",
+                        "Bleeding (thrombocytopenic purpura)",
+                        "Low IgM; high IgA and IgE",
+                        "Mutation in the WAS gene; actin cytoskeleton defect",
+                        "WATER: Wiskott-Aldrich, Thrombocytopenia, Eczema, Recurrent infections"
+                    ],
+                    category: "Immunology",
+                    difficulty: 5
             ),
             MedicalCase(
                 diagnosis: "Botulism",
