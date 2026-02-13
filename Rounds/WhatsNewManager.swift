@@ -35,6 +35,7 @@ class WhatsNewManager: ObservableObject {
 
     // IMPORTANT: Update this URL to your GitHub repo's raw file URL
     // Format: https://raw.githubusercontent.com/{username}/{repo}/{branch}/whats-new.json
+    // Note: This only works for PUBLIC repos. For private repos, use bundled fallback.
     private let remoteURL = URL(string: "https://raw.githubusercontent.com/thisisalimirza/rounds-its/main/whats-new.json")!
 
     // UserDefaults keys
@@ -46,6 +47,38 @@ class WhatsNewManager: ObservableObject {
     @Published var shouldShowWhatsNew = false
     @Published var isLoading = false
 
+    // Bundled fallback data - always available even without network
+    private static let bundledData = WhatsNewData(
+        version: "1.3.0",
+        lastUpdated: "2025-02-12",
+        showToVersionsBelow: "1.3.0",
+        title: "What's New in Rounds",
+        features: [
+            WhatsNewFeature(
+                icon: "trophy.fill",
+                title: "Global Leaderboard",
+                description: "Compete with medical students worldwide! See rankings by school and climb to the top."
+            ),
+            WhatsNewFeature(
+                icon: "square.and.arrow.up",
+                title: "Challenge Friends",
+                description: "Share cases directly with friends via deep links. They can play the exact same case!"
+            ),
+            WhatsNewFeature(
+                icon: "flame.fill",
+                title: "Streak Freezes",
+                description: "Pro users get weekly streak freezes to protect their progress when life gets busy."
+            ),
+            WhatsNewFeature(
+                icon: "sparkles",
+                title: "Redesigned Home",
+                description: "Fresh new look with easier navigation. Swipe between Play, Progress, and More tabs."
+            )
+        ],
+        footer: "Thanks for playing Rounds! Your feedback helps us improve.",
+        dismissButtonText: "Let's Go!"
+    )
+
     private init() {}
 
     // MARK: - Public Methods
@@ -55,21 +88,25 @@ class WhatsNewManager: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        // First, try to fetch fresh data from GitHub
-        if let data = await fetchRemoteData() {
-            whatsNewData = data
-            cacheData(data)
+        // Try sources in order: remote -> cached -> bundled
+        let data: WhatsNewData
+        if let remoteData = await fetchRemoteData() {
+            data = remoteData
+            cacheData(remoteData)
+            print("WhatsNewManager: Using remote data")
+        } else if let cachedData = getCachedData() {
+            data = cachedData
+            print("WhatsNewManager: Using cached data")
+        } else {
+            data = Self.bundledData
+            print("WhatsNewManager: Using bundled fallback data")
+        }
 
-            // Check if we should show this to the user
-            if shouldShowToUser(data: data) {
-                shouldShowWhatsNew = true
-            }
-        } else if let cached = getCachedData() {
-            // Fall back to cached data if network fails
-            whatsNewData = cached
-            if shouldShowToUser(data: cached) {
-                shouldShowWhatsNew = true
-            }
+        whatsNewData = data
+
+        // Check if we should show this to the user
+        if shouldShowToUser(data: data) {
+            shouldShowWhatsNew = true
         }
     }
 
@@ -82,9 +119,11 @@ class WhatsNewManager: ObservableObject {
 
     /// Force show What's New (for testing or settings menu)
     func forceShow() {
-        if whatsNewData != nil {
-            shouldShowWhatsNew = true
+        // If no data loaded yet, use bundled fallback
+        if whatsNewData == nil {
+            whatsNewData = Self.bundledData
         }
+        shouldShowWhatsNew = true
     }
 
     /// Reset seen status (for testing)
