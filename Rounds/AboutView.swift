@@ -23,6 +23,9 @@ struct AboutView: View {
     @State private var editedDisplayName = ""
     @State private var notificationsEnabled = false
     @State private var selectedIntensity: NotificationIntensity = SmartNotificationManager.shared.currentIntensity
+    @State private var showingNotificationPreview = false
+    @State private var previewTitle = ""
+    @State private var previewBody = ""
     @State private var showingHowToPlay = false
     @State private var showingWhatsNew = false
     @StateObject private var whatsNewManager = WhatsNewManager.shared
@@ -180,6 +183,11 @@ struct AboutView: View {
             }
         } message: {
             Text("Your scores will be removed from all leaderboards. You can rejoin anytime.")
+        }
+        .alert(previewTitle, isPresented: $showingNotificationPreview) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(previewBody)
         }
         .onAppear {
             checkNotificationStatus()
@@ -342,31 +350,44 @@ struct AboutView: View {
         }
 
         if notificationsEnabled {
-            // Intensity Picker
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Notification Style")
-                    .font(.body)
+            // Intensity Picker - cleaner menu style
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Notification Style")
+                        .font(.body)
+                    Text(selectedIntensity.description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
 
-                Picker("Style", selection: $selectedIntensity) {
+                Spacer()
+
+                Menu {
                     ForEach(NotificationIntensity.allCases, id: \.self) { intensity in
-                        HStack {
-                            Image(systemName: intensity.icon)
-                            Text(intensity.displayName)
+                        Button {
+                            selectedIntensity = intensity
+                            SmartNotificationManager.shared.currentIntensity = intensity
+                            rescheduleSmartNotification()
+                        } label: {
+                            Label(intensity.displayName, systemImage: intensity.icon)
                         }
-                        .tag(intensity)
                     }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: selectedIntensity.icon)
+                            .font(.subheadline)
+                        Text(selectedIntensity.displayName)
+                            .font(.subheadline)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption2)
+                    }
+                    .foregroundStyle(.blue)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(8)
                 }
-                .pickerStyle(.segmented)
-                .onChange(of: selectedIntensity) { _, newValue in
-                    SmartNotificationManager.shared.currentIntensity = newValue
-                    rescheduleSmartNotification()
-                }
-
-                Text(selectedIntensity.description)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
-            .padding(.vertical, 4)
 
             // Time Picker
             DatePicker(selection: reminderTime, displayedComponents: .hourAndMinute) {
@@ -380,12 +401,12 @@ struct AboutView: View {
             }
             .tint(.blue)
 
-            // Preview button
+            // Preview button - shows alert with sample notification
             Button {
                 previewNotification()
             } label: {
                 HStack {
-                    Image(systemName: "eye.fill")
+                    Image(systemName: "bell.badge.fill")
                     Text("Preview Notification")
                 }
                 .font(.subheadline)
@@ -600,13 +621,14 @@ struct AboutView: View {
     }
 
     private func previewNotification() {
-        let context = buildNotificationContext()
-        SmartNotificationManager.shared.scheduleOneTimeNotification(
-            identifier: "rounds.preview",
-            title: "Preview Notification",
-            body: "This is how your daily reminder will look!",
-            delay: 2
+        // Generate a sample notification based on current context and intensity
+        let sample = SmartNotificationManager.shared.generateSampleMessage(
+            context: buildNotificationContext(),
+            intensity: selectedIntensity
         )
+        previewTitle = sample.title
+        previewBody = sample.body
+        showingNotificationPreview = true
 
         // Also reschedule to update the actual daily notification
         rescheduleSmartNotification()

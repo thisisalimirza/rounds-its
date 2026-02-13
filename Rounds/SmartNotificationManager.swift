@@ -198,6 +198,11 @@ class SmartNotificationManager {
         UNUserNotificationCenter.current().setBadgeCount(0)
     }
 
+    /// Generate a sample message for preview (public method)
+    func generateSampleMessage(context: NotificationContext?, intensity: NotificationIntensity) -> (title: String, body: String) {
+        return generateMessage(context: context, intensity: intensity)
+    }
+
     // MARK: - Message Generation
 
     private func generateMessage(context: NotificationContext?, intensity: NotificationIntensity) -> (title: String, body: String) {
