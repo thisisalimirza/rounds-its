@@ -8,130 +8,265 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - Display Category Model
+
+struct DisplayCategory: Identifiable, Hashable {
+    let id = UUID()
+    let name: String
+    let icon: String
+    let color: Color
+    let includedCategories: [String] // Original category names that map to this display group
+
+    var caseCount: Int = 0
+    var completedCount: Int = 0
+
+    var progress: Double {
+        guard caseCount > 0 else { return 0 }
+        return Double(completedCount) / Double(caseCount)
+    }
+
+    // Hashable conformance - hash by name since that's the unique identifier
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
+    }
+
+    static func == (lhs: DisplayCategory, rhs: DisplayCategory) -> Bool {
+        lhs.name == rhs.name
+    }
+}
+
+// MARK: - Category Mapping
+
+struct CategoryMapper {
+
+    /// Maps original case categories to display groups
+    /// Combo categories (e.g., "Genetics / Cardiology") are assigned to their PRIMARY (first) category
+    static func getDisplayCategories() -> [DisplayCategory] {
+        [
+            DisplayCategory(
+                name: "Cardiology",
+                icon: "heart.fill",
+                color: .red,
+                includedCategories: ["Cardiology"]
+            ),
+            DisplayCategory(
+                name: "Pulmonology",
+                icon: "lungs.fill",
+                color: .blue,
+                includedCategories: ["Pulmonology"]
+            ),
+            DisplayCategory(
+                name: "Gastroenterology",
+                icon: "stomach",
+                color: .orange,
+                includedCategories: ["Gastroenterology", "Hepatology / GI"]
+            ),
+            DisplayCategory(
+                name: "Nephrology",
+                icon: "drop.fill",
+                color: .cyan,
+                includedCategories: ["Nephrology"]
+            ),
+            DisplayCategory(
+                name: "Neurology",
+                icon: "brain.head.profile",
+                color: .purple,
+                includedCategories: ["Neurology"]
+            ),
+            DisplayCategory(
+                name: "Infectious Disease",
+                icon: "microbe.fill",
+                color: .yellow,
+                includedCategories: ["Infectious Disease"]
+            ),
+            DisplayCategory(
+                name: "Endocrinology",
+                icon: "waveform.path.ecg",
+                color: .green,
+                includedCategories: ["Endocrinology"]
+            ),
+            DisplayCategory(
+                name: "Hematology & Oncology",
+                icon: "drop.triangle.fill",
+                color: .pink,
+                includedCategories: ["Hematology", "Oncology", "Hematology / Oncology"]
+            ),
+            DisplayCategory(
+                name: "Rheumatology",
+                icon: "figure.walk",
+                color: .indigo,
+                includedCategories: ["Rheumatology", "Rheumatology / Vasculitis", "Rheumatology / Orthopedics"]
+            ),
+            DisplayCategory(
+                name: "Psychiatry",
+                icon: "brain",
+                color: .mint,
+                includedCategories: ["Psychiatry"]
+            ),
+            DisplayCategory(
+                name: "Pediatrics",
+                icon: "figure.and.child.holdinghands",
+                color: Color(red: 0.4, green: 0.8, blue: 0.9),
+                includedCategories: ["Pediatrics", "Pediatrics / GI", "Pediatrics / Cardiology"]
+            ),
+            DisplayCategory(
+                name: "Dermatology",
+                icon: "hand.raised.fill",
+                color: .orange.opacity(0.8),
+                includedCategories: ["Dermatology"]
+            ),
+            DisplayCategory(
+                name: "Basic Sciences",
+                icon: "flask.fill",
+                color: .teal,
+                includedCategories: [
+                    "Biochemistry", "Genetics", "Pharmacology", "Nutrition",
+                    "Immunology", "Toxicology",
+                    "Biochemistry / Pediatrics", "Biochemistry / Genetics",
+                    "Genetics / Cardiology", "Genetics / Biochemistry", "Genetics / Urology",
+                    "Genetics / Pulmonology", "Genetics / Psychiatry", "Genetics / Oncology",
+                    "Genetics / OBGYN", "Genetics / Dermatology", "Genetics / Connective Tissue",
+                    "Immunology / Genetics"
+                ]
+            ),
+            DisplayCategory(
+                name: "Surgical Specialties",
+                icon: "cross.case.fill",
+                color: .brown,
+                includedCategories: [
+                    "Orthopedics", "Vascular", "ENT", "Ophthalmology", "Urology",
+                    "Critical Care", "Orthopedics / Oncology"
+                ]
+            ),
+            DisplayCategory(
+                name: "OB/GYN",
+                icon: "figure.stand.dress",
+                color: .pink.opacity(0.8),
+                includedCategories: ["Obstetrics", "Gynecology", "Obstetrics & Gynecology"]
+            )
+        ]
+    }
+
+    /// Get the display category for a given original category
+    static func displayCategory(for originalCategory: String, in displayCategories: [DisplayCategory]) -> DisplayCategory? {
+        // First, try exact match
+        if let match = displayCategories.first(where: { $0.includedCategories.contains(originalCategory) }) {
+            return match
+        }
+
+        // For combo categories not explicitly mapped, use the PRIMARY (first) category
+        if originalCategory.contains(" / ") {
+            let primary = originalCategory.components(separatedBy: " / ").first ?? originalCategory
+            // Find which display category contains this primary
+            return displayCategories.first { displayCat in
+                displayCat.includedCategories.contains { $0.lowercased() == primary.lowercased() }
+            }
+        }
+
+        return nil
+    }
+}
+
+// MARK: - Main View
+
 struct CaseBrowserView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var caseHistory: [CaseHistoryEntry]
-    @State private var selectedCategory: String = "All"
     @State private var searchText = ""
+    @State private var selectedDisplayCategory: DisplayCategory?
     @State private var selectedCase: MedicalCase?
     @State private var showingGame = false
     @State private var showingPaywall = false
     @State private var showingConfetti = false
     @State private var showingCompletedAlert = false
-    
+    @State private var showingAllCases = false
+
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     private let allCases: [MedicalCase] = CaseLibrary.getSampleCases()
-    
-    /// Set of case IDs that have been completed
+
+    // MARK: - Computed Properties
+
     private var completedCaseIDs: Set<UUID> {
         Set(caseHistory.map { $0.caseID })
     }
-    
-    /// Set of diagnosis names that have been completed (fallback for old entries)
+
     private var completedDiagnoses: Set<String> {
         Set(caseHistory.map { $0.diagnosis.lowercased() })
     }
-    
-    /// Check if a case has been completed (by ID or diagnosis name)
+
     private func isCaseCompleted(_ medicalCase: MedicalCase) -> Bool {
-        // Check by ID first (for new deterministic IDs)
         if completedCaseIDs.contains(medicalCase.id) {
             return true
         }
-        // Fallback: check by diagnosis name (for old random IDs)
         return completedDiagnoses.contains(medicalCase.diagnosis.lowercased())
     }
-    
-    /// Get the history entry for a completed case
+
     private func historyEntry(for medicalCase: MedicalCase) -> CaseHistoryEntry? {
-        // Try by ID first
         if let entry = caseHistory.first(where: { $0.caseID == medicalCase.id }) {
             return entry
         }
-        // Fallback: try by diagnosis name
         return caseHistory.first { $0.diagnosis.lowercased() == medicalCase.diagnosis.lowercased() }
     }
-    
-    private var categories: [String] {
-        let allCategories = Set(allCases.map { $0.category })
-        return ["All"] + allCategories.sorted()
-    }
-    
-    private var filteredCases: [MedicalCase] {
-        var cases = allCases
-        
-        // Filter by category
-        if selectedCategory != "All" {
-            cases = cases.filter { $0.category == selectedCategory }
-        }
-        
-        // Filter by search text (only search by category, not diagnosis to keep it mysterious)
-        if !searchText.isEmpty {
-            cases = cases.filter { medicalCase in
-                medicalCase.category.localizedCaseInsensitiveContains(searchText)
+
+    /// Display categories with computed case counts
+    private var displayCategories: [DisplayCategory] {
+        var categories = CategoryMapper.getDisplayCategories()
+
+        for i in categories.indices {
+            let casesInCategory = allCases.filter { medicalCase in
+                categories[i].includedCategories.contains(medicalCase.category) ||
+                CategoryMapper.displayCategory(for: medicalCase.category, in: categories)?.name == categories[i].name
             }
+            categories[i].caseCount = casesInCategory.count
+            categories[i].completedCount = casesInCategory.filter { isCaseCompleted($0) }.count
         }
-        
-        return cases.sorted { $0.diagnosis < $1.diagnosis }
+
+        // Sort by case count descending, filter out empty categories
+        return categories
+            .filter { $0.caseCount > 0 }
+            .sorted { $0.caseCount > $1.caseCount }
     }
-    
+
+    /// Cases filtered by search
+    private var searchFilteredCases: [MedicalCase] {
+        guard !searchText.isEmpty else { return [] }
+        return allCases.filter { medicalCase in
+            medicalCase.category.localizedCaseInsensitiveContains(searchText) ||
+            medicalCase.hints.first?.localizedCaseInsensitiveContains(searchText) == true
+        }
+    }
+
+    /// Cases for selected category
+    private func cases(for displayCategory: DisplayCategory) -> [MedicalCase] {
+        allCases.filter { medicalCase in
+            displayCategory.includedCategories.contains(medicalCase.category) ||
+            CategoryMapper.displayCategory(for: medicalCase.category, in: displayCategories)?.name == displayCategory.name
+        }.sorted { $0.category < $1.category }
+    }
+
+    // MARK: - Body
+
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Category Picker
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(categories, id: \.self) { category in
-                            CategoryButton(
-                                title: category,
-                                isSelected: selectedCategory == category
-                            ) {
-                                withAnimation {
-                                    selectedCategory = category
-                                }
-                            }
-                        }
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Search results (when searching)
+                    if !searchText.isEmpty {
+                        searchResultsSection
+                    } else {
+                        // Category grid
+                        categoryGridSection
+
+                        // All Cases option
+                        allCasesButton
                     }
-                    .padding()
                 }
-                .background(Color(.systemGray6))
-                
-                // Cases List
-                if filteredCases.isEmpty {
-                    emptyStateView
-                } else {
-                    List(Array(filteredCases.enumerated()), id: \.element.id) { index, medicalCase in
-                        let isCompleted = isCaseCompleted(medicalCase)
-                        let historyItem = historyEntry(for: medicalCase)
-                        
-                        Button {
-                            if isCompleted {
-                                // Case already completed - show alert
-                                selectedCase = medicalCase
-                                showingCompletedAlert = true
-                            } else if subscriptionManager.isProUser {
-                                selectedCase = medicalCase
-                                showingGame = true
-                            } else {
-                                showingPaywall = true
-                            }
-                        } label: {
-                            CaseRow(
-                                medicalCase: medicalCase,
-                                caseNumber: index + 1,
-                                isLocked: !subscriptionManager.isProSubscriber,
-                                isCompleted: isCompleted,
-                                wasCorrect: historyItem?.wasCorrect
-                            )
-                        }
-                        .disabled(isCompleted)
-                    }
-                    .listStyle(.plain)
-                }
+                .padding(.vertical, 16)
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Browse Cases")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $searchText, prompt: "Search categories...")
+            .searchable(text: $searchText, prompt: "Search cases...")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
@@ -143,6 +278,27 @@ struct CaseBrowserView: View {
                 if let selectedCase = selectedCase {
                     GameView(medicalCase: selectedCase)
                 }
+            }
+            .navigationDestination(item: $selectedDisplayCategory) { category in
+                CategoryCasesView(
+                    displayCategory: category,
+                    cases: cases(for: category),
+                    isCaseCompleted: isCaseCompleted,
+                    historyEntry: historyEntry,
+                    onCaseSelected: { medicalCase in
+                        handleCaseSelection(medicalCase)
+                    }
+                )
+            }
+            .navigationDestination(isPresented: $showingAllCases) {
+                AllCasesView(
+                    cases: allCases,
+                    isCaseCompleted: isCaseCompleted,
+                    historyEntry: historyEntry,
+                    onCaseSelected: { medicalCase in
+                        handleCaseSelection(medicalCase)
+                    }
+                )
             }
             .sheet(isPresented: $showingPaywall) {
                 RoundsPaywallView(
@@ -171,149 +327,468 @@ struct CaseBrowserView: View {
                 if let selectedCase = selectedCase {
                     Text("You've already completed this case (\(selectedCase.diagnosis)). Check your Case History to review it!")
                 } else {
-                    Text("You've already completed this case. Check your Case History to review it!")
+                    Text("You've already completed this case.")
                 }
             }
         }
     }
-    
-    private var emptyStateView: some View {
-        VStack(spacing: 16) {
+
+    // MARK: - Category Grid
+
+    private var categoryGridSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Categories")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 20)
+
+            LazyVGrid(columns: [
+                GridItem(.flexible(), spacing: 12),
+                GridItem(.flexible(), spacing: 12)
+            ], spacing: 12) {
+                ForEach(displayCategories) { category in
+                    CategoryCard(category: category) {
+                        selectedDisplayCategory = category
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+
+    // MARK: - All Cases Button
+
+    private var allCasesButton: some View {
+        Button {
+            showingAllCases = true
+        } label: {
+            HStack {
+                Image(systemName: "list.bullet.rectangle.fill")
+                    .font(.title3)
+                    .foregroundStyle(.blue)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("All Cases")
+                        .font(.headline)
+                    Text("\(allCases.count) cases total")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(16)
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 16)
+    }
+
+    // MARK: - Search Results
+
+    private var searchResultsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if searchFilteredCases.isEmpty {
+                emptySearchView
+            } else {
+                Text("\(searchFilteredCases.count) results")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 20)
+
+                LazyVStack(spacing: 8) {
+                    ForEach(Array(searchFilteredCases.enumerated()), id: \.element.id) { index, medicalCase in
+                        let isCompleted = isCaseCompleted(medicalCase)
+                        let historyItem = historyEntry(for: medicalCase)
+
+                        Button {
+                            handleCaseSelection(medicalCase)
+                        } label: {
+                            CompactCaseRow(
+                                medicalCase: medicalCase,
+                                caseNumber: index + 1,
+                                isLocked: !subscriptionManager.isProSubscriber,
+                                isCompleted: isCompleted,
+                                wasCorrect: historyItem?.wasCorrect
+                            )
+                        }
+                        .disabled(isCompleted)
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
+        }
+    }
+
+    private var emptySearchView: some View {
+        VStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 60))
-                .foregroundStyle(.gray)
-            
-            Text("No Cases Found")
-                .font(.title2)
-                .bold()
-            
-            Text("Try adjusting your search or category filter")
+                .font(.system(size: 40))
+                .foregroundStyle(.tertiary)
+
+            Text("No cases found")
+                .font(.headline)
+
+            Text("Try a different search term")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 60)
+    }
+
+    // MARK: - Helpers
+
+    private func handleCaseSelection(_ medicalCase: MedicalCase) {
+        if isCaseCompleted(medicalCase) {
+            selectedCase = medicalCase
+            showingCompletedAlert = true
+        } else if subscriptionManager.isProUser {
+            selectedCase = medicalCase
+            showingGame = true
+        } else {
+            showingPaywall = true
+        }
     }
 }
 
-// MARK: - Category Button
-struct CategoryButton: View {
-    let title: String
-    let isSelected: Bool
+// MARK: - Category Card
+
+struct CategoryCard: View {
+    let category: DisplayCategory
     let action: () -> Void
-    
+
+    @State private var isPressed = false
+
     var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.subheadline)
-                .fontWeight(isSelected ? .semibold : .regular)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(isSelected ? Color.blue : Color(.systemGray5))
-                .foregroundStyle(isSelected ? .white : .primary)
-                .cornerRadius(20)
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            action()
+        }) {
+            VStack(alignment: .leading, spacing: 12) {
+                // Icon and count
+                HStack {
+                    ZStack {
+                        Circle()
+                            .fill(category.color.opacity(0.15))
+                            .frame(width: 44, height: 44)
+
+                        Image(systemName: category.icon)
+                            .font(.system(size: 20))
+                            .foregroundStyle(category.color)
+                    }
+
+                    Spacer()
+
+                    Text("\(category.caseCount)")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundStyle(.primary)
+                }
+
+                // Name
+                Text(category.name)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+
+                // Progress bar
+                VStack(alignment: .leading, spacing: 4) {
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(Color(.systemGray5))
+                                .frame(height: 4)
+
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(category.color)
+                                .frame(width: geometry.size.width * category.progress, height: 4)
+                        }
+                    }
+                    .frame(height: 4)
+
+                    Text("\(category.completedCount)/\(category.caseCount) completed")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(14)
+            .background(Color(.systemBackground))
+            .cornerRadius(14)
+            .shadow(color: category.color.opacity(0.1), radius: 8, y: 2)
+            .scaleEffect(isPressed ? 0.97 : 1)
+        }
+        .buttonStyle(.plain)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    withAnimation(.spring(response: 0.2)) { isPressed = true }
+                }
+                .onEnded { _ in
+                    withAnimation(.spring(response: 0.2)) { isPressed = false }
+                }
+        )
+    }
+}
+
+// MARK: - Category Cases View (Drill-down)
+
+struct CategoryCasesView: View {
+    let displayCategory: DisplayCategory
+    let cases: [MedicalCase]
+    let isCaseCompleted: (MedicalCase) -> Bool
+    let historyEntry: (MedicalCase) -> CaseHistoryEntry?
+    let onCaseSelected: (MedicalCase) -> Void
+
+    private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
+
+    /// Group cases by their original subcategory
+    private var groupedCases: [(subcategory: String, cases: [MedicalCase])] {
+        let grouped = Dictionary(grouping: cases) { $0.category }
+        return grouped.map { (subcategory: $0.key, cases: $0.value) }
+            .sorted { $0.cases.count > $1.cases.count }
+    }
+
+    var body: some View {
+        List {
+            ForEach(groupedCases, id: \.subcategory) { group in
+                Section {
+                    ForEach(Array(group.cases.enumerated()), id: \.element.id) { index, medicalCase in
+                        let isCompleted = isCaseCompleted(medicalCase)
+                        let historyItem = historyEntry(medicalCase)
+
+                        Button {
+                            onCaseSelected(medicalCase)
+                        } label: {
+                            CompactCaseRow(
+                                medicalCase: medicalCase,
+                                caseNumber: index + 1,
+                                isLocked: !subscriptionManager.isProSubscriber,
+                                isCompleted: isCompleted,
+                                wasCorrect: historyItem?.wasCorrect
+                            )
+                        }
+                        .disabled(isCompleted)
+                    }
+                } header: {
+                    if groupedCases.count > 1 {
+                        HStack {
+                            Text(group.subcategory)
+                            Spacer()
+                            Text("\(group.cases.count) cases")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle(displayCategory.name)
+        .navigationBarTitleDisplayMode(.large)
+    }
+}
+
+// MARK: - All Cases View
+
+struct AllCasesView: View {
+    let cases: [MedicalCase]
+    let isCaseCompleted: (MedicalCase) -> Bool
+    let historyEntry: (MedicalCase) -> CaseHistoryEntry?
+    let onCaseSelected: (MedicalCase) -> Void
+
+    @State private var searchText = ""
+    @State private var sortOption: SortOption = .category
+
+    private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
+
+    enum SortOption: String, CaseIterable {
+        case category = "Category"
+        case difficulty = "Difficulty"
+        case status = "Status"
+    }
+
+    private var filteredAndSortedCases: [MedicalCase] {
+        var result = cases
+
+        // Filter by search
+        if !searchText.isEmpty {
+            result = result.filter {
+                $0.category.localizedCaseInsensitiveContains(searchText) ||
+                $0.hints.first?.localizedCaseInsensitiveContains(searchText) == true
+            }
+        }
+
+        // Sort
+        switch sortOption {
+        case .category:
+            result.sort { $0.category < $1.category }
+        case .difficulty:
+            result.sort { $0.difficulty > $1.difficulty }
+        case .status:
+            result.sort { !isCaseCompleted($0) && isCaseCompleted($1) }
+        }
+
+        return result
+    }
+
+    var body: some View {
+        List {
+            ForEach(Array(filteredAndSortedCases.enumerated()), id: \.element.id) { index, medicalCase in
+                let isCompleted = isCaseCompleted(medicalCase)
+                let historyItem = historyEntry(medicalCase)
+
+                Button {
+                    onCaseSelected(medicalCase)
+                } label: {
+                    CompactCaseRow(
+                        medicalCase: medicalCase,
+                        caseNumber: index + 1,
+                        isLocked: !subscriptionManager.isProSubscriber,
+                        isCompleted: isCompleted,
+                        wasCorrect: historyItem?.wasCorrect
+                    )
+                }
+                .disabled(isCompleted)
+            }
+        }
+        .listStyle(.plain)
+        .navigationTitle("All Cases")
+        .navigationBarTitleDisplayMode(.large)
+        .searchable(text: $searchText, prompt: "Search cases...")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Menu {
+                    Picker("Sort by", selection: $sortOption) {
+                        ForEach(SortOption.allCases, id: \.self) { option in
+                            Text(option.rawValue).tag(option)
+                        }
+                    }
+                } label: {
+                    Image(systemName: "arrow.up.arrow.down")
+                }
+            }
         }
     }
 }
 
-// MARK: - Case Row
-struct CaseRow: View {
+// MARK: - Compact Case Row
+
+struct CompactCaseRow: View {
     let medicalCase: MedicalCase
     let caseNumber: Int
     var isLocked: Bool = false
     var isCompleted: Bool = false
     var wasCorrect: Bool? = nil
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                // Show "Case #" instead of diagnosis
-                HStack(spacing: 8) {
+        HStack(spacing: 12) {
+            // Status icon
+            ZStack {
+                Circle()
+                    .fill(statusColor.opacity(0.15))
+                    .frame(width: 36, height: 36)
+
+                Image(systemName: statusIcon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(statusColor)
+            }
+
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
                     Text("Case \(caseNumber)")
-                        .font(.headline)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
                         .foregroundStyle(isCompleted ? .secondary : .primary)
-                    
-                    // Status indicator
+
                     if isCompleted {
-                        // Completed indicator
-                        Image(systemName: wasCorrect == true ? "checkmark.circle.fill" : "xmark.circle.fill")
-                            .font(.subheadline)
-                            .foregroundStyle(wasCorrect == true ? .green : .red)
-                    } else if isLocked {
-                        Image(systemName: "lock.fill")
-                            .font(.subheadline)
-                            .foregroundStyle(.orange)
-                    } else {
-                        Image(systemName: "questionmark.circle.fill")
-                            .font(.subheadline)
-                            .foregroundStyle(.blue)
+                        Text(medicalCase.diagnosis)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
                     }
                 }
-                
-                Spacer()
-                
-                // Right side indicator
-                if isCompleted {
-                    Text("Completed")
+
+                HStack(spacing: 6) {
+                    Text(medicalCase.category)
                         .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(.systemGray5))
-                        .cornerRadius(6)
-                } else if isLocked {
-                    ProBadge(size: .small)
-                } else {
-                    // Difficulty indicator
-                    HStack(spacing: 2) {
-                        ForEach(0..<5) { index in
-                            Image(systemName: index < medicalCase.difficulty ? "star.fill" : "star")
-                                .font(.caption2)
-                                .foregroundStyle(index < medicalCase.difficulty ? .yellow : .gray)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(getCategoryColor(medicalCase.category).opacity(0.15))
+                        .foregroundStyle(getCategoryColor(medicalCase.category))
+                        .cornerRadius(4)
+
+                    if !isCompleted && !isLocked {
+                        // Difficulty dots
+                        HStack(spacing: 2) {
+                            ForEach(0..<3) { index in
+                                Circle()
+                                    .fill(index < min(medicalCase.difficulty, 3) ? Color.orange : Color(.systemGray4))
+                                    .frame(width: 5, height: 5)
+                            }
                         }
                     }
                 }
             }
-            
-            HStack(spacing: 8) {
-                Text(medicalCase.category)
-                    .font(.caption)
+
+            Spacer()
+
+            // Right indicator
+            if isLocked && !isCompleted {
+                ProBadge(size: .small)
+            } else if isCompleted {
+                Text("Done")
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(getCategoryColor(medicalCase.category).opacity(isCompleted ? 0.1 : (isLocked ? 0.1 : 0.2)))
-                    .foregroundStyle(getCategoryColor(medicalCase.category).opacity(isCompleted ? 0.5 : (isLocked ? 0.6 : 1)))
-                    .cornerRadius(6)
-                
-                // Show diagnosis if completed (no longer a mystery!)
-                if isCompleted {
-                    Text(medicalCase.diagnosis)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-            }
-            
-            // Show first hint as preview (not the diagnosis!)
-            if !isCompleted {
-                Text(medicalCase.hints.first ?? "")
+                    .background(Color(.systemGray5))
+                    .cornerRadius(4)
+            } else {
+                Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .opacity(isLocked ? 0.6 : 1)
+                    .foregroundStyle(.tertiary)
             }
         }
         .padding(.vertical, 4)
-        .opacity(isCompleted ? 0.7 : (isLocked ? 0.85 : 1))
+        .opacity(isCompleted ? 0.7 : 1)
     }
-    
+
+    private var statusIcon: String {
+        if isCompleted {
+            return wasCorrect == true ? "checkmark" : "xmark"
+        } else if isLocked {
+            return "lock.fill"
+        } else {
+            return "stethoscope"
+        }
+    }
+
+    private var statusColor: Color {
+        if isCompleted {
+            return wasCorrect == true ? .green : .red
+        } else if isLocked {
+            return .orange
+        } else {
+            return .blue
+        }
+    }
+
     private func getCategoryColor(_ category: String) -> Color {
-        switch category {
+        // Extract primary category for combos
+        let primary = category.components(separatedBy: " / ").first ?? category
+
+        switch primary {
         case "Cardiology": return .red
         case "Neurology": return .purple
         case "Pulmonology": return .blue
-        case "Gastroenterology": return .orange
+        case "Gastroenterology", "Hepatology": return .orange
         case "Endocrinology": return .green
         case "Nephrology": return .cyan
         case "Hematology": return .pink
@@ -330,9 +805,7 @@ struct CaseRow: View {
         case "ENT": return Color(red: 0.8, green: 0.6, blue: 0.2)
         case "Critical Care": return .red.opacity(0.8)
         case "Vascular": return .red.opacity(0.6)
-        case "Obstetrics": return .pink.opacity(0.8)
-        case "Gynecology": return .pink
-        case "Obstetrics & Gynecology": return .pink
+        case "Obstetrics", "Gynecology", "Obstetrics & Gynecology": return .pink
         case "Oncology": return .purple.opacity(0.7)
         case "Dermatology": return .orange.opacity(0.8)
         case "Ophthalmology": return .blue.opacity(0.7)
@@ -343,7 +816,9 @@ struct CaseRow: View {
     }
 }
 
+// MARK: - Preview
+
 #Preview {
     CaseBrowserView()
-        .modelContainer(for: MedicalCase.self, inMemory: true)
+        .modelContainer(for: [CaseHistoryEntry.self], inMemory: true)
 }
