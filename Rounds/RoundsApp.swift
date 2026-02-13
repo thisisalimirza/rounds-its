@@ -8,11 +8,40 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - Deep Link Manager
+@Observable
+class DeepLinkManager {
+    static let shared = DeepLinkManager()
+    var pendingCaseID: String?
+
+    private init() {}
+
+    func handleURL(_ url: URL) -> Bool {
+        // Handle rounds://case/{caseID}
+        guard url.scheme == "rounds",
+              url.host == "case",
+              let caseID = url.pathComponents.last,
+              !caseID.isEmpty,
+              caseID != "/" else {
+            return false
+        }
+
+        pendingCaseID = caseID
+        return true
+    }
+
+    func consumePendingCase() -> String? {
+        let caseID = pendingCaseID
+        pendingCaseID = nil
+        return caseID
+    }
+}
+
 @main
 struct RoundsApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var showOnboarding = false
-    
+
     init() {
         // Configure RevenueCat on app launch
         // This is nonisolated and safe to call during init
@@ -86,6 +115,10 @@ struct RoundsApp: App {
                 .sheet(isPresented: $showOnboarding) {
                     OnboardingView()
                         .interactiveDismissDisabled() // Prevent accidental swipe dismissal
+                }
+                .onOpenURL { url in
+                    // Handle deep links like rounds://case/{caseID}
+                    _ = DeepLinkManager.shared.handleURL(url)
                 }
         }
         .modelContainer(sharedModelContainer)

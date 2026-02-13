@@ -426,7 +426,8 @@ struct GameView: View {
                 guessCount: gameSession.guesses.count,
                 hintsUsed: gameSession.gameState == .won ? gameSession.hintsRevealedAtWin : gameSession.hintsRevealed,
                 score: gameSession.score,
-                isDailyCase: isDailyCase
+                isDailyCase: isDailyCase,
+                caseID: isDailyCase ? nil : currentCase.id.uuidString
             )
             
             // Hint about AMBOSS link

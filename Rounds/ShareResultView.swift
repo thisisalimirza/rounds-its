@@ -127,23 +127,30 @@ struct ShareTextGenerator {
     static func generateShareText(
         won: Bool,
         hintsUsed: Int,
+        score: Int,
+        guessCount: Int,
         isDailyCase: Bool,
-        dailyCaseNumber: Int?
+        dailyCaseNumber: Int?,
+        caseID: String? = nil
     ) -> String {
         // Green = hints used, Black = hints remaining (fewer green = better!)
         let hintSquares = String(repeating: "🟢", count: min(hintsUsed, 5)) + String(repeating: "⚫️", count: max(0, 5 - hintsUsed))
-        
+
         var text = "🩺 Rounds"
-        
+
         if isDailyCase, let caseNum = dailyCaseNumber {
             text += " #\(caseNum)"
         }
-        
+
         text += "\n\n"
         text += hintSquares
         text += "\n\n"
-        
+
         if won {
+            // Show score and performance
+            text += "💯 Score: \(score) points\n"
+            text += "🎯 \(guessCount) guess\(guessCount == 1 ? "" : "es"), \(hintsUsed) hint\(hintsUsed == 1 ? "" : "s")\n\n"
+
             switch hintsUsed {
             case 1:
                 text += "🔥 First hint diagnosis!"
@@ -157,12 +164,21 @@ struct ShareTextGenerator {
                 text += "✅ Diagnosed it!"
             }
         } else {
-            text += "❌ Missed this one"
+            text += "❌ Couldn't crack this one"
         }
-        
-        text += "\n\nThink you can beat me? 🧠"
-        text += "\nhttps://apps.apple.com/app/rounds"  // Replace with actual App Store link
-        
+
+        text += "\n\n🧠 Think you can beat my score?"
+
+        // Add deep link for the specific case
+        if isDailyCase {
+            text += "\n\n▶️ Play today's case:"
+        } else if let caseID = caseID {
+            text += "\n\n▶️ Try this exact case:"
+            text += "\nrounds://case/\(caseID)"
+        }
+
+        text += "\nhttps://apps.apple.com/app/id6740487567"
+
         return text
     }
 }
@@ -178,9 +194,10 @@ struct ShareResultButton: View {
     let hintsUsed: Int
     let score: Int
     let isDailyCase: Bool
-    
+    var caseID: String? = nil
+
     @State private var showingShareSheet = false
-    
+
     private var dailyCaseNumber: Int {
         // Calculate day number since Jan 1, 2025
         let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 1))!
@@ -188,7 +205,7 @@ struct ShareResultButton: View {
         let daysSinceStart = Calendar.current.dateComponents([.day], from: startDate, to: today).day ?? 0
         return daysSinceStart + 1
     }
-    
+
     var body: some View {
         Button {
             showingShareSheet = true
@@ -217,8 +234,11 @@ struct ShareResultButton: View {
             ShareSheet(text: ShareTextGenerator.generateShareText(
                 won: won,
                 hintsUsed: hintsUsed,
+                score: score,
+                guessCount: guessCount,
                 isDailyCase: isDailyCase,
-                dailyCaseNumber: isDailyCase ? dailyCaseNumber : nil
+                dailyCaseNumber: isDailyCase ? dailyCaseNumber : nil,
+                caseID: caseID
             ))
             .presentationDetents([.medium])
         }
@@ -229,17 +249,20 @@ struct ShareResultButton: View {
 struct CompactShareButton: View {
     let won: Bool
     let hintsUsed: Int
+    let score: Int
+    let guessCount: Int
     let isDailyCase: Bool
-    
+    var caseID: String? = nil
+
     @State private var showingShareSheet = false
-    
+
     private var dailyCaseNumber: Int {
         let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 1))!
         let today = Calendar.current.startOfDay(for: Date())
         let daysSinceStart = Calendar.current.dateComponents([.day], from: startDate, to: today).day ?? 0
         return daysSinceStart + 1
     }
-    
+
     var body: some View {
         Button {
             showingShareSheet = true
@@ -252,8 +275,11 @@ struct CompactShareButton: View {
             ShareSheet(text: ShareTextGenerator.generateShareText(
                 won: won,
                 hintsUsed: hintsUsed,
+                score: score,
+                guessCount: guessCount,
                 isDailyCase: isDailyCase,
-                dailyCaseNumber: isDailyCase ? dailyCaseNumber : nil
+                dailyCaseNumber: isDailyCase ? dailyCaseNumber : nil,
+                caseID: caseID
             ))
             .presentationDetents([.medium])
         }

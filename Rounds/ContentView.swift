@@ -207,6 +207,13 @@ struct ContentView: View {
                         showingStreakRecovery = true
                     }
                 }
+
+                // Check for deep linked case
+                checkForDeepLinkedCase()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                // Also check when app becomes active (in case opened via URL while running)
+                checkForDeepLinkedCase()
             }
         }
     }
@@ -426,6 +433,22 @@ struct ContentView: View {
     private func startRandomGame() {
         if let randomCase = CaseLibrary.getRandomCase() {
             currentCase = randomCase
+            isDailyCase = false
+            showingGame = true
+        }
+    }
+
+    private func checkForDeepLinkedCase() {
+        // Check if there's a pending case from a deep link
+        guard let caseIDString = DeepLinkManager.shared.consumePendingCase(),
+              let caseUUID = UUID(uuidString: caseIDString) else {
+            return
+        }
+
+        // Find the case in the library
+        let allCases = CaseLibrary.getSampleCases()
+        if let linkedCase = allCases.first(where: { $0.id == caseUUID }) {
+            currentCase = linkedCase
             isDailyCase = false
             showingGame = true
         }
