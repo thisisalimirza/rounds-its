@@ -58,8 +58,27 @@ struct LeaderboardView: View {
             }
             .sheet(isPresented: $showingProfileSetup) {
                 LeaderboardProfileSetupView { newProfile in
-                    // Profile created, fetch leaderboard
+                    // Profile created - sync to CloudKit first, then fetch leaderboard
                     Task {
+                        // Get player stats to sync
+                        let descriptor = FetchDescriptor<PlayerStats>()
+                        if let stats = try? modelContext.fetch(descriptor).first {
+                            await LeaderboardManager.shared.syncScoreIfNeeded(
+                                profile: newProfile,
+                                totalScore: stats.totalScore,
+                                gamesPlayed: stats.gamesPlayed,
+                                gamesWon: stats.gamesWon
+                            )
+                        } else {
+                            // No stats yet, sync with zeros to create CloudKit record
+                            await LeaderboardManager.shared.syncScoreIfNeeded(
+                                profile: newProfile,
+                                totalScore: 0,
+                                gamesPlayed: 0,
+                                gamesWon: 0
+                            )
+                        }
+                        // Then fetch the leaderboard to show updated data
                         await fetchLeaderboard(for: selectedScope, profile: newProfile)
                     }
                 }

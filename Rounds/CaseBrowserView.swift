@@ -181,6 +181,10 @@ struct CaseBrowserView: View {
     @State private var showingCompletedAlert = false
     @State private var showingAllCases = false
 
+    // Track context for swipe-to-next-case feature
+    @State private var currentCaseContext: CaseContext = .random
+    @State private var currentCategoryName: String? = nil
+
     // Cached categories to avoid recomputation on every render
     @State private var cachedCategories: [DisplayCategory] = []
 
@@ -283,7 +287,13 @@ struct CaseBrowserView: View {
             }
             .navigationDestination(isPresented: $showingGame) {
                 if let selectedCase = selectedCase {
-                    GameView(medicalCase: selectedCase)
+                    GameView(
+                        medicalCase: selectedCase,
+                        caseContext: currentCaseContext,
+                        onRequestNextCase: { context, excludingID in
+                            getNextCase(context: context, excludingID: excludingID)
+                        }
+                    )
                 }
             }
             .navigationDestination(item: $selectedDisplayCategory) { category in
@@ -293,7 +303,7 @@ struct CaseBrowserView: View {
                     isCaseCompleted: isCaseCompleted,
                     historyEntry: historyEntry,
                     onCaseSelected: { medicalCase in
-                        handleCaseSelection(medicalCase)
+                        handleCaseSelection(medicalCase, categoryName: category.name)
                     }
                 )
             }
@@ -462,15 +472,57 @@ struct CaseBrowserView: View {
 
     // MARK: - Helpers
 
-    private func handleCaseSelection(_ medicalCase: MedicalCase) {
+    private func handleCaseSelection(_ medicalCase: MedicalCase, categoryName: String? = nil) {
         if isCaseCompleted(medicalCase) {
             selectedCase = medicalCase
             showingCompletedAlert = true
         } else if subscriptionManager.isProUser {
             selectedCase = medicalCase
+            // Set context for swipe-to-next-case
+            if let categoryName = categoryName {
+                currentCaseContext = .category(categoryName)
+                currentCategoryName = categoryName
+            } else {
+                currentCaseContext = .random
+                currentCategoryName = nil
+            }
             showingGame = true
         } else {
             showingPaywall = true
+        }
+    }
+
+    /// Get the next case based on context for swipe-to-next-case feature
+    private func getNextCase(context: CaseContext, excludingID: UUID) -> MedicalCase? {
+        let completedIDs = completedCaseIDs
+        let completedDiags = completedDiagnoses
+
+        switch context {
+        case .category(let categoryName):
+            // Find the display category
+            if let displayCategory = cachedCategories.first(where: { $0.name == categoryName }) {
+                // Get unplayed cases in this category
+                let categoryCases = cases(for: displayCategory)
+                let unplayedCases = categoryCases.filter { medicalCase in
+                    medicalCase.id != excludingID &&
+                    !completedIDs.contains(medicalCase.id) &&
+                    !completedDiags.contains(medicalCase.diagnosis.lowercased())
+                }
+
+                // Return next unplayed case, or a random unplayed case
+                if let nextCase = unplayedCases.first {
+                    return nextCase
+                }
+
+                // If all cases in category are played, try a random case from any category
+                return CaseLibrary.getRandomCase(excluding: Array(completedIDs) + [excludingID])
+            }
+            // Fallback to random
+            return CaseLibrary.getRandomCase(excluding: [excludingID])
+
+        case .daily, .random:
+            // Get a random case excluding the current one
+            return CaseLibrary.getRandomCase(excluding: [excludingID])
         }
     }
 }

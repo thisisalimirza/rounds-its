@@ -18,7 +18,7 @@ extension View {
 
 struct AdaptiveContentWidthModifier: ViewModifier {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    
+
     func body(content: Content) -> some View {
         if horizontalSizeClass == .regular {
             // iPad: Center content with max width and white space on sides
@@ -33,6 +33,14 @@ struct AdaptiveContentWidthModifier: ViewModifier {
             content
         }
     }
+}
+
+// MARK: - Case Context for Next Case Selection
+
+enum CaseContext: Equatable {
+    case daily
+    case random
+    case category(String)
 }
 
 struct GameView: View {
@@ -59,15 +67,38 @@ struct GameView: View {
     @AppStorage("hasSeenLeaderboardPrompt") private var hasSeenLeaderboardPrompt = false
     let isDailyCase: Bool
 
+    // MARK: - Swipe-to-Next-Case State
+    @State private var swipeOffset: CGFloat = 0
+    @State private var isTransitioning: Bool = false
+    @State private var hasTriggeredThresholdHaptic = false
+    @State private var showNoMoreCasesAlert = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    // Swipe configuration
+    private let swipeThreshold: CGFloat = 150
+    private let velocityThreshold: CGFloat = 500
+    private let maxDragDistance: CGFloat = 300
+
+    // Context and next case provider
+    let caseContext: CaseContext
+    let onRequestNextCase: ((CaseContext, UUID) -> MedicalCase?)?
+
     private var leaderboardProfile: LeaderboardProfile? {
         leaderboardProfiles.first
     }
-    
-    init(medicalCase: MedicalCase, isDailyCase: Bool = false) {
+
+    init(
+        medicalCase: MedicalCase,
+        isDailyCase: Bool = false,
+        caseContext: CaseContext = .random,
+        onRequestNextCase: ((CaseContext, UUID) -> MedicalCase?)? = nil
+    ) {
         _currentCase = State(initialValue: medicalCase)
         _gameSession = State(initialValue: GameSession(caseID: medicalCase.id))
         self.isDailyCase = isDailyCase
-        
+        self.caseContext = caseContext
+        self.onRequestNextCase = onRequestNextCase
+
         // Track case started
         AnalyticsManager.shared.trackCaseStarted(
             caseID: medicalCase.id.uuidString,
@@ -84,29 +115,42 @@ struct GameView: View {
                     headerView
                         .padding(.horizontal)
                         .padding(.top, 12)
-                    
+
                     // Hints Section
                     hintsSection
                         .padding(.horizontal)
-                    
+
                     // Previous Guesses
                     if !gameSession.guesses.isEmpty && gameSession.gameState == .playing {
                         previousGuessesSection
                             .padding(.horizontal)
                     }
-                    
+
                     // Result section if game is over
                     if gameSession.gameState != .playing {
                         resultSection
                             .padding(.horizontal)
+
+                        // Swipe indicator at the very bottom
+                        if onRequestNextCase != nil {
+                            SwipeUpIndicator(progress: swipeProgress)
+                                .padding(.top, 8)
+                        }
                     }
-                    
+
                     // Add bottom padding to ensure content doesn't hide behind button
                     Spacer()
-                        .frame(height: gameSession.gameState == .playing ? 100 : 20)
+                        .frame(height: gameSession.gameState == .playing ? 100 : 40)
                 }
                 .adaptiveContentWidth() // Apply iPad-friendly centering
+                .offset(y: swipeOffset)
             }
+            // Apply swipe gesture to entire scroll view when game is complete
+            .simultaneousGesture(
+                gameSession.gameState != .playing && onRequestNextCase != nil
+                    ? swipeUpGesture
+                    : nil
+            )
             
             // Floating action buttons for input (only when playing)
             if gameSession.gameState == .playing {
@@ -220,6 +264,11 @@ struct GameView: View {
             Button("OK") { }
         } message: {
             Text(resultMessage)
+        }
+        .alert("Great job!", isPresented: $showNoMoreCasesAlert) {
+            Button("OK") { }
+        } message: {
+            Text("You've completed all available cases. Try a random case to keep practicing!")
         }
         .sheet(isPresented: $showingLevelUp) {
             if let level = newLevel {
@@ -438,6 +487,112 @@ struct GameView: View {
         .padding(14)
         .background(Color(.systemGray6))
         .cornerRadius(14)
+    }
+
+    // MARK: - Swipe Progress
+    private var swipeProgress: CGFloat {
+        min(1, abs(swipeOffset) / swipeThreshold)
+    }
+
+    // MARK: - Swipe Gesture
+    private var swipeUpGesture: some Gesture {
+        DragGesture(minimumDistance: 20, coordinateSpace: .local)
+            .onChanged { value in
+                // Only allow upward swipes (negative translation) when game is complete
+                guard gameSession.gameState != .playing else { return }
+                guard onRequestNextCase != nil else { return }
+                guard !isTransitioning else { return }
+                guard value.translation.height < 0 else { return }
+
+                let translation = min(0, max(-maxDragDistance, value.translation.height * 0.8))
+                swipeOffset = translation
+
+                // Haptic feedback at threshold crossing
+                if abs(translation) > swipeThreshold && !hasTriggeredThresholdHaptic {
+                    HapticManager.shared.swipeThresholdCrossed()
+                    hasTriggeredThresholdHaptic = true
+                } else if abs(translation) < swipeThreshold && hasTriggeredThresholdHaptic {
+                    hasTriggeredThresholdHaptic = false
+                }
+            }
+            .onEnded { value in
+                guard gameSession.gameState != .playing else { return }
+                guard onRequestNextCase != nil else { return }
+                guard !isTransitioning else { return }
+
+                hasTriggeredThresholdHaptic = false
+                let translation = value.translation.height
+                let velocity = value.predictedEndTranslation.height - translation
+
+                // Determine if should complete transition
+                let shouldComplete = abs(translation) > swipeThreshold ||
+                                     abs(velocity) > velocityThreshold
+
+                if shouldComplete && translation < 0 {
+                    completeSwipeTransition()
+                } else {
+                    snapBack()
+                }
+            }
+    }
+
+    // MARK: - Swipe Transition
+    private func completeSwipeTransition() {
+        guard let nextCaseProvider = onRequestNextCase,
+              let nextCase = nextCaseProvider(caseContext, currentCase.id) else {
+            snapBack()
+            showNoMoreCasesAlert = true
+            return
+        }
+
+        isTransitioning = true
+        HapticManager.shared.swipeTransitionStart()
+
+        // Track swipe to next case
+        AnalyticsManager.shared.track("swipe_to_next_case", properties: [
+            "from_case_id": currentCase.id.uuidString,
+            "to_case_id": nextCase.id.uuidString,
+            "context": String(describing: caseContext)
+        ])
+
+        if reduceMotion {
+            // Accessibility: Use crossfade instead of slide
+            withAnimation(.easeInOut(duration: 0.3)) {
+                currentCase = nextCase
+                gameSession = GameSession(caseID: nextCase.id)
+                swipeOffset = 0
+                isTransitioning = false
+            }
+            HapticManager.shared.newCaseArrived()
+        } else {
+            // Step 1: Slide current view up and out
+            withAnimation(.easeIn(duration: 0.2)) {
+                swipeOffset = -UIScreen.main.bounds.height
+            }
+
+            // Step 2: Reset state and prepare new case
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                currentCase = nextCase
+                gameSession = GameSession(caseID: nextCase.id)
+                swipeOffset = UIScreen.main.bounds.height * 0.3 // Position slightly below
+
+                // Step 3: Slide new view up into place
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                    swipeOffset = 0
+                    isTransitioning = false
+                }
+
+                // Haptic for new case arrival
+                HapticManager.shared.newCaseArrived()
+            }
+        }
+    }
+
+    private func snapBack() {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            swipeOffset = 0
+        }
+        HapticManager.shared.swipeSnapBack()
     }
     
     // MARK: - Helper Methods

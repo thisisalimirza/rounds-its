@@ -123,7 +123,15 @@ struct ContentView: View {
             }
             .navigationDestination(isPresented: $showingGame) {
                 if let currentCase = currentCase {
-                    GameView(medicalCase: currentCase, isDailyCase: isDailyCase)
+                    GameView(
+                        medicalCase: currentCase,
+                        isDailyCase: isDailyCase,
+                        caseContext: isDailyCase ? .daily : .random,
+                        onRequestNextCase: { context, excludingID in
+                            // Get a random case excluding the current one
+                            return CaseLibrary.getRandomCase(excluding: [excludingID])
+                        }
+                    )
                 }
             }
             .sheet(isPresented: $showingStats) {

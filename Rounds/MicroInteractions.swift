@@ -652,6 +652,69 @@ struct EnhancedTabButton: View {
     }
 }
 
+// MARK: - Swipe Up Indicator (TikTok-style next case)
+
+struct SwipeUpIndicator: View {
+    let progress: CGFloat  // 0 to 1 based on drag progress
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(spacing: 6) {
+            // Animated chevrons
+            VStack(spacing: 2) {
+                Image(systemName: "chevron.up")
+                    .font(.caption.bold())
+                    .opacity(0.3 + progress * 0.7)
+                Image(systemName: "chevron.up")
+                    .font(.caption.bold())
+                    .opacity(0.6 + progress * 0.4)
+            }
+            .foregroundStyle(progress > 0.7 ? .blue : .secondary)
+            .offset(y: isAnimating ? -4 : 0)
+            .animation(
+                .easeInOut(duration: 0.8)
+                .repeatForever(autoreverses: true),
+                value: isAnimating
+            )
+
+            Text("Swipe up for next case")
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.top, 16)
+        .opacity(Double(1.0 - progress * 0.5))  // Fade as user swipes
+        .onAppear { isAnimating = true }
+    }
+}
+
+// MARK: - Swipe Progress Bar
+
+struct SwipeProgressBar: View {
+    let progress: CGFloat  // 0 to 1
+
+    var body: some View {
+        GeometryReader { geometry in
+            Capsule()
+                .fill(Color(.systemGray5))
+                .frame(height: 4)
+                .overlay(alignment: .leading) {
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [.blue, .purple],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: geometry.size.width * min(1, progress))
+                }
+        }
+        .frame(height: 4)
+        .padding(.horizontal, 60)
+    }
+}
+
 // MARK: - Preview
 
 #Preview("Micro Interactions") {
@@ -679,5 +742,16 @@ struct EnhancedTabButton: View {
         .padding(.horizontal, 20)
     }
     .padding()
+    .background(Color(.systemGray6))
+}
+
+#Preview("Swipe Indicator") {
+    VStack {
+        Spacer()
+        SwipeUpIndicator(progress: 0)
+        Spacer()
+        SwipeProgressBar(progress: 0.5)
+            .padding()
+    }
     .background(Color(.systemGray6))
 }

@@ -58,7 +58,7 @@ class HapticManager {
     func achievementUnlocked() {
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.success)
-        
+
         // Triple tap for celebration
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             let impactGenerator = UIImpactFeedbackGenerator(style: .medium)
@@ -68,5 +68,31 @@ class HapticManager {
             let impactGenerator = UIImpactFeedbackGenerator(style: .heavy)
             impactGenerator.impactOccurred()
         }
+    }
+
+    // MARK: - Swipe-to-Next-Case Haptics
+
+    // Swipe threshold crossed during drag
+    func swipeThresholdCrossed() {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+    }
+
+    // Swipe transition starting
+    func swipeTransitionStart() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+    }
+
+    // New case arrived after swipe
+    func newCaseArrived() {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred(intensity: 0.7)
+    }
+
+    // Swipe cancelled / snap back
+    func swipeSnapBack() {
+        let generator = UISelectionFeedbackGenerator()
+        generator.selectionChanged()
     }
 }

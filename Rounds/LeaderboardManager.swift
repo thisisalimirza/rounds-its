@@ -466,8 +466,12 @@ extension LeaderboardManager {
     ) async {
         guard let profile = profile else { return }
 
-        // Only sync if score has changed
-        guard totalScore != profile.lastSyncedScore else { return }
+        // Always sync if this profile has never been synced to CloudKit
+        // (cloudKitRecordID will be nil for brand new profiles)
+        let needsInitialSync = profile.cloudKitRecordID == nil
+
+        // Only sync if score has changed OR if this is the first sync
+        guard needsInitialSync || totalScore != profile.lastSyncedScore else { return }
 
         do {
             try await syncProfile(
