@@ -13,6 +13,8 @@ struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query private var leaderboardProfiles: [LeaderboardProfile]
+    @Query private var playerStats: [PlayerStats]
+    @Query private var achievementProgress: [AchievementProgress]
     @State private var showingFeedback = false
     @State private var showingSubscription = false
     @State private var showingLeaderboardSetup = false
@@ -20,6 +22,7 @@ struct AboutView: View {
     @State private var showingEditDisplayName = false
     @State private var editedDisplayName = ""
     @State private var notificationsEnabled = false
+    @State private var selectedIntensity: NotificationIntensity = SmartNotificationManager.shared.currentIntensity
     @State private var showingHowToPlay = false
     @State private var showingWhatsNew = false
     @StateObject private var whatsNewManager = WhatsNewManager.shared
@@ -47,7 +50,9 @@ struct AboutView: View {
                 let components = Calendar.current.dateComponents([.hour, .minute], from: newDate)
                 reminderHour = components.hour ?? 19
                 reminderMinute = components.minute ?? 0
-                NotificationManager.scheduleDailyReminder(hour: reminderHour, minute: reminderMinute)
+                // Use smart notifications with context
+                let ctx = playerStats.first.map { SmartNotificationManager.buildContext(from: $0, achievements: achievementProgress.first) }
+                SmartNotificationManager.shared.scheduleSmartReminder(hour: reminderHour, minute: reminderMinute, context: ctx)
             }
         )
     }
@@ -326,7 +331,7 @@ struct AboutView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Daily Reminder")
                     .font(.body)
-                Text("Get reminded to keep your streak alive")
+                Text("Smart reminders personalized to your streak")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -337,6 +342,33 @@ struct AboutView: View {
         }
 
         if notificationsEnabled {
+            // Intensity Picker
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Notification Style")
+                    .font(.body)
+
+                Picker("Style", selection: $selectedIntensity) {
+                    ForEach(NotificationIntensity.allCases, id: \.self) { intensity in
+                        HStack {
+                            Image(systemName: intensity.icon)
+                            Text(intensity.displayName)
+                        }
+                        .tag(intensity)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: selectedIntensity) { _, newValue in
+                    SmartNotificationManager.shared.currentIntensity = newValue
+                    rescheduleSmartNotification()
+                }
+
+                Text(selectedIntensity.description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 4)
+
+            // Time Picker
             DatePicker(selection: reminderTime, displayedComponents: .hourAndMinute) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Reminder Time")
@@ -347,6 +379,18 @@ struct AboutView: View {
                 }
             }
             .tint(.blue)
+
+            // Preview button
+            Button {
+                previewNotification()
+            } label: {
+                HStack {
+                    Image(systemName: "eye.fill")
+                    Text("Preview Notification")
+                }
+                .font(.subheadline)
+                .foregroundStyle(.blue)
+            }
         }
     }
 
@@ -526,16 +570,46 @@ struct AboutView: View {
 
     private func handleNotificationToggle(_ enabled: Bool) {
         if enabled {
-            NotificationManager.requestAuthorization { granted in
+            SmartNotificationManager.shared.requestAuthorization { granted in
                 if granted {
-                    NotificationManager.scheduleDailyReminder(hour: reminderHour, minute: reminderMinute)
+                    rescheduleSmartNotification()
                 } else {
                     notificationsEnabled = false
                 }
             }
         } else {
-            NotificationManager.cancelAll()
+            SmartNotificationManager.shared.cancelAll()
         }
+    }
+
+    private func rescheduleSmartNotification() {
+        let context = buildNotificationContext()
+        SmartNotificationManager.shared.scheduleSmartReminder(
+            hour: reminderHour,
+            minute: reminderMinute,
+            context: context
+        )
+    }
+
+    private func buildNotificationContext() -> NotificationContext? {
+        guard let stats = playerStats.first else { return nil }
+        return SmartNotificationManager.buildContext(
+            from: stats,
+            achievements: achievementProgress.first
+        )
+    }
+
+    private func previewNotification() {
+        let context = buildNotificationContext()
+        SmartNotificationManager.shared.scheduleOneTimeNotification(
+            identifier: "rounds.preview",
+            title: "Preview Notification",
+            body: "This is how your daily reminder will look!",
+            delay: 2
+        )
+
+        // Also reschedule to update the actual daily notification
+        rescheduleSmartNotification()
     }
 
     private func saveDisplayName() {
