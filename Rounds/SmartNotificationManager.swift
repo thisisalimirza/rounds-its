@@ -488,3 +488,177 @@ extension SmartNotificationManager {
         )
     }
 }
+
+// MARK: - Competitive Notifications
+
+extension SmartNotificationManager {
+
+    // UserDefaults keys for rank tracking
+    private static let previousSchoolRankKey = "competitive_previousSchoolRank"
+    private static let previousSchoolNameKey = "competitive_previousSchoolName"
+    private static let lastRankCheckKey = "competitive_lastRankCheck"
+
+    /// Store the user's current school rank for comparison
+    func storeCurrentRank(rank: Int, schoolName: String) {
+        UserDefaults.standard.set(rank, forKey: Self.previousSchoolRankKey)
+        UserDefaults.standard.set(schoolName, forKey: Self.previousSchoolNameKey)
+        UserDefaults.standard.set(Date(), forKey: Self.lastRankCheckKey)
+    }
+
+    /// Get the previously stored rank
+    func getPreviousRank() -> (rank: Int, schoolName: String)? {
+        let rank = UserDefaults.standard.integer(forKey: Self.previousSchoolRankKey)
+        let schoolName = UserDefaults.standard.string(forKey: Self.previousSchoolNameKey)
+
+        guard rank > 0, let school = schoolName else { return nil }
+        return (rank, school)
+    }
+
+    /// Check for rank changes and send appropriate notification
+    /// Call this after fetching the leaderboard
+    func checkForRankChange(newRank: Int, schoolName: String, playerName: String? = nil) {
+        guard let previous = getPreviousRank(), previous.schoolName == schoolName else {
+            // First time or school changed, just store
+            storeCurrentRank(rank: newRank, schoolName: schoolName)
+            return
+        }
+
+        let oldRank = previous.rank
+
+        // Store the new rank
+        storeCurrentRank(rank: newRank, schoolName: schoolName)
+
+        // Check if rank changed significantly
+        if newRank > oldRank {
+            // User dropped in rank (someone passed them)
+            scheduleRankDropNotification(
+                oldRank: oldRank,
+                newRank: newRank,
+                schoolName: schoolName
+            )
+        } else if newRank < oldRank && newRank <= 10 {
+            // User climbed into top 10 - celebrate!
+            scheduleRankClimbNotification(
+                oldRank: oldRank,
+                newRank: newRank,
+                schoolName: schoolName
+            )
+        }
+    }
+
+    /// Schedule a notification when someone passes the user
+    private func scheduleRankDropNotification(oldRank: Int, newRank: Int, schoolName: String) {
+        let identifier = "rounds.rank.drop"
+        center.removePendingNotificationRequests(withIdentifiers: [identifier])
+
+        let content = UNMutableNotificationContent()
+
+        // Different messages based on how much they dropped
+        let dropAmount = newRank - oldRank
+
+        if dropAmount == 1 {
+            content.title = "📉 Someone passed you!"
+            content.body = "You dropped from #\(oldRank) to #\(newRank) at \(schoolName). Play today's case to reclaim your spot!"
+        } else if dropAmount <= 3 {
+            content.title = "⚠️ Rank Alert!"
+            content.body = "You've dropped \(dropAmount) spots to #\(newRank) at \(schoolName). Time to fight back!"
+        } else {
+            content.title = "🚨 Your classmates are catching up!"
+            content.body = "You've fallen to #\(newRank) at \(schoolName). Play now to climb back up!"
+        }
+
+        content.sound = .default
+        content.interruptionLevel = .timeSensitive
+
+        // Send after a short delay (not immediately)
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 30, repeats: false)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+
+        center.add(request)
+
+        // Track analytics
+        AnalyticsManager.shared.track("competitive_notification_scheduled", properties: [
+            "type": "rank_drop",
+            "old_rank": oldRank,
+            "new_rank": newRank,
+            "drop_amount": dropAmount
+        ])
+    }
+
+    /// Schedule a celebration notification when user climbs
+    private func scheduleRankClimbNotification(oldRank: Int, newRank: Int, schoolName: String) {
+        let identifier = "rounds.rank.climb"
+        center.removePendingNotificationRequests(withIdentifiers: [identifier])
+
+        let content = UNMutableNotificationContent()
+
+        if newRank == 1 {
+            content.title = "👑 You're #1!"
+            content.body = "You just took the top spot at \(schoolName)! Can you hold it?"
+        } else if newRank <= 3 {
+            content.title = "🏆 Top 3!"
+            content.body = "You climbed to #\(newRank) at \(schoolName)! Keep the momentum going!"
+        } else {
+            content.title = "📈 Moving up!"
+            content.body = "You're now #\(newRank) at \(schoolName). Top 3 is within reach!"
+        }
+
+        content.sound = .default
+
+        // Send after a short delay
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+
+        center.add(request)
+
+        // Track analytics
+        AnalyticsManager.shared.track("competitive_notification_scheduled", properties: [
+            "type": "rank_climb",
+            "old_rank": oldRank,
+            "new_rank": newRank
+        ])
+    }
+
+    /// Schedule a notification about classmates' activity
+    /// Call this when you know how many players from the school played today
+    func scheduleClassmatesActiveNotification(activeCount: Int, schoolName: String) {
+        guard activeCount >= 3 else { return } // Only notify if enough activity
+
+        let identifier = "rounds.classmates.active"
+        center.removePendingNotificationRequests(withIdentifiers: [identifier])
+
+        let content = UNMutableNotificationContent()
+        content.title = "🏫 Your school is active!"
+        content.body = "\(activeCount) students from \(schoolName) played today. Don't fall behind!"
+        content.sound = .default
+
+        // Schedule for evening if they haven't played
+        var dateComponents = DateComponents()
+        dateComponents.hour = 20 // 8 PM
+        dateComponents.minute = 0
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+
+        center.add(request)
+    }
+
+    /// Schedule notification when user is close to overtaking someone
+    func scheduleCloseCompetitionNotification(currentRank: Int, pointsBehind: Int, schoolName: String) {
+        guard pointsBehind <= 100 && currentRank > 1 else { return }
+
+        let identifier = "rounds.close.competition"
+        center.removePendingNotificationRequests(withIdentifiers: [identifier])
+
+        let content = UNMutableNotificationContent()
+        content.title = "🎯 So close!"
+        content.body = "You're only \(pointsBehind) points from #\(currentRank - 1) at \(schoolName). One good case could do it!"
+        content.sound = .default
+
+        // Send in 2 hours if they don't play
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 7200, repeats: false)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+
+        center.add(request)
+    }
+}

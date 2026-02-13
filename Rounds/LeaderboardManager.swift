@@ -144,7 +144,7 @@ final class LeaderboardManager {
     // MARK: - Leaderboard Fetching
 
     /// Fetch school leaderboard
-    func fetchSchoolLeaderboard(schoolID: String, currentPlayerID: String) async throws {
+    func fetchSchoolLeaderboard(schoolID: String, currentPlayerID: String, schoolName: String? = nil) async throws {
         isLoading = true
         error = nil
         lastFetchedScope = .school
@@ -156,6 +156,25 @@ final class LeaderboardManager {
 
         schoolLeaderboard = entries
         schoolRank = entries.first { $0.isCurrentUser }?.rank
+
+        // Check for competitive notification opportunities
+        if let newRank = schoolRank, let school = schoolName ?? entries.first?.schoolName {
+            SmartNotificationManager.shared.checkForRankChange(
+                newRank: newRank,
+                schoolName: school
+            )
+
+            // Check if close to next rank
+            if newRank > 1, let currentUser = entries.first(where: { $0.isCurrentUser }),
+               let nextUser = entries.first(where: { $0.rank == newRank - 1 }) {
+                let pointsBehind = nextUser.totalScore - currentUser.totalScore
+                SmartNotificationManager.shared.scheduleCloseCompetitionNotification(
+                    currentRank: newRank,
+                    pointsBehind: pointsBehind,
+                    schoolName: school
+                )
+            }
+        }
     }
 
     /// Fetch state leaderboard (US only)
@@ -404,7 +423,8 @@ extension LeaderboardManager {
             case .school:
                 try await fetchSchoolLeaderboard(
                     schoolID: profile.schoolID,
-                    currentPlayerID: profile.playerID
+                    currentPlayerID: profile.playerID,
+                    schoolName: profile.schoolName
                 )
             case .state:
                 try await fetchStateLeaderboard(

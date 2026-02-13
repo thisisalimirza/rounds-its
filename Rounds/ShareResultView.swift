@@ -17,25 +17,28 @@ struct ShareResultCard: View {
     let score: Int
     let isDailyCase: Bool
     let dailyCaseNumber: Int?
-    
+    var streak: Int? = nil
+    var schoolRank: Int? = nil
+    var schoolName: String? = nil
+
     private var hintEmojis: String {
-        // Green = hints used, Black = hints remaining (fewer green = better!)
-        let filled = String(repeating: "🟢", count: min(hintsUsed, 5))
-        let empty = String(repeating: "⚫️", count: max(0, 5 - hintsUsed))
-        return filled + empty
+        // Red = hints used (bad), Green = hints remaining (good) - more intuitive
+        let used = String(repeating: "🟥", count: min(hintsUsed, 5))
+        let unused = String(repeating: "🟩", count: max(0, 5 - hintsUsed))
+        return used + unused
     }
-    
+
     private var resultEmoji: String {
         if !won { return "❌" }
         switch hintsUsed {
-        case 1: return "🔥"
-        case 2: return "⭐️"
-        case 3: return "✨"
-        case 4: return "👍"
+        case 1: return "💎"
+        case 2: return "🔥"
+        case 3: return "⭐️"
+        case 4: return "✨"
         default: return "✅"
         }
     }
-    
+
     var body: some View {
         VStack(spacing: 16) {
             // Header
@@ -49,7 +52,7 @@ struct ShareResultCard: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                
+
                 Text("Rounds")
                     .font(.title2)
                     .fontWeight(.bold)
@@ -60,39 +63,81 @@ struct ShareResultCard: View {
                             endPoint: .trailing
                         )
                     )
-                
+
                 Spacer()
-                
+
                 if isDailyCase, let caseNum = dailyCaseNumber {
-                    Text("Day #\(caseNum)")
+                    Text("#\(caseNum)")
                         .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 8)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(Color(.systemGray5))
+                        .background(
+                            LinearGradient(
+                                colors: [.blue, .purple],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
                         .cornerRadius(6)
                 }
             }
-            
+
             Divider()
-            
+
             // Result
             VStack(spacing: 12) {
                 Text(won ? "Diagnosed! \(resultEmoji)" : "Missed it \(resultEmoji)")
                     .font(.title3)
                     .fontWeight(.bold)
                     .foregroundStyle(won ? .green : .red)
-                
+
                 // Hint visualization
                 Text(hintEmojis)
                     .font(.title2)
                     .tracking(4)
-                
+
+                // Score and stats
                 if won {
-                    Text("Got it in \(hintsUsed) hint\(hintsUsed == 1 ? "" : "s")!")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 16) {
+                        VStack(spacing: 2) {
+                            Text("\(score)")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                            Text("points")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        if let streak = streak, streak > 1 {
+                            VStack(spacing: 2) {
+                                HStack(spacing: 2) {
+                                    Text("\(streak)")
+                                        .font(.title3)
+                                        .fontWeight(.bold)
+                                    Image(systemName: "flame.fill")
+                                        .font(.subheadline)
+                                        .foregroundStyle(.orange)
+                                }
+                                Text("streak")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+
+                        if let rank = schoolRank, rank <= 10 {
+                            VStack(spacing: 2) {
+                                Text("#\(rank)")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(.purple)
+                                Text("at school")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
                 } else {
                     Text("Used all hints")
                         .font(.subheadline)
@@ -100,15 +145,15 @@ struct ShareResultCard: View {
                 }
             }
             .padding(.vertical, 8)
-            
+
             Divider()
-            
+
             // Challenge
             VStack(spacing: 6) {
                 Text("Can you beat my score?")
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                
+
                 Text("Download Rounds and try today's case!")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -124,6 +169,8 @@ struct ShareResultCard: View {
 
 // MARK: - Share Text Generator
 struct ShareTextGenerator {
+
+    /// Generate share text with optional streak and rank info for viral sharing
     static func generateShareText(
         won: Bool,
         hintsUsed: Int,
@@ -131,10 +178,16 @@ struct ShareTextGenerator {
         guessCount: Int,
         isDailyCase: Bool,
         dailyCaseNumber: Int?,
-        caseID: String? = nil
+        caseID: String? = nil,
+        streak: Int? = nil,
+        schoolRank: Int? = nil,
+        schoolName: String? = nil
     ) -> String {
-        // Green = hints used, Black = hints remaining (fewer green = better!)
-        let hintSquares = String(repeating: "🟢", count: min(hintsUsed, 5)) + String(repeating: "⚫️", count: max(0, 5 - hintsUsed))
+        // Wordle-style grid: 🟩 = unused hints (good), 🟥 = used hints
+        // Fewer red squares = better performance (more intuitive)
+        let usedSquares = String(repeating: "🟥", count: min(hintsUsed, 5))
+        let unusedSquares = String(repeating: "🟩", count: max(0, 5 - hintsUsed))
+        let hintGrid = usedSquares + unusedSquares
 
         var text = "🩺 Rounds"
 
@@ -143,41 +196,78 @@ struct ShareTextGenerator {
         }
 
         text += "\n\n"
-        text += hintSquares
-        text += "\n\n"
+        text += hintGrid
 
         if won {
-            // Show score and performance
-            text += "💯 Score: \(score) points\n"
-            text += "🎯 \(guessCount) guess\(guessCount == 1 ? "" : "es"), \(hintsUsed) hint\(hintsUsed == 1 ? "" : "s")\n\n"
+            text += " \(score)pts"
 
+            // Add streak for bragging rights
+            if let streak = streak, streak > 1 {
+                text += " 🔥\(streak)"
+            }
+
+            text += "\n\n"
+
+            // Performance message based on hints
             switch hintsUsed {
             case 1:
-                text += "🔥 First hint diagnosis!"
+                text += "💎 First-hint diagnosis!"
             case 2:
-                text += "⭐️ Got it in 2 hints!"
+                text += "🔥 Solved in 2 hints!"
             case 3:
-                text += "✨ Diagnosed in 3 hints!"
+                text += "⭐️ Got it in 3!"
             case 4:
-                text += "👍 Figured it out in 4!"
+                text += "✨ Figured it out!"
             default:
-                text += "✅ Diagnosed it!"
+                text += "✅ Diagnosed!"
+            }
+
+            // Add school rank if impressive (top 10)
+            if let rank = schoolRank, rank <= 10, let school = schoolName {
+                text += "\n📊 #\(rank) at \(school)"
             }
         } else {
-            text += "❌ Couldn't crack this one"
+            text += "\n\n❌ This one stumped me"
         }
 
-        text += "\n\n🧠 Think you can beat my score?"
+        text += "\n\nCan you beat my score?"
 
-        // Add deep link for the specific case
+        // Add app link
         if isDailyCase {
-            text += "\n\n▶️ Play today's case:"
+            text += "\n🔗 apps.apple.com/app/id6740487567"
         } else if let caseID = caseID {
-            text += "\n\n▶️ Try this exact case:"
-            text += "\nrounds://case/\(caseID)"
+            text += "\n🔗 rounds://case/\(caseID)"
         }
 
-        text += "\nhttps://apps.apple.com/app/id6740487567"
+        return text
+    }
+
+    /// Generate a compact share text for Instagram/TikTok stories
+    static func generateCompactShareText(
+        won: Bool,
+        hintsUsed: Int,
+        score: Int,
+        dailyCaseNumber: Int?,
+        streak: Int? = nil
+    ) -> String {
+        let usedSquares = String(repeating: "🟥", count: min(hintsUsed, 5))
+        let unusedSquares = String(repeating: "🟩", count: max(0, 5 - hintsUsed))
+        let hintGrid = usedSquares + unusedSquares
+
+        var text = "🩺 Rounds"
+        if let caseNum = dailyCaseNumber {
+            text += " #\(caseNum)"
+        }
+        text += "\n\(hintGrid)"
+
+        if won {
+            text += " \(score)pts"
+            if let streak = streak, streak > 1 {
+                text += " 🔥\(streak)"
+            }
+        } else {
+            text += " ❌"
+        }
 
         return text
     }
@@ -195,6 +285,9 @@ struct ShareResultButton: View {
     let score: Int
     let isDailyCase: Bool
     var caseID: String? = nil
+    var streak: Int? = nil
+    var schoolRank: Int? = nil
+    var schoolName: String? = nil
 
     @State private var showingShareSheet = false
 
@@ -210,6 +303,14 @@ struct ShareResultButton: View {
         Button {
             showingShareSheet = true
             HapticManager.shared.buttonTap()
+            // Track share with more context
+            AnalyticsManager.shared.track("share_initiated", properties: [
+                "won": won,
+                "score": score,
+                "hints_used": hintsUsed,
+                "streak": streak ?? 0,
+                "has_school_rank": schoolRank != nil
+            ])
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "paperplane.fill")
@@ -238,7 +339,10 @@ struct ShareResultButton: View {
                 guessCount: guessCount,
                 isDailyCase: isDailyCase,
                 dailyCaseNumber: isDailyCase ? dailyCaseNumber : nil,
-                caseID: caseID
+                caseID: caseID,
+                streak: streak,
+                schoolRank: schoolRank,
+                schoolName: schoolName
             ))
             .presentationDetents([.medium])
         }
@@ -253,6 +357,9 @@ struct CompactShareButton: View {
     let guessCount: Int
     let isDailyCase: Bool
     var caseID: String? = nil
+    var streak: Int? = nil
+    var schoolRank: Int? = nil
+    var schoolName: String? = nil
 
     @State private var showingShareSheet = false
 
@@ -267,6 +374,11 @@ struct CompactShareButton: View {
         Button {
             showingShareSheet = true
             HapticManager.shared.buttonTap()
+            AnalyticsManager.shared.track("share_initiated", properties: [
+                "won": won,
+                "score": score,
+                "source": "compact_button"
+            ])
         } label: {
             Image(systemName: "square.and.arrow.up")
                 .font(.body.weight(.medium))
@@ -279,37 +391,135 @@ struct CompactShareButton: View {
                 guessCount: guessCount,
                 isDailyCase: isDailyCase,
                 dailyCaseNumber: isDailyCase ? dailyCaseNumber : nil,
-                caseID: caseID
+                caseID: caseID,
+                streak: streak,
+                schoolRank: schoolRank,
+                schoolName: schoolName
             ))
             .presentationDetents([.medium])
         }
     }
 }
 
+// MARK: - Copy to Clipboard Button (for quick sharing)
+struct CopyShareButton: View {
+    let won: Bool
+    let hintsUsed: Int
+    let score: Int
+    let dailyCaseNumber: Int?
+    var streak: Int? = nil
+
+    @State private var copied = false
+
+    var body: some View {
+        Button {
+            let text = ShareTextGenerator.generateCompactShareText(
+                won: won,
+                hintsUsed: hintsUsed,
+                score: score,
+                dailyCaseNumber: dailyCaseNumber,
+                streak: streak
+            )
+            UIPasteboard.general.string = text
+            copied = true
+            HapticManager.shared.correctGuess()
+
+            AnalyticsManager.shared.track("share_copied", properties: [
+                "won": won,
+                "score": score
+            ])
+
+            // Reset after 2 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                copied = false
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                    .font(.subheadline.weight(.medium))
+                Text(copied ? "Copied!" : "Copy")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color(.systemGray5))
+            .foregroundStyle(copied ? .green : .primary)
+            .cornerRadius(8)
+        }
+        .animation(.easeInOut(duration: 0.2), value: copied)
+    }
+}
+
 // MARK: - Preview
 #Preview {
-    VStack(spacing: 20) {
-        ShareResultCard(
-            won: true,
-            diagnosis: "Myocardial Infarction",
-            guessCount: 2,
-            hintsUsed: 2,
-            score: 350,
-            isDailyCase: true,
-            dailyCaseNumber: 42
-        )
-        
-        ShareResultCard(
-            won: false,
-            diagnosis: "Pulmonary Embolism",
-            guessCount: 5,
-            hintsUsed: 5,
-            score: 0,
-            isDailyCase: true,
-            dailyCaseNumber: 42
-        )
+    ScrollView {
+        VStack(spacing: 20) {
+            // Perfect score with streak
+            ShareResultCard(
+                won: true,
+                diagnosis: "Myocardial Infarction",
+                guessCount: 1,
+                hintsUsed: 1,
+                score: 400,
+                isDailyCase: true,
+                dailyCaseNumber: 42,
+                streak: 14,
+                schoolRank: 3,
+                schoolName: "Harvard Medical"
+            )
+
+            // Good score
+            ShareResultCard(
+                won: true,
+                diagnosis: "Pneumonia",
+                guessCount: 2,
+                hintsUsed: 3,
+                score: 250,
+                isDailyCase: true,
+                dailyCaseNumber: 42,
+                streak: 7
+            )
+
+            // Loss
+            ShareResultCard(
+                won: false,
+                diagnosis: "Pulmonary Embolism",
+                guessCount: 5,
+                hintsUsed: 5,
+                score: 0,
+                isDailyCase: true,
+                dailyCaseNumber: 42
+            )
+
+            // Share text preview
+            Text(ShareTextGenerator.generateShareText(
+                won: true,
+                hintsUsed: 2,
+                score: 350,
+                guessCount: 2,
+                isDailyCase: true,
+                dailyCaseNumber: 42,
+                streak: 14,
+                schoolRank: 3,
+                schoolName: "Harvard Medical"
+            ))
+            .font(.system(.caption, design: .monospaced))
+            .padding()
+            .background(Color(.systemGray5))
+            .cornerRadius(8)
+
+            // Copy button
+            CopyShareButton(
+                won: true,
+                hintsUsed: 2,
+                score: 350,
+                dailyCaseNumber: 42,
+                streak: 14
+            )
+        }
+        .padding()
     }
-    .padding()
     .background(Color(.systemGray6))
 }
 

@@ -173,10 +173,76 @@ class AnalyticsManager {
     func trackOnboardingCompleted() {
         track("onboarding_completed")
     }
-    
+
     func trackOnboardingSkipped(step: Int) {
         track("onboarding_skipped", properties: [
             "step": step
+        ])
+    }
+
+    // MARK: - Leaderboard & Competitive Tracking
+
+    func trackLeaderboardViewed(scope: String, userRank: Int?) {
+        track("leaderboard_viewed", properties: [
+            "scope": scope,
+            "user_rank": userRank ?? -1,
+            "has_rank": userRank != nil
+        ])
+    }
+
+    func trackLeaderboardJoined(schoolName: String, state: String) {
+        track("leaderboard_joined", properties: [
+            "school_name": schoolName,
+            "state": state
+        ])
+    }
+
+    func trackRankChange(oldRank: Int, newRank: Int, scope: String) {
+        let direction = newRank < oldRank ? "up" : "down"
+        track("rank_changed", properties: [
+            "old_rank": oldRank,
+            "new_rank": newRank,
+            "direction": direction,
+            "change_amount": abs(newRank - oldRank),
+            "scope": scope
+        ])
+    }
+
+    func trackCompetitiveNotificationSent(type: String, rank: Int) {
+        track("competitive_notification_sent", properties: [
+            "type": type,
+            "rank": rank
+        ])
+    }
+
+    // MARK: - Viral Loop Tracking
+
+    func trackShareInitiated(source: String, won: Bool, score: Int, hasStreak: Bool, hasSchoolRank: Bool) {
+        track("share_initiated", properties: [
+            "source": source,
+            "won": won,
+            "score": score,
+            "has_streak": hasStreak,
+            "has_school_rank": hasSchoolRank
+        ])
+    }
+
+    func trackShareCompleted(destination: String?) {
+        track("share_completed", properties: [
+            "destination": destination ?? "unknown"
+        ])
+    }
+
+    func trackDeepLinkOpened(caseID: String, source: String?) {
+        track("deep_link_opened", properties: [
+            "case_id": caseID,
+            "source": source ?? "unknown"
+        ])
+    }
+
+    func trackReferralReceived(referrerID: String?) {
+        track("referral_received", properties: [
+            "has_referrer": referrerID != nil
         ])
     }
 }
@@ -185,61 +251,141 @@ class AnalyticsManager {
 
 class AppStoreReviewManager {
     static let shared = AppStoreReviewManager()
-    
+
     @UserDefaultsWrapper(key: "gamesCompletedCount", defaultValue: 0)
     private var gamesCompleted: Int
-    
+
+    @UserDefaultsWrapper(key: "gamesWonCount", defaultValue: 0)
+    private var gamesWon: Int
+
+    @UserDefaultsWrapper(key: "perfectScoresCount", defaultValue: 0)
+    private var perfectScores: Int
+
     @UserDefaultsWrapper(key: "hasRequestedReview", defaultValue: false)
     private var hasRequestedReview: Bool
-    
+
     @UserDefaultsWrapper(key: "lastReviewRequestDate", defaultValue: nil)
     private var lastReviewRequestDate: Date?
-    
-    private init() {}
-    
-    /// Call this after each successful game completion
-    @MainActor
-    func gameCompleted(won: Bool) {
-        guard won else { return } // Only count wins
-        gamesCompleted += 1
-        
-        // Request review after 3 wins or 7 day streak
-        if shouldRequestReview() {
-            requestReview()
+
+    @UserDefaultsWrapper(key: "reviewPromptsThisYear", defaultValue: 0)
+    private var reviewPromptsThisYear: Int
+
+    @UserDefaultsWrapper(key: "lastReviewPromptYear", defaultValue: 0)
+    private var lastReviewPromptYear: Int
+
+    // Streak milestones that should trigger review consideration
+    private let streakMilestones: Set<Int> = [7, 14, 21, 30, 50, 100]
+
+    private init() {
+        // Reset yearly counter if new year
+        let currentYear = Calendar.current.component(.year, from: Date())
+        if lastReviewPromptYear != currentYear {
+            reviewPromptsThisYear = 0
+            lastReviewPromptYear = currentYear
         }
     }
-    
-    /// Call this when user achieves a milestone streak
+
+    /// Call this after each game completion with detailed info
+    @MainActor
+    func gameCompleted(won: Bool, hintsUsed: Int = 5, isFirstWin: Bool = false) {
+        gamesCompleted += 1
+
+        guard won else { return }
+        gamesWon += 1
+
+        // Track perfect scores (1-hint diagnosis)
+        if hintsUsed == 1 {
+            perfectScores += 1
+            // Perfect score is a peak happiness moment!
+            if shouldRequestReview(reason: "perfect_score") {
+                requestReview(reason: "perfect_score")
+                return
+            }
+        }
+
+        // First ever win is special
+        if isFirstWin || gamesWon == 1 {
+            if shouldRequestReview(reason: "first_win") {
+                requestReview(reason: "first_win")
+                return
+            }
+        }
+
+        // After 5 wins, user is engaged
+        if gamesWon == 5 {
+            if shouldRequestReview(reason: "five_wins") {
+                requestReview(reason: "five_wins")
+                return
+            }
+        }
+    }
+
+    /// Call this when user achieves a streak milestone
     @MainActor
     func streakAchieved(_ streak: Int) {
-        if streak >= 7 && shouldRequestReview() {
-            requestReview()
+        // Only trigger on milestone streaks
+        guard streakMilestones.contains(streak) else { return }
+
+        if shouldRequestReview(reason: "streak_\(streak)") {
+            requestReview(reason: "streak_\(streak)")
         }
     }
-    
-    private func shouldRequestReview() -> Bool {
-        // Don't request if already requested in last 90 days
+
+    /// Call when user returns after being away and wins
+    @MainActor
+    func returningUserWon(daysSinceLastPlay: Int) {
+        // User came back after 3+ days and won - they're re-engaged!
+        if daysSinceLastPlay >= 3 && shouldRequestReview(reason: "returning_user") {
+            requestReview(reason: "returning_user")
+        }
+    }
+
+    private func shouldRequestReview(reason: String) -> Bool {
+        // Apple limits to 3 prompts per 365-day period
+        guard reviewPromptsThisYear < 3 else {
+            print("📊 Review: Skipping (\(reason)) - hit yearly limit")
+            return false
+        }
+
+        // Don't request if already requested in last 60 days
         if let lastRequest = lastReviewRequestDate {
             let daysSince = Calendar.current.dateComponents([.day], from: lastRequest, to: Date()).day ?? 0
-            guard daysSince >= 90 else { return false }
+            guard daysSince >= 60 else {
+                print("📊 Review: Skipping (\(reason)) - too recent (\(daysSince) days)")
+                return false
+            }
         }
-        
-        // Request after 3 completed games minimum
-        return gamesCompleted >= 3
+
+        // Minimum engagement: at least 3 games played
+        guard gamesCompleted >= 3 else {
+            print("📊 Review: Skipping (\(reason)) - not enough games (\(gamesCompleted))")
+            return false
+        }
+
+        return true
     }
-    
+
     @MainActor
-    private func requestReview() {
+    private func requestReview(reason: String) {
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
             // Use modern AppStore API (iOS 16+)
             AppStore.requestReview(in: scene)
             lastReviewRequestDate = Date()
             hasRequestedReview = true
-            
-            AnalyticsManager.shared.track("review_prompt_shown")
+            reviewPromptsThisYear += 1
+
+            AnalyticsManager.shared.track("review_prompt_shown", properties: [
+                "reason": reason,
+                "games_completed": gamesCompleted,
+                "games_won": gamesWon,
+                "perfect_scores": perfectScores,
+                "prompts_this_year": reviewPromptsThisYear
+            ])
+
+            print("📊 Review: Requested (reason: \(reason), prompts this year: \(reviewPromptsThisYear))")
         }
     }
-    
+
     /// Manually trigger review request (e.g., from Settings)
     @MainActor
     func manualReviewRequest() {
@@ -247,6 +393,11 @@ class AppStoreReviewManager {
             AppStore.requestReview(in: scene)
             AnalyticsManager.shared.track("review_prompt_manual")
         }
+    }
+
+    /// Check if we should prompt (for UI indicators)
+    var canPromptForReview: Bool {
+        return reviewPromptsThisYear < 3 && gamesCompleted >= 3
     }
 }
 
