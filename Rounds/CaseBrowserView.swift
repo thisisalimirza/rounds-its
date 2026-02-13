@@ -419,7 +419,8 @@ struct CaseBrowserView: View {
                     .padding(.horizontal, 20)
 
                 LazyVStack(spacing: 8) {
-                    ForEach(Array(searchFilteredCases.enumerated()), id: \.element.id) { index, medicalCase in
+                    // Use offset as ID to avoid duplicates
+                    ForEach(Array(searchFilteredCases.enumerated()), id: \.offset) { index, medicalCase in
                         let isCompleted = isCaseCompleted(medicalCase)
                         let historyItem = historyEntry(for: medicalCase)
 
@@ -480,8 +481,6 @@ struct CategoryCard: View {
     let category: DisplayCategory
     let action: () -> Void
 
-    @State private var isPressed = false
-
     var body: some View {
         Button(action: {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -537,18 +536,19 @@ struct CategoryCard: View {
             .background(Color(.systemBackground))
             .cornerRadius(14)
             .shadow(color: category.color.opacity(0.1), radius: 8, y: 2)
-            .scaleEffect(isPressed ? 0.97 : 1)
         }
-        .buttonStyle(.plain)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    withAnimation(.spring(response: 0.2)) { isPressed = true }
-                }
-                .onEnded { _ in
-                    withAnimation(.spring(response: 0.2)) { isPressed = false }
-                }
-        )
+        .buttonStyle(CategoryCardButtonStyle(color: category.color))
+    }
+}
+
+// Custom button style that doesn't interfere with scrolling
+struct CategoryCardButtonStyle: ButtonStyle {
+    let color: Color
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }
 
@@ -574,7 +574,8 @@ struct CategoryCasesView: View {
         List {
             ForEach(groupedCases, id: \.subcategory) { group in
                 Section {
-                    ForEach(Array(group.cases.enumerated()), id: \.element.id) { index, medicalCase in
+                    // Use index as part of ID to avoid duplicates
+                    ForEach(Array(group.cases.enumerated()), id: \.offset) { index, medicalCase in
                         let isCompleted = isCaseCompleted(medicalCase)
                         let historyItem = historyEntry(medicalCase)
 
@@ -655,7 +656,8 @@ struct AllCasesView: View {
 
     var body: some View {
         List {
-            ForEach(Array(filteredAndSortedCases.enumerated()), id: \.element.id) { index, medicalCase in
+            // Use offset as ID to avoid duplicates from CaseLibrary
+            ForEach(Array(filteredAndSortedCases.enumerated()), id: \.offset) { index, medicalCase in
                 let isCompleted = isCaseCompleted(medicalCase)
                 let historyItem = historyEntry(medicalCase)
 
