@@ -28,7 +28,6 @@ struct ContentView: View {
     @State private var showingCategoryAnalytics = false
     @State private var showingLeaderboard = false
     @State private var selectedTab: HomeTab = .play
-    @State private var playButtonScale: CGFloat = 1.0
     @State private var showingStreakRecovery = false
     @State private var streakRecoveryChecked = false
     @State private var showingWhatsNew = false
@@ -74,15 +73,7 @@ struct ContentView: View {
                     HStack {
                         // Logo + Title
                         HStack(spacing: 10) {
-                            Image(systemName: "cross.case.fill")
-                                .font(.system(size: 28))
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
+                            AnimatedLogo()
 
                             Text("Rounds")
                                 .font(.system(size: 24, weight: .bold, design: .rounded))
@@ -101,8 +92,8 @@ struct ContentView: View {
 
                         Spacer()
 
-                        // Streak Pill
-                        StreakPillAdaptive(streak: stats.currentStreak, freezes: stats.streakFreezesAvailable, isPro: subscriptionManager.isProUser)
+                        // Streak Pill with animated fire effect
+                        AnimatedStreakPill(streak: stats.currentStreak, freezes: stats.streakFreezesAvailable, isPro: subscriptionManager.isProUser)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
@@ -124,8 +115,8 @@ struct ContentView: View {
                     }
                     .tabViewStyle(.page(indexDisplayMode: .never))
 
-                    // MARK: - Bottom Tab Bar
-                    HomeTabBar(selectedTab: $selectedTab)
+                    // MARK: - Bottom Tab Bar with bounce animations
+                    EnhancedTabBar(selectedTab: $selectedTab)
                         .padding(.bottom, 8)
                 }
                 .adaptiveContentWidth()
@@ -254,29 +245,25 @@ struct ContentView: View {
                 .foregroundStyle(.secondary)
                 .tracking(2)
 
-            // HERO: Daily Case Button
+            // HERO: Daily Case Button with enhanced animations
             Button {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 if hasPlayedDailyToday {
                     showingDailyCompleteAlert = true
                 } else {
                     startNewGame()
                 }
             } label: {
-                HeroDailyCaseButton(
+                EnhancedDailyCaseButton(
                     isCompleted: hasPlayedDailyToday,
                     streak: stats.currentStreak
                 )
             }
-            .scaleEffect(playButtonScale)
-            .onAppear {
-                withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
-                    playButtonScale = hasPlayedDailyToday ? 1.0 : 1.02
-                }
-            }
 
-            // Secondary Actions
+            // Secondary Actions with press feedback
             HStack(spacing: 12) {
                 Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     if subscriptionManager.isProUser {
                         startRandomGame()
                     } else {
@@ -290,8 +277,10 @@ struct ContentView: View {
                         isLocked: !subscriptionManager.isProUser
                     )
                 }
+                .pressEffect()
 
                 Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     showingCaseBrowser = true
                 } label: {
                     PunchyActionButton(
@@ -301,12 +290,13 @@ struct ContentView: View {
                         isLocked: !subscriptionManager.isProUser
                     )
                 }
+                .pressEffect()
             }
             .padding(.horizontal, 20)
 
-            // Fun Section: Leaderboard & Badges
+            // Fun Section: Leaderboard & Badges with enhanced interactions
             HStack(spacing: 12) {
-                PunchyFeatureCard(
+                EnhancedFeatureCard(
                     icon: "trophy.fill",
                     title: "Leaderboard",
                     color: .orange
@@ -314,7 +304,7 @@ struct ContentView: View {
                     showingLeaderboard = true
                 }
 
-                PunchyFeatureCard(
+                EnhancedFeatureCard(
                     icon: "medal.fill",
                     title: "Badges",
                     badgeText: achievementBadgeText,
@@ -334,14 +324,15 @@ struct ContentView: View {
         VStack(spacing: 16) {
             Spacer()
 
-            // Compact Streak Display
+            // Compact Streak Display with subtle breathing animation
             CompactStreakCard(stats: stats, isPro: subscriptionManager.isProUser)
+                .breathing(intensity: 0.01, duration: 3.0)
                 .padding(.horizontal, 20)
 
-            // Stats Grid (3 items - Statistics, Analytics, History)
+            // Stats Grid (3 items - Statistics, Analytics, History) with enhanced interactions
             VStack(spacing: 12) {
                 HStack(spacing: 12) {
-                    PunchyFeatureCard(
+                    EnhancedFeatureCard(
                         icon: "chart.bar.fill",
                         title: "Statistics",
                         color: .blue
@@ -349,7 +340,7 @@ struct ContentView: View {
                         showingStats = true
                     }
 
-                    PunchyFeatureCard(
+                    EnhancedFeatureCard(
                         icon: "chart.pie.fill",
                         title: "Analytics",
                         color: .indigo,
@@ -363,7 +354,7 @@ struct ContentView: View {
                     }
                 }
 
-                PunchyFeatureCard(
+                EnhancedFeatureCard(
                     icon: "clock.arrow.circlepath",
                     title: "Case History",
                     color: .cyan,
