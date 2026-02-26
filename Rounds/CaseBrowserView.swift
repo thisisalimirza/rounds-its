@@ -302,8 +302,15 @@ struct CaseBrowserView: View {
                     cases: cases(for: category),
                     isCaseCompleted: isCaseCompleted,
                     historyEntry: historyEntry,
-                    onCaseSelected: { medicalCase in
-                        handleCaseSelection(medicalCase, categoryName: category.name)
+                    onRequestNextCase: { context, excludingID in
+                        getNextCase(context: context, excludingID: excludingID)
+                    },
+                    onShowPaywall: {
+                        showingPaywall = true
+                    },
+                    onShowCompletedAlert: { medicalCase in
+                        selectedCase = medicalCase
+                        showingCompletedAlert = true
                     }
                 )
             }
@@ -312,8 +319,15 @@ struct CaseBrowserView: View {
                     cases: allCases,
                     isCaseCompleted: isCaseCompleted,
                     historyEntry: historyEntry,
-                    onCaseSelected: { medicalCase in
-                        handleCaseSelection(medicalCase)
+                    onRequestNextCase: { context, excludingID in
+                        getNextCase(context: context, excludingID: excludingID)
+                    },
+                    onShowPaywall: {
+                        showingPaywall = true
+                    },
+                    onShowCompletedAlert: { medicalCase in
+                        selectedCase = medicalCase
+                        showingCompletedAlert = true
                     }
                 )
             }
@@ -611,7 +625,12 @@ struct CategoryCasesView: View {
     let cases: [MedicalCase]
     let isCaseCompleted: (MedicalCase) -> Bool
     let historyEntry: (MedicalCase) -> CaseHistoryEntry?
-    let onCaseSelected: (MedicalCase) -> Void
+    let onRequestNextCase: (CaseContext, UUID) -> MedicalCase?
+    let onShowPaywall: () -> Void
+    let onShowCompletedAlert: (MedicalCase) -> Void
+
+    @State private var selectedCase: MedicalCase?
+    @State private var showingGame = false
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
 
@@ -632,7 +651,7 @@ struct CategoryCasesView: View {
                         let historyItem = historyEntry(medicalCase)
 
                         Button {
-                            onCaseSelected(medicalCase)
+                            handleCaseSelection(medicalCase)
                         } label: {
                             CompactCaseRow(
                                 medicalCase: medicalCase,
@@ -660,6 +679,26 @@ struct CategoryCasesView: View {
         .listStyle(.insetGrouped)
         .navigationTitle(displayCategory.name)
         .navigationBarTitleDisplayMode(.large)
+        .navigationDestination(isPresented: $showingGame) {
+            if let selectedCase = selectedCase {
+                GameView(
+                    medicalCase: selectedCase,
+                    caseContext: .category(displayCategory.name),
+                    onRequestNextCase: onRequestNextCase
+                )
+            }
+        }
+    }
+
+    private func handleCaseSelection(_ medicalCase: MedicalCase) {
+        if isCaseCompleted(medicalCase) {
+            onShowCompletedAlert(medicalCase)
+        } else if subscriptionManager.isProUser {
+            selectedCase = medicalCase
+            showingGame = true
+        } else {
+            onShowPaywall()
+        }
     }
 }
 
@@ -669,10 +708,14 @@ struct AllCasesView: View {
     let cases: [MedicalCase]
     let isCaseCompleted: (MedicalCase) -> Bool
     let historyEntry: (MedicalCase) -> CaseHistoryEntry?
-    let onCaseSelected: (MedicalCase) -> Void
+    let onRequestNextCase: (CaseContext, UUID) -> MedicalCase?
+    let onShowPaywall: () -> Void
+    let onShowCompletedAlert: (MedicalCase) -> Void
 
     @State private var searchText = ""
     @State private var sortOption: SortOption = .category
+    @State private var selectedCase: MedicalCase?
+    @State private var showingGame = false
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
 
@@ -714,7 +757,7 @@ struct AllCasesView: View {
                 let historyItem = historyEntry(medicalCase)
 
                 Button {
-                    onCaseSelected(medicalCase)
+                    handleCaseSelection(medicalCase)
                 } label: {
                     CompactCaseRow(
                         medicalCase: medicalCase,
@@ -743,6 +786,26 @@ struct AllCasesView: View {
                     Image(systemName: "arrow.up.arrow.down")
                 }
             }
+        }
+        .navigationDestination(isPresented: $showingGame) {
+            if let selectedCase = selectedCase {
+                GameView(
+                    medicalCase: selectedCase,
+                    caseContext: .random,
+                    onRequestNextCase: onRequestNextCase
+                )
+            }
+        }
+    }
+
+    private func handleCaseSelection(_ medicalCase: MedicalCase) {
+        if isCaseCompleted(medicalCase) {
+            onShowCompletedAlert(medicalCase)
+        } else if subscriptionManager.isProUser {
+            selectedCase = medicalCase
+            showingGame = true
+        } else {
+            onShowPaywall()
         }
     }
 }

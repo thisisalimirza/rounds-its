@@ -28,7 +28,7 @@ class CaseLibrary {
             // Neurology
             MedicalCase(
                 diagnosis: "Multiple Sclerosis",
-                alternativeNames: ["MS"],
+                alternativeNames: ["Demyelinating Disease", "MS"],
                 hints: [
                     "28-year-old female with episodes of vision loss",
                     "Patient reports numbness and tingling in lower extremities",
@@ -200,7 +200,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Wolff-Parkinson-White Syndrome",
-                alternativeNames: ["WPW"],
+                alternativeNames: ["WPW", "Wolff Parkinson White Syndrome"],
                 hints: [
                     "Teenager with episodes of palpitations and dizziness",
                     "ECG shows short PR interval and delta wave",
@@ -239,7 +239,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Guillain-Barré Syndrome",
-                alternativeNames: ["GBS", "Acute Inflammatory Demyelinating Polyradiculoneuropathy"],
+                alternativeNames: ["GBS", "Acute Inflammatory Demyelinating Polyradiculoneuropathy", "Guillain Barré Syndrome", "Guillain-Barre Syndrome", "Guillain Barre Syndrome"],
                 hints: [
                     "Young adult with ascending symmetric paralysis",
                     "Recent Campylobacter jejuni gastroenteritis",
@@ -265,7 +265,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Sarcoidosis",
-                alternativeNames: [],
+                alternativeNames: ["Besnier-Boeck-Schaumann disease"],
                 hints: [
                     "African American woman with dry cough and dyspnea",
                     "Bilateral hilar lymphadenopathy on chest X-ray",
@@ -291,7 +291,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Crohn's Disease",
-                alternativeNames: ["Crohn Disease", "Regional Enteritis"],
+                alternativeNames: ["Crohn Disease", "Regional Enteritis", "Crohns Disease"],
                 hints: [
                     "Young adult with chronic diarrhea and weight loss",
                     "Abdominal pain, worse in right lower quadrant",
@@ -330,7 +330,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Graves Disease",
-                alternativeNames: ["Hyperthyroidism"],
+                alternativeNames: ["Basedow Disease", "Hyperthyroidism", "Thyrotoxicosis", "Toxic Diffuse Goiter"],
                 hints: [
                     "30-year-old woman with weight loss and palpitations",
                     "Heat intolerance and tremor",
@@ -356,7 +356,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Cushing Syndrome",
-                alternativeNames: [],
+                alternativeNames: ["Hypercortisolism"],
                 hints: [
                     "Patient with central obesity and purple striae",
                     "Proximal muscle weakness and hypertension",
@@ -382,7 +382,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Minimal Change Disease",
-                alternativeNames: ["Lipoid Nephrosis"],
+                alternativeNames: ["Lipoid Nephrosis", "MCD", "Nil Disease"],
                 hints: [
                     "Child with periorbital edema and frothy urine",
                     "Selective albuminuria (nephrotic syndrome)",
@@ -408,7 +408,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Iron Deficiency Anemia",
-                alternativeNames: [],
+                alternativeNames: ["IDA"],
                 hints: [
                     "Woman with fatigue and pica",
                     "Microcytic, hypochromic anemia",
@@ -447,7 +447,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Tuberculosis",
-                alternativeNames: ["TB"],
+                alternativeNames: ["Pulmonary TB", "TB"],
                 hints: [
                     "Immigrant with chronic cough, night sweats, and weight loss",
                     "Hemoptysis present",
@@ -460,7 +460,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Lyme Disease",
-                alternativeNames: [],
+                alternativeNames: ["Borreliosis"],
                 hints: [
                     "Hiker from Northeast with expanding erythema migrans rash",
                     "Flu-like symptoms and arthralgias",
@@ -486,7 +486,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Gout",
-                alternativeNames: ["Gouty Arthritis"],
+                alternativeNames: ["Gouty Arthritis", "Monosodium Urate Crystal Arthropathy"],
                 hints: [
                     "Middle-aged man with acute monoarthritis of first MTP joint",
                     "Severe pain, redness, and swelling",
@@ -551,7 +551,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Ectopic Pregnancy",
-                alternativeNames: [],
+                alternativeNames: ["Tubal Pregnancy"],
                 hints: [
                     "Woman with amenorrhea, abdominal pain, and vaginal bleeding",
                     "Positive pregnancy test",
@@ -590,7 +590,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Osteomyelitis",
-                alternativeNames: [],
+                alternativeNames: ["Bone Infection"],
                 hints: [
                     "Child with fever and localized bone pain",
                     "Elevated ESR and CRP",
@@ -603,7 +603,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Psoriasis",
-                alternativeNames: [],
+                alternativeNames: ["Plaque Psoriasis", "Psoriasis Vulgaris"],
                 hints: [
                     "Adult with well-demarcated erythematous plaques with silvery scale",
                     "Extensor surfaces and scalp involved",
@@ -642,7 +642,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Kawasaki Disease",
-                alternativeNames: [],
+                alternativeNames: ["Mucocutaneous Lymph Node Syndrome"],
                 hints: [
                     "Child with persistent fever >5 days",
                     "Conjunctivitis, rash, adenopathy, strawberry tongue",
@@ -655,7 +655,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Septic Arthritis",
-                alternativeNames: [],
+                alternativeNames: ["Bacterial Arthritis"],
                 hints: [
                     "Acute monoarticular joint pain, swelling, and fever",
                     "Warm, erythematous joint with limited ROM",
@@ -753,7 +753,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Aortic Stenosis",
-                alternativeNames: ["AS"],
+                alternativeNames: ["AS", "Calcific Aortic Valve"],
                 hints: [
                     "Elderly patient with syncope, angina, and dyspnea (SAD triad)",
                     "Crescendo-decrescendo systolic murmur at right sternal border",
@@ -781,7 +781,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Coarctation of the Aorta",
-                alternativeNames: ["Aortic Coarctation"],
+                alternativeNames: ["Aortic Coarctation", "Aortic Narrowing"],
                 hints: [
                     "Child with upper extremity hypertension, lower extremity hypotension",
                     "Weak or delayed femoral pulses",
@@ -838,7 +838,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Cystic Fibrosis",
-                alternativeNames: ["CF"],
+                alternativeNames: ["CF", "Mucoviscidosis"],
                 hints: [
                     "Child with recurrent pulmonary infections and failure to thrive",
                     "Meconium ileus in newborn period",
@@ -866,7 +866,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Community-Acquired Pneumonia",
-                alternativeNames: ["CAP", "Pneumonia"],
+                alternativeNames: ["CAP", "Pneumonia", "Community Acquired Pneumonia"],
                 hints: [
                     "Patient with fever, productive cough, and pleuritic chest pain",
                     "Dullness to percussion and increased tactile fremitus",
@@ -876,20 +876,6 @@ class CaseLibrary {
                 ],
                 category: "Pulmonology",
                 difficulty: 2
-            ),
-            
-            MedicalCase(
-                diagnosis: "Tuberculosis",
-                alternativeNames: ["TB", "Pulmonary TB"],
-                hints: [
-                    "Immigrant with chronic cough, night sweats, and hemoptysis",
-                    "Apical cavitary lesions on chest X-ray",
-                    "AFB smear positive, positive PPD test",
-                    "Granulomas with central caseating necrosis",
-                    "Requires multi-drug therapy (RIPE)"
-                ],
-                category: "Pulmonology",
-                difficulty: 3
             ),
             
             MedicalCase(
@@ -922,7 +908,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Alpha-1 Antitrypsin Deficiency",
-                alternativeNames: ["A1AT Deficiency"],
+                alternativeNames: ["A1AT Deficiency", "Alpha 1 Antitrypsin Deficiency"],
                 hints: [
                     "Young patient with COPD and no smoking history",
                     "Basilar emphysema on imaging",
@@ -949,20 +935,6 @@ class CaseLibrary {
             ),
             
             // GASTROENTEROLOGY (10 cases)
-            MedicalCase(
-                diagnosis: "Ulcerative Colitis",
-                alternativeNames: ["UC"],
-                hints: [
-                    "Young adult with bloody diarrhea and tenesmus",
-                    "Continuous inflammation starting in rectum",
-                    "Loss of haustra (lead pipe colon) on barium enema",
-                    "Crypt abscesses and pseudopolyps on colonoscopy",
-                    "Increased risk of colorectal cancer"
-                ],
-                category: "Gastroenterology",
-                difficulty: 3
-            ),
-            
             MedicalCase(
                 diagnosis: "Celiac Disease",
                 alternativeNames: ["Celiac Sprue", "Gluten-Sensitive Enteropathy"],
@@ -1204,7 +1176,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Membranous Nephropathy",
-                alternativeNames: ["Membranous GN"],
+                alternativeNames: ["Membranous GN", "Membranous Glomerulonephritis"],
                 hints: [
                     "Adult with nephrotic syndrome",
                     "Subepithelial immune complex deposits (spike and dome)",
@@ -1246,48 +1218,6 @@ class CaseLibrary {
             ),
             
             MedicalCase(
-                diagnosis: "Graves Disease",
-                alternativeNames: ["Hyperthyroidism", "Thyrotoxicosis"],
-                hints: [
-                    "Woman with weight loss, heat intolerance, and palpitations",
-                    "Exophthalmos and pretibial myxedema",
-                    "Diffuse goiter with bruit",
-                    "Low TSH, elevated T4 and T3",
-                    "TSI antibodies positive, increased radioiodine uptake"
-                ],
-                category: "Endocrinology",
-                difficulty: 2
-            ),
-            
-            MedicalCase(
-                diagnosis: "Cushing Syndrome",
-                alternativeNames: ["Hypercortisolism"],
-                hints: [
-                    "Patient with central obesity and moon facies",
-                    "Purple striae, buffalo hump, easy bruising",
-                    "Hyperglycemia and hypertension",
-                    "Loss of diurnal cortisol variation",
-                    "Dexamethasone suppression test abnormal"
-                ],
-                category: "Endocrinology",
-                difficulty: 3
-            ),
-            
-            MedicalCase(
-                diagnosis: "Addison Disease",
-                alternativeNames: ["Primary Adrenal Insufficiency"],
-                hints: [
-                    "Patient with fatigue, weight loss, and hypotension",
-                    "Hyperpigmentation in skin creases and mucous membranes",
-                    "Hyponatremia and hyperkalemia",
-                    "Low cortisol, high ACTH",
-                    "Autoimmune destruction of adrenal glands most common"
-                ],
-                category: "Endocrinology",
-                difficulty: 3
-            ),
-            
-            MedicalCase(
                 diagnosis: "Diabetes Insipidus",
                 alternativeNames: ["DI"],
                 hints: [
@@ -1317,7 +1247,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Pheochromocytoma",
-                alternativeNames: ["Adrenal Paraganglioma"],
+                alternativeNames: ["10% Tumor", "Adrenal Medulla Tumor", "Adrenal Paraganglioma"],
                 hints: [
                     "Patient with episodic headaches, palpitations, and sweating",
                     "Paroxysmal hypertension",
@@ -1429,20 +1359,6 @@ class CaseLibrary {
             ),
             
             MedicalCase(
-                diagnosis: "Temporal Arteritis",
-                alternativeNames: ["Giant Cell Arteritis", "GCA"],
-                hints: [
-                    "Elderly patient with new-onset headache and jaw claudication",
-                    "Temporal artery tenderness",
-                    "Vision loss risk (ophthalmic artery involvement)",
-                    "Elevated ESR and CRP",
-                    "Temporal artery biopsy shows granulomatous inflammation"
-                ],
-                category: "Neurology",
-                difficulty: 3
-            ),
-            
-            MedicalCase(
                 diagnosis: "Seizure Disorder",
                 alternativeNames: ["Epilepsy"],
                 hints: [
@@ -1458,7 +1374,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Huntington Disease",
-                alternativeNames: ["HD"],
+                alternativeNames: ["HD", "Huntington Chorea"],
                 hints: [
                     "Middle-aged patient with chorea and dementia",
                     "Progressive behavioral and psychiatric changes",
@@ -1472,7 +1388,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Bell's Palsy",
-                alternativeNames: ["Idiopathic Facial Nerve Palsy"],
+                alternativeNames: ["Idiopathic Facial Nerve Palsy", "Bells Palsy"],
                 hints: [
                     "Acute onset unilateral facial weakness",
                     "Unable to close eye or wrinkle forehead on affected side",
@@ -1513,20 +1429,6 @@ class CaseLibrary {
             ),
             
             // HEMATOLOGY/ONCOLOGY (10 cases)
-            MedicalCase(
-                diagnosis: "Iron Deficiency Anemia",
-                alternativeNames: ["IDA"],
-                hints: [
-                    "Woman with fatigue and pallor",
-                    "Microcytic hypochromic anemia",
-                    "Low ferritin, low iron, high TIBC",
-                    "Koilonychia (spoon nails) and pica",
-                    "Most common cause is chronic blood loss"
-                ],
-                category: "Hematology",
-                difficulty: 2
-            ),
-            
             MedicalCase(
                 diagnosis: "Vitamin B12 Deficiency",
                 alternativeNames: ["Pernicious Anemia"],
@@ -1599,7 +1501,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Non-Hodgkin Lymphoma",
-                alternativeNames: ["NHL"],
+                alternativeNames: ["NHL", "Non Hodgkin Lymphoma"],
                 hints: [
                     "Adult with generalized lymphadenopathy",
                     "Extranodal involvement common",
@@ -1683,20 +1585,6 @@ class CaseLibrary {
             ),
             
             MedicalCase(
-                diagnosis: "Gout",
-                alternativeNames: ["Gouty Arthritis"],
-                hints: [
-                    "Man with acute onset red, swollen, painful big toe",
-                    "Podagra (MTP joint most common)",
-                    "Hyperuricemia and tophi",
-                    "Needle-shaped negatively birefringent crystals",
-                    "Precipitated by alcohol, purines, diuretics"
-                ],
-                category: "Rheumatology",
-                difficulty: 2
-            ),
-            
-            MedicalCase(
                 diagnosis: "Pseudogout",
                 alternativeNames: ["CPPD", "Calcium Pyrophosphate Deposition"],
                 hints: [
@@ -1705,20 +1593,6 @@ class CaseLibrary {
                     "Rhomboid positively birefringent crystals",
                     "Associated with hyperparathyroidism and hemochromatosis",
                     "Treated with NSAIDs and colchicine"
-                ],
-                category: "Rheumatology",
-                difficulty: 3
-            ),
-            
-            MedicalCase(
-                diagnosis: "Ankylosing Spondylitis",
-                alternativeNames: ["AS"],
-                hints: [
-                    "Young man with chronic lower back pain and stiffness",
-                    "Improves with exercise, worse with rest",
-                    "Limited spinal mobility and reduced chest expansion",
-                    "HLA-B27 positive",
-                    "Bamboo spine on X-ray, anterior uveitis"
                 ],
                 category: "Rheumatology",
                 difficulty: 3
@@ -1824,34 +1698,6 @@ class CaseLibrary {
             ),
             
             MedicalCase(
-                diagnosis: "Lyme Disease",
-                alternativeNames: ["Borreliosis"],
-                hints: [
-                    "Patient with erythema migrans (bulls-eye rash)",
-                    "History of tick bite in endemic area",
-                    "Early disseminated: facial nerve palsy, AV block",
-                    "Late: arthritis and neurologic symptoms",
-                    "Caused by Borrelia burgdorferi, treated with doxycycline"
-                ],
-                category: "Infectious Disease",
-                difficulty: 2
-            ),
-            
-            MedicalCase(
-                diagnosis: "Septic Arthritis",
-                alternativeNames: ["Bacterial Arthritis"],
-                hints: [
-                    "Patient with acute monoarticular joint pain and fever",
-                    "Joint is hot, swollen, and tender with limited ROM",
-                    "Synovial fluid WBC >50,000 with >90% neutrophils",
-                    "Gram stain and culture positive",
-                    "Most common: Staph aureus, Neisseria in young adults"
-                ],
-                category: "Infectious Disease",
-                difficulty: 2
-            ),
-            
-            MedicalCase(
                 diagnosis: "Clostridium difficile Colitis",
                 alternativeNames: ["C. diff", "Pseudomembranous Colitis"],
                 hints: [
@@ -1877,34 +1723,6 @@ class CaseLibrary {
                 ],
                 category: "Infectious Disease",
                 difficulty: 3
-            ),
-            
-            MedicalCase(
-                diagnosis: "Rocky Mountain Spotted Fever",
-                alternativeNames: ["RMSF"],
-                hints: [
-                    "Patient with fever, headache after tick bite",
-                    "Petechial rash starting on wrists and ankles, spreading centrally",
-                    "Palms and soles involved",
-                    "Rickettsia rickettsii, treated with doxycycline",
-                    "Can be fatal if untreated"
-                ],
-                category: "Infectious Disease",
-                difficulty: 3
-            ),
-            
-            MedicalCase(
-                diagnosis: "Osteomyelitis",
-                alternativeNames: ["Bone Infection"],
-                hints: [
-                    "Patient with fever and bone pain",
-                    "Local tenderness and swelling over affected bone",
-                    "Elevated ESR and CRP",
-                    "MRI shows bone marrow edema",
-                    "Staph aureus most common, Salmonella in sickle cell"
-                ],
-                category: "Infectious Disease",
-                difficulty: 2
             ),
             
             MedicalCase(
@@ -1936,20 +1754,6 @@ class CaseLibrary {
             ),
             
             // DERMATOLOGY (5 cases)
-            MedicalCase(
-                diagnosis: "Psoriasis",
-                alternativeNames: ["Plaque Psoriasis"],
-                hints: [
-                    "Patient with well-demarcated erythematous plaques",
-                    "Silvery scales, Auspitz sign (pinpoint bleeding when scraped)",
-                    "Extensor surfaces commonly involved",
-                    "Nail pitting and onycholysis",
-                    "Associated with psoriatic arthritis"
-                ],
-                category: "Dermatology",
-                difficulty: 2
-            ),
-            
             MedicalCase(
                 diagnosis: "Melanoma",
                 alternativeNames: ["Malignant Melanoma"],
@@ -1994,7 +1798,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Stevens-Johnson Syndrome",
-                alternativeNames: ["SJS", "Toxic Epidermal Necrolysis"],
+                alternativeNames: ["SJS", "Toxic Epidermal Necrolysis", "Stevens Johnson Syndrome"],
                 hints: [
                     "Patient with painful skin blisters and mucosal involvement",
                     "Recent drug exposure (sulfonamides, anticonvulsants, allopurinol)",
@@ -2065,34 +1869,6 @@ class CaseLibrary {
             ),
             
             MedicalCase(
-                diagnosis: "Ectopic Pregnancy",
-                alternativeNames: ["Tubal Pregnancy"],
-                hints: [
-                    "Woman with positive pregnancy test and abdominal pain",
-                    "Vaginal bleeding",
-                    "Risk factors: PID, prior ectopic, IUD",
-                    "β-hCG not doubling appropriately",
-                    "Empty uterus on ultrasound, adnexal mass"
-                ],
-                category: "Obstetrics",
-                difficulty: 3
-            ),
-            
-            MedicalCase(
-                diagnosis: "Polycystic Ovary Syndrome",
-                alternativeNames: ["PCOS"],
-                hints: [
-                    "Woman with oligomenorrhea and infertility",
-                    "Hirsutism and acne",
-                    "Insulin resistance and obesity",
-                    "Elevated LH:FSH ratio",
-                    "Multiple ovarian cysts on ultrasound"
-                ],
-                category: "Gynecology",
-                difficulty: 2
-            ),
-            
-            MedicalCase(
                 diagnosis: "Endometriosis",
                 alternativeNames: [],
                 hints: [
@@ -2121,20 +1897,6 @@ class CaseLibrary {
             ),
             
             // PEDIATRICS (7 cases)
-            MedicalCase(
-                diagnosis: "Kawasaki Disease",
-                alternativeNames: ["Mucocutaneous Lymph Node Syndrome"],
-                hints: [
-                    "Child with high fever >5 days unresponsive to antibiotics",
-                    "Bilateral conjunctivitis, strawberry tongue, oral mucositis",
-                    "Polymorphous rash and cervical lymphadenopathy",
-                    "Desquamation of hands and feet",
-                    "Risk of coronary artery aneurysms, treated with IVIG and aspirin"
-                ],
-                category: "Pediatrics",
-                difficulty: 3
-            ),
-            
             MedicalCase(
                 diagnosis: "Croup",
                 alternativeNames: ["Laryngotracheobronchitis"],
@@ -2165,7 +1927,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Intussusception",
-                alternativeNames: [],
+                alternativeNames: ["Telescoping Bowel"],
                 hints: [
                     "Infant with colicky abdominal pain and vomiting",
                     "Currant jelly stools",
@@ -2221,20 +1983,6 @@ class CaseLibrary {
             
             // PSYCHIATRY (5 cases)
             MedicalCase(
-                diagnosis: "Schizophrenia",
-                alternativeNames: [],
-                hints: [
-                    "Young adult with delusions and hallucinations",
-                    "Disorganized speech and behavior",
-                    "Negative symptoms: flat affect, alogia, avolition",
-                    "Symptoms >6 months",
-                    "Treated with antipsychotic medications"
-                ],
-                category: "Psychiatry",
-                difficulty: 2
-            ),
-            
-            MedicalCase(
                 diagnosis: "Bipolar Disorder",
                 alternativeNames: ["Manic Depression"],
                 hints: [
@@ -2243,20 +1991,6 @@ class CaseLibrary {
                     "Pressured speech and flight of ideas",
                     "Risky behavior and poor judgment",
                     "Treated with mood stabilizers (lithium, valproate)"
-                ],
-                category: "Psychiatry",
-                difficulty: 2
-            ),
-            
-            MedicalCase(
-                diagnosis: "Generalized Anxiety Disorder",
-                alternativeNames: ["GAD"],
-                hints: [
-                    "Patient with excessive worry for >6 months",
-                    "Difficulty controlling anxiety",
-                    "Restlessness, fatigue, difficulty concentrating",
-                    "Muscle tension and sleep disturbance",
-                    "Treated with SSRIs and CBT"
                 ],
                 category: "Psychiatry",
                 difficulty: 2
@@ -2514,24 +2248,10 @@ class CaseLibrary {
                 difficulty: 3
             ),
             
-            MedicalCase(
-                diagnosis: "Goodpasture Syndrome",
-                alternativeNames: ["Anti-GBM Disease"],
-                hints: [
-                    "Young male with hemoptysis and hematuria",
-                    "Pulmonary hemorrhage and glomerulonephritis",
-                    "Linear IgG deposits on kidney and lung biopsy",
-                    "Anti-GBM antibodies",
-                    "Treated with plasmapheresis and immunosuppression"
-                ],
-                category: "Pulmonology",
-                difficulty: 4
-            ),
-            
             // GASTROENTEROLOGY (10 cases)
             MedicalCase(
                 diagnosis: "Achalasia",
-                alternativeNames: [],
+                alternativeNames: ["Cardiospasm"],
                 hints: [
                     "Patient with progressive dysphagia to solids and liquids",
                     "Food regurgitation and weight loss",
@@ -2545,7 +2265,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Mallory-Weiss Tear",
-                alternativeNames: [],
+                alternativeNames: ["Mallory Weiss Tear"],
                 hints: [
                     "Patient with hematemesis after forceful vomiting",
                     "History of alcohol use or bulimia",
@@ -2559,7 +2279,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Zenker Diverticulum",
-                alternativeNames: ["Pharyngeal Pouch"],
+                alternativeNames: ["Pharyngeal Pouch", "Pharyngoesophageal Diverticulum"],
                 hints: [
                     "Elderly patient with dysphagia and halitosis",
                     "Food regurgitation and gurgling sounds",
@@ -2601,7 +2321,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Whipple Disease",
-                alternativeNames: [],
+                alternativeNames: ["Tropheryma whipplei infection"],
                 hints: [
                     "Patient with weight loss, diarrhea, and arthralgias",
                     "Neurologic symptoms and cardiac involvement",
@@ -2615,7 +2335,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Hemochromatosis",
-                alternativeNames: ["Iron Overload"],
+                alternativeNames: ["Bronze Diabetes", "Iron Overload"],
                 hints: [
                     "Patient with bronze diabetes: skin hyperpigmentation and diabetes",
                     "Hepatomegaly and arthropathy",
@@ -2643,7 +2363,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Budd-Chiari Syndrome",
-                alternativeNames: ["Hepatic Vein Thrombosis"],
+                alternativeNames: ["Hepatic Vein Thrombosis", "Budd Chiari Syndrome"],
                 hints: [
                     "Patient with acute hepatomegaly, ascites, and abdominal pain",
                     "Nutmeg liver appearance",
@@ -2727,20 +2447,6 @@ class CaseLibrary {
             ),
             
             MedicalCase(
-                diagnosis: "Minimal Change Disease",
-                alternativeNames: ["MCD"],
-                hints: [
-                    "Child with sudden onset nephrotic syndrome",
-                    "Selective proteinuria (mostly albumin)",
-                    "Normal light microscopy, podocyte effacement on EM",
-                    "Excellent response to corticosteroids",
-                    "May be triggered by infections or immunizations"
-                ],
-                category: "Nephrology",
-                difficulty: 3
-            ),
-            
-            MedicalCase(
                 diagnosis: "Focal Segmental Glomerulosclerosis",
                 alternativeNames: ["FSGS"],
                 hints: [
@@ -2756,7 +2462,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Post-Streptococcal Glomerulonephritis",
-                alternativeNames: ["PSGN"],
+                alternativeNames: ["PSGN", "Post Streptococcal Glomerulonephritis"],
                 hints: [
                     "Child with hematuria 2 weeks after pharyngitis",
                     "Periorbital edema and hypertension",
@@ -2827,7 +2533,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Zollinger-Ellison Syndrome",
-                alternativeNames: ["Gastrinoma"],
+                alternativeNames: ["Gastrinoma", "Zollinger Ellison Syndrome"],
                 hints: [
                     "Patient with refractory peptic ulcers",
                     "Diarrhea due to gastric acid hypersecretion",
@@ -2912,7 +2618,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Wernicke Encephalopathy",
-                alternativeNames: ["Wernicke-Korsakoff Syndrome"],
+                alternativeNames: ["Thiamine Deficiency", "Vitamin B1 Deficiency", "Wernicke-Korsakoff Syndrome"],
                 hints: [
                     "Chronic alcoholic with confusion and ataxia",
                     "Classic triad: confusion, ophthalmoplegia, ataxia",
@@ -2954,7 +2660,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Creutzfeldt-Jakob Disease",
-                alternativeNames: ["CJD", "Prion Disease"],
+                alternativeNames: ["CJD", "Prion Disease", "Creutzfeldt Jakob Disease"],
                 hints: [
                     "Rapid progressive dementia with myoclonus",
                     "Startle myoclonus",
@@ -2982,7 +2688,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Charcot-Marie-Tooth Disease",
-                alternativeNames: ["Hereditary Motor and Sensory Neuropathy"],
+                alternativeNames: ["Hereditary Motor and Sensory Neuropathy", "Charcot Marie Tooth Disease"],
                 hints: [
                     "Young patient with foot drop and distal weakness",
                     "Stork leg or inverted champagne bottle appearance",
@@ -3024,7 +2730,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Lambert-Eaton Myasthenic Syndrome",
-                alternativeNames: ["LEMS"],
+                alternativeNames: ["LEMS", "Lambert Eaton Myasthenic Syndrome"],
                 hints: [
                     "Patient with proximal muscle weakness improving with use",
                     "Associated with small cell lung cancer",
@@ -3053,7 +2759,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Glucose-6-Phosphate Dehydrogenase Deficiency",
-                alternativeNames: ["G6PD Deficiency"],
+                alternativeNames: ["G6PD Deficiency", "Glucose 6 Phosphate Dehydrogenase Deficiency"],
                 hints: [
                     "Male with episodic hemolytic anemia after oxidant stress",
                     "Triggers include fava beans, sulfa drugs, antimalarials",
@@ -3067,7 +2773,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Hereditary Spherocytosis",
-                alternativeNames: [],
+                alternativeNames: ["HS"],
                 hints: [
                     "Patient with jaundice and splenomegaly",
                     "Spherocytes on blood smear",
@@ -3095,7 +2801,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Polycythemia Vera",
-                alternativeNames: ["PV"],
+                alternativeNames: ["PV", "Primary Polycythemia"],
                 hints: [
                     "Patient with elevated hemoglobin and pruritus after bathing",
                     "Plethoric appearance and splenomegaly",
@@ -3137,7 +2843,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Multiple Myeloma",
-                alternativeNames: ["Plasma Cell Myeloma"],
+                alternativeNames: ["Kahler Disease", "Plasma Cell Dyscrasia", "Plasma Cell Myeloma"],
                 hints: [
                     "Elderly patient with back pain and anemia",
                     "CRAB: Calcium elevated, Renal failure, Anemia, Bone lesions",
@@ -3190,20 +2896,6 @@ class CaseLibrary {
                 ],
                 category: "Rheumatology",
                 difficulty: 4
-            ),
-            
-            MedicalCase(
-                diagnosis: "Kawasaki Disease",
-                alternativeNames: ["Mucocutaneous Lymph Node Syndrome"],
-                hints: [
-                    "Child with persistent fever >5 days",
-                    "Conjunctivitis, strawberry tongue, cervical lymphadenopathy",
-                    "Desquamating rash on hands and feet",
-                    "Risk of coronary artery aneurysms",
-                    "Treated with IVIG and aspirin"
-                ],
-                category: "Rheumatology",
-                difficulty: 3
             ),
             
             MedicalCase(
@@ -3364,7 +3056,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Pemphigus Vulgaris",
-                alternativeNames: [],
+                alternativeNames: ["Acantholysis"],
                 hints: [
                     "Patient with painful oral erosions and flaccid skin blisters",
                     "Positive Nikolsky sign",
@@ -3449,7 +3141,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "DiGeorge Syndrome",
-                alternativeNames: ["22q11.2 Deletion Syndrome"],
+                alternativeNames: ["22q11.2 Deletion Syndrome", "Catch-22"],
                 hints: [
                     "Infant with tetany from hypocalcemia",
                     "CATCH-22: Cardiac defects, Abnormal facies, Thymic aplasia, Cleft palate, Hypocalcemia",
@@ -3463,7 +3155,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Wiskott-Aldrich Syndrome",
-                alternativeNames: ["WAS"],
+                alternativeNames: ["WAS", "Wiskott Aldrich Syndrome"],
                 hints: [
                     "Male infant with eczema, thrombocytopenia, and recurrent infections",
                     "Small platelets on blood smear",
@@ -3521,7 +3213,7 @@ class CaseLibrary {
             // PSYCHIATRY (2 cases)
             MedicalCase(
                 diagnosis: "Obsessive-Compulsive Disorder",
-                alternativeNames: ["OCD"],
+                alternativeNames: ["OCD", "Obsessive Compulsive Disorder"],
                 hints: [
                     "Patient with intrusive thoughts causing anxiety",
                     "Repetitive behaviors (compulsions) to reduce anxiety",
@@ -3535,7 +3227,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Post-Traumatic Stress Disorder",
-                alternativeNames: ["PTSD"],
+                alternativeNames: ["PTSD", "Post Traumatic Stress Disorder"],
                 hints: [
                     "Patient with flashbacks and nightmares after trauma",
                     "Avoidance of trauma-related stimuli",
@@ -3719,7 +3411,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Churg-Strauss Syndrome",
-                alternativeNames: ["Eosinophilic Granulomatosis with Polyangiitis", "EGPA"],
+                alternativeNames: ["Eosinophilic Granulomatosis with Polyangiitis", "EGPA", "Churg Strauss Syndrome"],
                 hints: [
                     "Asthmatic patient with peripheral neuropathy",
                     "Eosinophilia and pulmonary infiltrates",
@@ -3776,7 +3468,7 @@ class CaseLibrary {
             // GASTROENTEROLOGY (8 cases)
             MedicalCase(
                 diagnosis: "Peutz-Jeghers Syndrome",
-                alternativeNames: ["PJS"],
+                alternativeNames: ["PJS", "Peutz Jeghers Syndrome"],
                 hints: [
                     "Patient with perioral freckling and pigmented macules",
                     "Multiple hamartomatous polyps throughout GI tract",
@@ -3931,7 +3623,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Contrast-Induced Nephropathy",
-                alternativeNames: ["CIN"],
+                alternativeNames: ["CIN", "Contrast Induced Nephropathy"],
                 hints: [
                     "Patient with rise in creatinine 24-48 hours after contrast",
                     "Risk factors: CKD, diabetes, volume depletion",
@@ -4270,7 +3962,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Bernard-Soulier Syndrome",
-                alternativeNames: [],
+                alternativeNames: ["Bernard Soulier Syndrome"],
                 hints: [
                     "Patient with mucosal bleeding and large platelets",
                     "Deficiency of GPIb receptor",
@@ -4327,7 +4019,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Adult-Onset Still Disease",
-                alternativeNames: ["AOSD"],
+                alternativeNames: ["AOSD", "Adult Onset Still Disease"],
                 hints: [
                     "Young adult with high spiking fevers and evanescent salmon-colored rash",
                     "Arthritis and sore throat",
@@ -4355,7 +4047,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Henoch-Schönlein Purpura",
-                alternativeNames: ["IgA Vasculitis"],
+                alternativeNames: ["IgA Vasculitis", "Henoch Schönlein Purpura", "Henoch-Schonlein Purpura", "Henoch Schonlein Purpura"],
                 hints: [
                     "Child with palpable purpura on buttocks and legs",
                     "Abdominal pain and GI bleeding",
@@ -4496,7 +4188,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Hand-Foot-Mouth Disease",
-                alternativeNames: ["HFMD"],
+                alternativeNames: ["HFMD", "Hand Foot Mouth Disease"],
                 hints: [
                     "Child with vesicles on hands, feet, and mouth",
                     "Painful oral ulcers",
@@ -4768,7 +4460,7 @@ class CaseLibrary {
             // MUSCULOSKELETAL (5 cases)
             MedicalCase(
                 diagnosis: "Osgood-Schlatter Disease",
-                alternativeNames: [],
+                alternativeNames: ["Osgood Schlatter Disease"],
                 hints: [
                     "Adolescent with anterior knee pain and tibial tubercle tenderness",
                     "Worse with activity and kneeling",
@@ -4796,7 +4488,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Legg-Calvé-Perthes Disease",
-                alternativeNames: ["Perthes Disease"],
+                alternativeNames: ["Perthes Disease", "Legg Calvé Perthes Disease", "Legg-Calve-Perthes Disease", "Legg Calve Perthes Disease"],
                 hints: [
                     "Young child with insidious onset hip pain and limp",
                     "Avascular necrosis of femoral head",
@@ -4837,34 +4529,6 @@ class CaseLibrary {
             ),
             // BIOCHEMISTRY/GENETICS - AMINO ACID DISORDERS (10 cases)
             MedicalCase(
-                diagnosis: "Phenylketonuria",
-                alternativeNames: ["PKU"],
-                hints: [
-                    "Infant with intellectual disability and musty odor",
-                    "Fair skin, eczema, and seizures",
-                    "Deficiency of phenylalanine hydroxylase",
-                    "Elevated phenylalanine, decreased tyrosine",
-                    "Treated with phenylalanine-restricted diet"
-                ],
-                category: "Biochemistry",
-                difficulty: 2
-            ),
-            
-            MedicalCase(
-                diagnosis: "Maple Syrup Urine Disease",
-                alternativeNames: ["MSUD"],
-                hints: [
-                    "Newborn with sweet-smelling urine and lethargy",
-                    "Poor feeding and vomiting",
-                    "Deficiency of branched-chain alpha-ketoacid dehydrogenase",
-                    "Elevated leucine, isoleucine, valine",
-                    "Causes severe neurologic damage if untreated"
-                ],
-                category: "Biochemistry",
-                difficulty: 3
-            ),
-            
-            MedicalCase(
                 diagnosis: "Homocystinuria",
                 alternativeNames: [],
                 hints: [
@@ -4880,7 +4544,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Alkaptonuria",
-                alternativeNames: ["Ochronosis"],
+                alternativeNames: ["Homogentisic Acid Oxidase Deficiency", "Ochronosis"],
                 hints: [
                     "Patient with dark urine that turns black on standing",
                     "Dark pigmentation of cartilage and sclera",
@@ -4979,7 +4643,7 @@ class CaseLibrary {
             // BIOCHEMISTRY/GENETICS - CARBOHYDRATE DISORDERS (8 cases)
             MedicalCase(
                 diagnosis: "Galactosemia",
-                alternativeNames: [],
+                alternativeNames: ["Classic Galactosemia"],
                 hints: [
                     "Newborn with jaundice, vomiting after milk feeds",
                     "Hepatomegaly and cataracts",
@@ -5021,7 +4685,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Von Gierke Disease",
-                alternativeNames: ["Glycogen Storage Disease Type I"],
+                alternativeNames: ["GSD Type I", "Glycogen Storage Disease Type I"],
                 hints: [
                     "Infant with severe fasting hypoglycemia and hepatomegaly",
                     "Doll-like face and protuberant abdomen",
@@ -5035,7 +4699,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Pompe Disease",
-                alternativeNames: ["Glycogen Storage Disease Type II"],
+                alternativeNames: ["GSD Type II", "Glycogen Storage Disease Type II"],
                 hints: [
                     "Infant with cardiomegaly and hypotonia",
                     "Exercise intolerance and muscle weakness",
@@ -5134,7 +4798,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Gaucher Disease",
-                alternativeNames: [],
+                alternativeNames: ["Glucocerebrosidase Deficiency"],
                 hints: [
                     "Patient with hepatosplenomegaly and bone pain",
                     "Gaucher cells (wrinkled paper appearance)",
@@ -5148,7 +4812,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Niemann-Pick Disease",
-                alternativeNames: [],
+                alternativeNames: ["Niemann Pick Disease"],
                 hints: [
                     "Infant with hepatosplenomegaly and cherry-red spot",
                     "Progressive neurodegeneration",
@@ -5162,7 +4826,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Tay-Sachs Disease",
-                alternativeNames: [],
+                alternativeNames: ["Hexosaminidase A Deficiency", "Tay Sachs Disease"],
                 hints: [
                     "Ashkenazi Jewish infant with developmental regression",
                     "Cherry-red spot on macula",
@@ -5205,7 +4869,7 @@ class CaseLibrary {
             // BIOCHEMISTRY/GENETICS - PURINE/PYRIMIDINE DISORDERS (4 cases)
             MedicalCase(
                 diagnosis: "Lesch-Nyhan Syndrome",
-                alternativeNames: [],
+                alternativeNames: ["HGPRT Deficiency", "Lesch Nyhan Syndrome"],
                 hints: [
                     "Boy with self-mutilation and intellectual disability",
                     "Dystonia and gouty arthritis",
@@ -5290,7 +4954,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Chediak-Higashi Syndrome",
-                alternativeNames: [],
+                alternativeNames: ["CHS", "Chediak Higashi Syndrome"],
                 hints: [
                     "Child with recurrent pyogenic infections and albinism",
                     "Progressive neurologic dysfunction",
@@ -5347,7 +5011,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "X-Linked Agammaglobulinemia",
-                alternativeNames: ["Bruton Agammaglobulinemia"],
+                alternativeNames: ["Bruton Agammaglobulinemia", "X Linked Agammaglobulinemia"],
                 hints: [
                     "Boy with recurrent sinopulmonary infections after 6 months",
                     "Absent or low B cells, absent immunoglobulins",
@@ -5389,7 +5053,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Hyper-IgM Syndrome",
-                alternativeNames: [],
+                alternativeNames: ["Hyper IgM Syndrome"],
                 hints: [
                     "Boy with recurrent sinopulmonary infections",
                     "Elevated IgM, low IgG, IgA, IgE",
@@ -5445,7 +5109,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Ataxia-Telangiectasia",
-                alternativeNames: [],
+                alternativeNames: ["Ataxia Telangiectasia"],
                 hints: [
                     "Child with progressive cerebellar ataxia",
                     "Telangiectasias on conjunctiva and skin",
@@ -5459,7 +5123,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Complement C5-C9 Deficiency",
-                alternativeNames: ["Terminal Complement Deficiency"],
+                alternativeNames: ["Terminal Complement Deficiency", "Complement C5 C9 Deficiency"],
                 hints: [
                     "Patient with recurrent Neisseria infections",
                     "Deficiency in membrane attack complex",
@@ -5487,7 +5151,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "IL-12 Receptor Deficiency",
-                alternativeNames: [],
+                alternativeNames: ["IL 12 Receptor Deficiency"],
                 hints: [
                     "Patient with disseminated mycobacterial infections",
                     "Poor Th1 response",
@@ -6388,7 +6052,7 @@ class CaseLibrary {
             // GENETIC SYNDROMES (10 cases)
             MedicalCase(
                 diagnosis: "Fragile X Syndrome",
-                alternativeNames: [],
+                alternativeNames: ["CGG Repeat Disorder"],
                 hints: [
                     "Boy with intellectual disability and large testicles (macroorchidism)",
                     "Long face with prominent jaw and ears",
@@ -6402,7 +6066,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Prader-Willi Syndrome",
-                alternativeNames: [],
+                alternativeNames: ["Prader Willi Syndrome"],
                 hints: [
                     "Child with hyperphagia and obesity",
                     "Hypotonia in infancy",
@@ -6444,7 +6108,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Marfan Syndrome",
-                alternativeNames: [],
+                alternativeNames: ["MFS"],
                 hints: [
                     "Tall patient with long limbs and arachnodactyly",
                     "Lens dislocation (upward, ectopia lentis)",
@@ -6458,7 +6122,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Ehlers-Danlos Syndrome",
-                alternativeNames: ["EDS"],
+                alternativeNames: ["EDS", "Hypermobility Syndrome", "Ehlers Danlos Syndrome"],
                 hints: [
                     "Patient with hyperextensible skin and hypermobile joints",
                     "Easy bruising and poor wound healing",
@@ -6571,7 +6235,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Testicular Non-Seminomatous Germ Cell Tumor",
-                alternativeNames: ["NSGCT"],
+                alternativeNames: ["NSGCT", "Testicular Non Seminomatous Germ Cell Tumor"],
                 hints: [
                     "Young male with testicular mass",
                     "Includes embryonal, yolk sac, choriocarcinoma, teratoma",
@@ -6648,20 +6312,6 @@ class CaseLibrary {
                     "Urethral discharge if STI-related",
                     "Chlamydia/gonorrhea in <35 years, E. coli in older",
                     "Treated with antibiotics"
-                ],
-                category: "Urology",
-                difficulty: 2
-            ),
-            
-            MedicalCase(
-                diagnosis: "Testicular Torsion",
-                alternativeNames: [],
-                hints: [
-                    "Adolescent with sudden severe testicular pain",
-                    "Absent cremasteric reflex",
-                    "Negative Prehn sign (no relief with elevation)",
-                    "Bell-clapper deformity",
-                    "Surgical emergency within 6 hours"
                 ],
                 category: "Urology",
                 difficulty: 2
@@ -6797,7 +6447,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Heparin-Induced Thrombocytopenia",
-                alternativeNames: ["HIT"],
+                alternativeNames: ["HIT", "Heparin Induced Thrombocytopenia"],
                 hints: [
                     "Patient on heparin with platelet count drop >50%",
                     "Paradoxical thrombosis risk",
@@ -6811,7 +6461,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Statin-Induced Myopathy",
-                alternativeNames: [],
+                alternativeNames: ["Statin Induced Myopathy"],
                 hints: [
                     "Patient on statin with muscle pain and weakness",
                     "Elevated CK levels",
@@ -6839,7 +6489,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Beta-Blocker Toxicity",
-                alternativeNames: [],
+                alternativeNames: ["Beta Blocker Toxicity"],
                 hints: [
                     "Patient with bradycardia, hypotension, and bronchospasm",
                     "Masks hypoglycemia symptoms in diabetics",
@@ -7092,7 +6742,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Attention-Deficit Hyperactivity Disorder",
-                alternativeNames: ["ADHD"],
+                alternativeNames: ["ADHD", "Attention Deficit Hyperactivity Disorder"],
                 hints: [
                     "Child with inattention and hyperactivity",
                     "Difficulty completing tasks and sitting still",
@@ -7344,201 +6994,6 @@ class CaseLibrary {
                 difficulty: 3
             ),
             MedicalCase(
-                diagnosis: "Pheochromocytoma",
-                alternativeNames: ["Adrenal Medulla Tumor", "10% Tumor"],
-                hints: [
-                    "35-year-old male with episodic headaches and palpitations",
-                    "Paroxysmal spells of sweating and anxiety",
-                    "Marked hypertension (200/110 mmHg) during episodes",
-                    "Elevated urinary vanillylmandelic acid (VMA) and metanephrines",
-                    "Chromaffin cell tumor derived from neural crest cells"
-                ],
-                category: "Endocrinology",
-                difficulty: 3),
-            
-            MedicalCase(
-                diagnosis: "Cystic Fibrosis",
-                alternativeNames: ["Mucoviscidosis", "CF"],
-                hints: [
-                    "2-year-old boy with recurrent pneumonia and foul-smelling stools",
-                    "Failure to thrive despite a healthy appetite",
-                    "Nasal polyps and digital clubbing on exam",
-                    "Sweat chloride concentration > 60 mEq/L",
-                    "Phe508 deletion in the CFTR gene on chromosome 7"
-                ],
-                category: "Pulmonology / Genetics",
-                difficulty: 2),
-            
-            MedicalCase(
-                diagnosis: "Multiple Myeloma",
-                alternativeNames: ["Plasma Cell Myeloma", "Kahler Disease"],
-                hints: [
-                    "68-year-old female with persistent lower back pain and fatigue",
-                    "Normocytic anemia and recurrent infections",
-                    "Hypercalcemia and 'punched-out' lytic bone lesions on X-ray",
-                    "Serum protein electrophoresis (SPEP) shows an M-spike",
-                    "Bence-Jones proteins (Ig light chains) found in urine"
-                ],
-                category: "Hematology / Oncology",
-                difficulty: 3),
-            
-            MedicalCase(
-                diagnosis: "Goodpasture Syndrome",
-                alternativeNames: ["Anti-GBM Disease"],
-                hints: [
-                    "25-year-old male presenting with hemoptysis and hematuria",
-                    "Shortness of breath and bilateral pulmonary infiltrates",
-                    "Crescentic glomerulonephritis on renal biopsy",
-                    "Linear immunofluorescence of IgG along the glomerular basement membrane",
-                    "Antibodies against the alpha-3 chain of Type IV collagen"
-                ],
-                category: "Nephrology",
-                difficulty: 4),
-            
-            MedicalCase(
-                diagnosis: "Pyloric Stenosis",
-                alternativeNames: ["Infantile Hypertrophic Pyloric Stenosis"],
-                hints: [
-                    "3-week-old first-born male with non-bilious, projectile vomiting",
-                    "Vomiting occurs immediately after feeding; infant is 'hungry'",
-                    "Palpable 'olive-shaped' mass in the epigastrium",
-                    "Hypochloremic, hypokalemic metabolic alkalosis",
-                    "Ultrasound showing thickening and elongation of the pylorus"
-                ],
-                category: "Pediatrics / GI",
-                difficulty: 2),
-            
-            MedicalCase(
-                diagnosis: "Multiple Sclerosis",
-                alternativeNames: ["MS", "Demyelinating Disease"],
-                hints: [
-                    "28-year-old female with sudden loss of vision in one eye and pain with movement",
-                    "History of transient numbness in the legs six months ago",
-                    "Internuclear ophthalmoplegia (INO) and hyperreflexia",
-                    "MRI showing periventricular white matter plaques (Dawson fingers)",
-                    "CSF analysis revealing oligoclonal bands"
-                ],
-                category: "Neurology",
-                difficulty: 3),
-            
-            MedicalCase(
-                diagnosis: "Sarcoidosis",
-                alternativeNames: ["Besnier-Boeck-Schaumann disease"],
-                hints: [
-                    "32-year-old African American female with a dry cough and skin rashes",
-                    "Tender red nodules on the shins (erythema nodosum)",
-                    "Bilateral hilar lymphadenopathy on chest X-ray",
-                    "Elevated serum ACE levels and hypercalcemia",
-                    "Non-caseating granulomas on tissue biopsy"
-                ],
-                category: "Pulmonology / Rheumatology",
-                difficulty: 2),
-            
-            MedicalCase(
-                diagnosis: "DiGeorge Syndrome",
-                alternativeNames: ["22q11.2 Deletion Syndrome", "Catch-22"],
-                hints: [
-                    "Newborn with a cleft palate, low-set ears, and a small jaw",
-                    "Patient develops tetany (hypocalcemic seizures) shortly after birth",
-                    "Chest X-ray reveals an absent thymic shadow",
-                    "Truncus arteriosus or Tetralogy of Fallot identified on echo",
-                    "Failure of the 3rd and 4th pharyngeal pouches to develop"
-                ],
-                category: "Immunology / Genetics",
-                difficulty: 4),
-            
-            MedicalCase(
-                diagnosis: "Systemic Lupus Erythematosus",
-                alternativeNames: ["SLE", "Lupus"],
-                hints: [
-                    "24-year-old female with joint pain and a facial rash after sun exposure",
-                    "Malar (butterfly) rash sparing the nasolabial folds",
-                    "Pleural effusion and proteinuria noted on workup",
-                    "Positive ANA (sensitive) and Anti-dsDNA or Anti-Smith (specific)",
-                    "Type III hypersensitivity reaction causing immune complex deposition"
-                ],
-                category: "Rheumatology",
-                difficulty: 2),
-            
-            MedicalCase(
-                diagnosis: "Graves Disease",
-                alternativeNames: ["Basedow Disease", "Toxic Diffuse Goiter"],
-                hints: [
-                    "30-year-old female with weight loss, heat intolerance, and tremors",
-                    "Proptosis (bulging eyes) and pretibial myxedema",
-                    "Diffuse, painless enlargement of the thyroid gland (goiter)",
-                    "Low TSH and high Free T4",
-                    "Thyroid-stimulating immunoglobulin (TSI) mimicking TSH"
-                ],
-                category: "Endocrinology",
-                difficulty: 1
-            ),
-            MedicalCase(
-                    diagnosis: "Aortic Stenosis",
-                    alternativeNames: ["AS", "Calcific Aortic Valve"],
-                    hints: [
-                        "72-year-old male with syncope during his daily walk",
-                        "Exertional dyspnea and angina",
-                        "Crescendo-decrescendo systolic murmur at the right upper sternal border",
-                        "Pulsus parvus et tardus (weak, delayed carotid pulse)",
-                        "SAD triad: Syncope, Angina, Dyspnea"
-                    ],
-                    category: "Cardiology",
-                    difficulty: 2),
-
-                MedicalCase(
-                    diagnosis: "Wernicke Encephalopathy",
-                    alternativeNames: ["Thiamine Deficiency", "Vitamin B1 Deficiency"],
-                    hints: [
-                        "45-year-old male with chronic alcohol use disorder",
-                        "Acute onset of confusion and ataxia",
-                        "Nystagmus and ophthalmoplegia on physical exam",
-                        "Symptoms improve rapidly with IV thiamine administration",
-                        "Classic triad: Ataxia, Confusion, Ophthalmoplegia"
-                    ],
-                    category: "Neurology / Nutrition",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Intussusception",
-                    alternativeNames: ["Telescoping Bowel"],
-                    hints: [
-                        "9-month-old infant with sudden, intermittent abdominal pain",
-                        "Infant draws knees to chest during episodes of crying",
-                        "'Currant jelly' stools (mucus and blood)",
-                        "Sausage-shaped mass palpable in the right upper quadrant",
-                        "Target sign seen on ultrasound; treat with air/contrast enema"
-                    ],
-                    category: "Pediatrics / GI",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Giant Cell Arteritis",
-                    alternativeNames: ["Temporal Arteritis", "GCA"],
-                    hints: [
-                        "70-year-old female with a new, unilateral headache",
-                        "Jaw claudication while chewing food",
-                        "Tenderness over the temporal area and sudden vision loss",
-                        "Markedly elevated Erythrocyte Sedimentation Rate (ESR)",
-                        "Granulomatous inflammation of large/medium arteries; risk of blindness"
-                    ],
-                    category: "Rheumatology",
-                    difficulty: 2),
-
-                MedicalCase(
-                    diagnosis: "Minimal Change Disease",
-                    alternativeNames: ["Nil Disease", "Lipoid Nephrosis"],
-                    hints: [
-                        "5-year-old boy with sudden facial puffiness and swollen ankles",
-                        "Recent history of an upper respiratory infection",
-                        "Heavy proteinuria (>3.5g/day) with no hematuria",
-                        "Normal light microscopy; 'nil' findings",
-                        "Effacement of podocyte foot processes on electron microscopy"
-                    ],
-                    category: "Nephrology",
-                    difficulty: 3),
-
-                MedicalCase(
                     diagnosis: "Pseudomembranous Colitis",
                     alternativeNames: ["C. diff Colitis", "Clostridioides difficile"],
                     hints: [
@@ -7552,45 +7007,6 @@ class CaseLibrary {
                     difficulty: 2),
 
                 MedicalCase(
-                    diagnosis: "Wilson Disease",
-                    alternativeNames: ["Hepatolenticular Degeneration"],
-                    hints: [
-                        "18-year-old male with tremors and new-onset jaundice",
-                        "Difficulty speaking (dysarthria) and parkinsonian symptoms",
-                        "Brownish-yellow rings seen in the cornea (Kayser-Fleischer rings)",
-                        "Low serum ceruloplasmin and high urinary copper",
-                        "Mutation in ATP7B gene causing impaired copper transport"
-                    ],
-                    category: "Gastroenterology / Neurology",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Zollinger-Ellison Syndrome",
-                    alternativeNames: ["Gastrinoma"],
-                    hints: [
-                        "40-year-old male with recurrent, multiple peptic ulcers",
-                        "Ulcers are refractory to PPI therapy and located in the jejunum",
-                        "Chronic watery diarrhea and weight loss",
-                        "Significantly elevated fasting serum gastrin levels",
-                        "Positive secretin stimulation test (gastrin remains high)"
-                    ],
-                    category: "Gastroenterology / Endocrinology",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Kawasaki Disease",
-                    alternativeNames: ["Mucocutaneous Lymph Node Syndrome"],
-                    hints: [
-                        "4-year-old boy with high fever for 6 days",
-                        "Bright red 'strawberry tongue' and cracked lips",
-                        "Bilateral conjunctival injection without exudate",
-                        "Desquamation of the skin on hands and feet",
-                        "CRASH and Burn: Conjunctivitis, Rash, Adenopathy, Strawberry tongue, Hand/foot changes + Fever"
-                    ],
-                    category: "Pediatrics / Cardiology",
-                    difficulty: 3),
-
-                MedicalCase(
                     diagnosis: "Pneumocystis Jirovecii Pneumonia",
                     alternativeNames: ["PCP", "Pneumocystosis"],
                     hints: [
@@ -7601,58 +7017,6 @@ class CaseLibrary {
                         "Prophylaxis and treatment with Trimethoprim-Sulfamethoxazole"
                     ],
                     category: "Infectious Disease",
-                    difficulty: 2),
-
-                MedicalCase(
-                    diagnosis: "Huntington Disease",
-                    alternativeNames: ["Huntington Chorea"],
-                    hints: [
-                        "40-year-old male with involuntary jerky movements (chorea)",
-                        "Recent onset of aggression, depression, and dementia",
-                        "Family history of similar symptoms at a young age",
-                        "Atrophy of the caudate nucleus and putamen on MRI",
-                        "CAG trinucleotide repeat expansion in the HTT gene"
-                    ],
-                    category: "Neurology / Genetics",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Acromegaly",
-                    alternativeNames: ["Growth Hormone Excess"],
-                    hints: [
-                        "45-year-old female noticing her rings and shoes no longer fit",
-                        "Coarsening of facial features and a prominent jaw (prognathism)",
-                        "New-onset hypertension and Type 2 Diabetes",
-                        "Elevated Insulin-like Growth Factor 1 (IGF-1)",
-                        "Failure to suppress Growth Hormone (GH) after oral glucose load"
-                    ],
-                    category: "Endocrinology",
-                    difficulty: 2),
-
-                MedicalCase(
-                    diagnosis: "Achalasia",
-                    alternativeNames: ["Cardiospasm"],
-                    hints: [
-                        "50-year-old male with progressive dysphagia to both solids and liquids",
-                        "Regurgitation of undigested food and weight loss",
-                        "Barium swallow shows a 'bird's beak' appearance of the esophagus",
-                        "Manometry shows failure of the lower esophageal sphincter (LES) to relax",
-                        "Loss of myenteric (Auerbach) plexus in the distal esophagus"
-                    ],
-                    category: "Gastroenterology",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Celiac Disease",
-                    alternativeNames: ["Gluten-Sensitive Enteropathy"],
-                    hints: [
-                        "30-year-old female with chronic diarrhea, bloating, and dermatitis herpetiformis",
-                        "Iron deficiency anemia and vitamin D deficiency",
-                        "Blunting of intestinal villi and crypt hyperplasia on biopsy",
-                        "Positive anti-tissue transglutaminase (tTG) IgA antibodies",
-                        "Association with HLA-DQ2 and HLA-DQ8"
-                    ],
-                    category: "Gastroenterology",
                     difficulty: 2),
 
                 MedicalCase(
@@ -7669,45 +7033,6 @@ class CaseLibrary {
                     difficulty: 4),
 
                 MedicalCase(
-                    diagnosis: "Polycythemia Vera",
-                    alternativeNames: ["Primary Polycythemia"],
-                    hints: [
-                        "55-year-old male with severe itching (pruritus) after a hot shower",
-                        "Plethoric face (redness) and splenomegaly",
-                        "Increased hematocrit and hemoglobin despite normal oxygen levels",
-                        "Very low serum erythropoietin (EPO) levels",
-                        "JAK2 V617F mutation in hematopoietic stem cells"
-                    ],
-                    category: "Hematology",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Membranous Nephropathy",
-                    alternativeNames: ["Membranous Glomerulonephritis"],
-                    hints: [
-                        "50-year-old male with generalized edema and frothy urine",
-                        "Associated with Hepatitis B, NSAID use, or solid tumors",
-                        "Thickened glomerular basement membrane (GBM) on light microscopy",
-                        "'Spike and dome' appearance on silver stain",
-                        "Granular deposition of IgG and C3 along the GBM"
-                    ],
-                    category: "Nephrology",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Gout",
-                    alternativeNames: ["Monosodium Urate Crystal Arthropathy"],
-                    hints: [
-                        "55-year-old male with sudden, excruciating pain in the big toe (Podagra)",
-                        "History of heavy alcohol use and high-protein diet",
-                        "Joint is red, hot, and extremely tender to touch",
-                        "Needle-shaped crystals under polarized light",
-                        "Crystals show negative birefringence (yellow when parallel to the slow wave)"
-                    ],
-                    category: "Rheumatology",
-                    difficulty: 2),
-
-                MedicalCase(
                     diagnosis: "Pernicious Anemia",
                     alternativeNames: ["Vitamin B12 Deficiency", "Megaloblastic Anemia"],
                     hints: [
@@ -7721,97 +7046,6 @@ class CaseLibrary {
                     difficulty: 3),
 
                 MedicalCase(
-                    diagnosis: "Primary Biliary Cholangitis",
-                    alternativeNames: ["PBC", "Primary Biliary Cirrhosis"],
-                    hints: [
-                        "45-year-old female with severe itching and fatigue",
-                        "Physical exam shows xanthelasmas and hepatomegaly",
-                        "Elevated Alkaline Phosphatase (ALP) and Bilirubin",
-                        "Positive anti-mitochondrial antibodies (AMA)",
-                        "Autoimmune destruction of intrahepatic bile ducts"
-                    ],
-                    category: "Gastroenterology / Hepatology",
-                    difficulty: 4
-            ),
-            MedicalCase(
-                    diagnosis: "Coarctation of the Aorta",
-                    alternativeNames: ["Aortic Narrowing"],
-                    hints: [
-                        "15-year-old male with headaches and cold feet",
-                        "Brachial-femoral pulse delay",
-                        "Hypertension in arms; hypotension/weak pulses in legs",
-                        "Rib notching on X-ray and '3' sign on barium swallow",
-                        "Turner Syndrome association (45,XO)"
-                    ],
-                    category: "Cardiology",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Ehlers-Danlos Syndrome",
-                    alternativeNames: ["EDS", "Hypermobility Syndrome"],
-                    hints: [
-                        "19-year-old male with multiple joint dislocations",
-                        "Hyperextensible skin and easy bruising",
-                        "Velvety skin texture and 'cigarette paper' scars",
-                        "Mitral valve prolapse and berry aneurysms",
-                        "Defect in Type V or Type III collagen synthesis"
-                    ],
-                    category: "Genetics / Connective Tissue",
-                    difficulty: 2),
-
-                MedicalCase(
-                    diagnosis: "Polyarteritis Nodosa",
-                    alternativeNames: ["PAN"],
-                    hints: [
-                        "45-year-old male with abdominal pain and foot drop",
-                        "Livedo reticularis (net-like rash) and fever",
-                        "Negative for ANCA; strongly associated with Hepatitis B",
-                        "String-of-beads appearance on renal artery angiogram",
-                        "Transmural necrotizing inflammation of medium-sized arteries"
-                    ],
-                    category: "Rheumatology / Vasculitis",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Minimal Change Disease",
-                    alternativeNames: ["Lipoid Nephrosis"],
-                    hints: [
-                        "4-year-old with periorbital edema after a viral cold",
-                        "Heavy proteinuria and fatty casts in urine",
-                        "Excellent response to corticosteroid therapy",
-                        "Normal light microscopy; no immune deposits",
-                        "Effacement of podocyte foot processes on EM"
-                    ],
-                    category: "Nephrology",
-                    difficulty: 2),
-
-                MedicalCase(
-                    diagnosis: "Hirschsprung Disease",
-                    alternativeNames: ["Congenital Aganglionic Megacolon"],
-                    hints: [
-                        "48-hour-old newborn who has not passed meconium",
-                        "Abdominal distension and bilious vomiting",
-                        "Explosive release of stool on digital rectal exam",
-                        "Dilated proximal colon; narrowed distal segment",
-                        "Absence of ganglion cells in Meissner and Auerbach plexuses"
-                    ],
-                    category: "Pediatrics / GI",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Chronic Granulomatous Disease",
-                    alternativeNames: ["CGD"],
-                    hints: [
-                        "5-year-old boy with recurrent skin abscesses",
-                        "Infections with Catalase-positive organisms (S. aureus, Aspergillus)",
-                        "Abnormal Dihydrorhodamine (DHR) flow cytometry",
-                        "Negative Nitroblue Tetrazolium (NBT) dye test",
-                        "Deficiency in NADPH oxidase"
-                    ],
-                    category: "Immunology",
-                    difficulty: 4),
-
-                MedicalCase(
                     diagnosis: "Osteosarcoma",
                     alternativeNames: ["Osteogenic Sarcoma"],
                     hints: [
@@ -7822,19 +7056,6 @@ class CaseLibrary {
                         "Associated with mutations in RB1 and TP53 genes"
                     ],
                     category: "Orthopedics / Oncology",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Small Cell Lung Cancer",
-                    alternativeNames: ["Oat Cell Carcinoma"],
-                    hints: [
-                        "65-year-old heavy smoker with a central lung mass",
-                        "Hyponatremia (SIADH) or Cushingoid features (ACTH)",
-                        "Lambert-Eaton Myasthenic Syndrome (proximal weakness)",
-                        "Neuroendocrine origin; small blue cells on histology",
-                        "Often treated with chemo/radiation rather than surgery"
-                    ],
-                    category: "Pulmonology / Oncology",
                     difficulty: 3),
 
                 MedicalCase(
@@ -7851,45 +7072,6 @@ class CaseLibrary {
                     difficulty: 4),
 
                 MedicalCase(
-                    diagnosis: "Addison Disease",
-                    alternativeNames: ["Primary Adrenal Insufficiency"],
-                    hints: [
-                        "35-year-old female with weakness and salt cravings",
-                        "Hyperpigmentation of skin creases and buccal mucosa",
-                        "Hypotension, hyperkalemia, and hyponatremia",
-                        "Low morning cortisol; high ACTH",
-                        "Autoimmune destruction of the adrenal cortex"
-                    ],
-                    category: "Endocrinology",
-                    difficulty: 2),
-
-                MedicalCase(
-                    diagnosis: "Chediak-Higashi Syndrome",
-                    alternativeNames: ["CHS"],
-                    hints: [
-                        "4-year-old with silvery-white hair (partial albinism)",
-                        "Recurrent pyogenic infections and peripheral neuropathy",
-                        "Giant granules in neutrophils on blood smear",
-                        "Easy bruising and bleeding (platelet dysfunction)",
-                        "Defect in lysosomal trafficking regulator gene (LYST)"
-                    ],
-                    category: "Immunology",
-                    difficulty: 5),
-
-                MedicalCase(
-                    diagnosis: "Hemophilia A",
-                    alternativeNames: ["Factor VIII Deficiency"],
-                    hints: [
-                        "8-year-old boy with painful swelling in the knee (hemarthrosis)",
-                        "Prolonged bleeding after dental extractions",
-                        "Isolated prolonged PTT; normal PT and bleeding time",
-                        "X-linked recessive inheritance",
-                        "Deficiency of coagulation Factor VIII"
-                    ],
-                    category: "Hematology",
-                    difficulty: 2),
-
-                MedicalCase(
                     diagnosis: "Diabetes Insipidus (Central)",
                     alternativeNames: ["Neurogenic DI"],
                     hints: [
@@ -7903,19 +7085,6 @@ class CaseLibrary {
                     difficulty: 3),
 
                 MedicalCase(
-                    diagnosis: "Marfan Syndrome",
-                    alternativeNames: ["MFS"],
-                    hints: [
-                        "22-year-old tall male with long, thin fingers (arachnodactyly)",
-                        "Upward lens subluxation (ectopia lentis)",
-                        "Pectus excavatum and high-arched palate",
-                        "Risk of aortic dissection or mitral valve prolapse",
-                        "FBN1 gene mutation on chromosome 15 (fibrillin-1)"
-                    ],
-                    category: "Genetics / Cardiology",
-                    difficulty: 2),
-
-                MedicalCase(
                     diagnosis: "Glioblastoma Multiforme",
                     alternativeNames: ["GBM", "Grade IV Astrocytoma"],
                     hints: [
@@ -7926,19 +7095,6 @@ class CaseLibrary {
                         "Most common malignant primary brain tumor in adults"
                     ],
                     category: "Neurology / Oncology",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Hereditary Spherocytosis",
-                    alternativeNames: ["HS"],
-                    hints: [
-                        "25-year-old with jaundice and splenomegaly",
-                        "Small, dark red blood cells lacking central pallor",
-                        "Increased Mean Corpuscular Hemoglobin Concentration (MCHC)",
-                        "Positive osmotic fragility test",
-                        "Defect in ankyrin, spectrin, or band 3 proteins"
-                    ],
-                    category: "Hematology",
                     difficulty: 3),
 
                 MedicalCase(
@@ -7955,19 +7111,6 @@ class CaseLibrary {
                     difficulty: 4),
 
                 MedicalCase(
-                    diagnosis: "Minimal Change Disease",
-                    alternativeNames: ["Lipoid Nephrosis"],
-                    hints: [
-                        "4-year-old with puffy eyes and generalized edema",
-                        "Recent viral infection or immunization",
-                        "Selective albuminuria (>3.5g/day)",
-                        "Normal light microscopy findings",
-                        "Effacement of podocyte foot processes on EM"
-                    ],
-                    category: "Nephrology",
-                    difficulty: 2),
-
-                MedicalCase(
                     diagnosis: "Burkitt Lymphoma",
                     alternativeNames: ["B-cell Non-Hodgkin Lymphoma"],
                     hints: [
@@ -7979,97 +7122,6 @@ class CaseLibrary {
                     ],
                     category: "Hematology / Oncology",
                     difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Duchenne Muscular Dystrophy",
-                    alternativeNames: ["DMD"],
-                    hints: [
-                        "4-year-old boy using hands to 'climb up' his legs to stand",
-                        "Pseudohypertrophy of the calves",
-                        "Gowers sign and waddling gait",
-                        "Markedly elevated Creatine Kinase (CK)",
-                        "Frameshift mutation leading to absent dystrophin protein"
-                    ],
-                    category: "Neurology / Genetics",
-                    difficulty: 2),
-
-                MedicalCase(
-                    diagnosis: "Primary Sclerosing Cholangitis",
-                    alternativeNames: ["PSC"],
-                    hints: [
-                        "35-year-old male with ulcerative colitis and jaundice",
-                        "Itching, fatigue, and dark urine",
-                        "ERCP showing 'beading' of the bile ducts",
-                        "Histology: 'Onion-skin' periductal fibrosis",
-                        "p-ANCA positivity in 60-80% of cases"
-                    ],
-                    category: "Hepatology / GI",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Von Willebrand Disease",
-                    alternativeNames: ["vWD"],
-                    hints: [
-                        "18-year-old female with heavy menses and frequent nosebleeds",
-                        "Bleeding after dental work",
-                        "Increased bleeding time; normal or slightly prolonged PTT",
-                        "Abnormal ristocetin cofactor assay",
-                        "Most common inherited bleeding disorder"
-                    ],
-                    category: "Hematology",
-                    difficulty: 2),
-
-                MedicalCase(
-                    diagnosis: "Cushing Syndrome",
-                    alternativeNames: ["Hypercortisolism"],
-                    hints: [
-                        "40-year-old with 'moon facies' and 'buffalo hump'",
-                        "Purple abdominal striae and central obesity",
-                        "Hypertension and hyperglycemia (diabetes)",
-                        "Elevated 24-hour urinary free cortisol",
-                        "Can be caused by exogenous steroids or ACTH-secreting tumor"
-                    ],
-                    category: "Endocrinology",
-                    difficulty: 1),
-
-                MedicalCase(
-                    diagnosis: "Zenker Diverticulum",
-                    alternativeNames: ["Pharyngoesophageal Diverticulum"],
-                    hints: [
-                        "75-year-old male with halitosis (bad breath) and dysphagia",
-                        "Regurgitation of undigested food while lying down",
-                        "A mass in the neck that gurgles",
-                        "Barium swallow shows a pouch in the upper esophagus",
-                        "Herniation through Killian's triangle (false diverticulum)"
-                    ],
-                    category: "Gastroenterology",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Whipple Disease",
-                    alternativeNames: ["Tropheryma whipplei infection"],
-                    hints: [
-                        "55-year-old male with weight loss, diarrhea, and joint pain",
-                        "Hyperpigmentation and cardiac symptoms",
-                        "PAS-positive macrophages in the lamina propria",
-                        "Gram-positive rod-shaped intracellular bacteria",
-                        "Treatment usually involves long-term Ceftriaxone or TMP-SMX"
-                    ],
-                    category: "Infectious Disease / GI",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Psoriasis",
-                    alternativeNames: ["Psoriasis Vulgaris"],
-                    hints: [
-                        "30-year-old with silver scales on red plaques on the elbows",
-                        "Auspitz sign (pinpoint bleeding when scales are removed)",
-                        "Nail pitting and oil spots",
-                        "Histology: Munro microabscesses (neutrophils in stratum corneum)",
-                        "Association with HLA-Cw6 and psoriatic arthritis"
-                    ],
-                    category: "Dermatology",
-                    difficulty: 2),
 
                 MedicalCase(
                     diagnosis: "Scleroderma (Diffuse)",
@@ -8085,32 +7137,6 @@ class CaseLibrary {
                     difficulty: 3),
 
                 MedicalCase(
-                    diagnosis: "Hypertrophic Cardiomyopathy",
-                    alternativeNames: ["HCM", "HOCM"],
-                    hints: [
-                        "18-year-old athlete collapses and dies during a game",
-                        "Systolic murmur that decreases with squatting",
-                        "Murmur increases with Valsalva or standing",
-                        "Asymmetric septal hypertrophy on echo",
-                        "Mutations in sarcomeric proteins (beta-myosin heavy chain)"
-                    ],
-                    category: "Cardiology",
-                    difficulty: 2),
-
-                MedicalCase(
-                    diagnosis: "Minimal Change Disease",
-                    alternativeNames: ["Lipoid Nephrosis"],
-                    hints: [
-                        "6-year-old presenting with massive generalized edema",
-                        "Urinalysis shows 4+ protein and oval fat bodies",
-                        "Rapid response to Prednisone therapy",
-                        "Normal glomeruli on light microscopy",
-                        "Effacement of foot processes on EM"
-                    ],
-                    category: "Nephrology",
-                    difficulty: 2),
-
-                MedicalCase(
                     diagnosis: "Gardner Syndrome",
                     alternativeNames: ["FAP with Extra-intestinal Manifestations"],
                     hints: [
@@ -8124,110 +7150,6 @@ class CaseLibrary {
                     difficulty: 4
             ),
             MedicalCase(
-                    diagnosis: "Tetralogy of Fallot",
-                    alternativeNames: ["ToF"],
-                    hints: [
-                        "Infant with cyanosis that improves when squatting ('tet spells')",
-                        "Boot-shaped heart on chest X-ray",
-                        "Right ventricular hypertrophy, Overriding aorta, VSD, Pulmonary stenosis",
-                        "Crescendo-decrescendo systolic murmur at left upper sternal border",
-                        "Derived from abnormal neural crest cell migration"
-                    ],
-                    category: "Pediatrics / Cardiology",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Cystic Fibrosis",
-                    alternativeNames: ["CF"],
-                    hints: [
-                        "Child with recurrent pulmonary infections and foul-smelling steatorrhea",
-                        "Meconium ileus noted at birth",
-                        "Chloride levels >60 mEq/L in sweat test",
-                        "PHE508 deletion in the CFTR gene on chromosome 7",
-                        "Infertility in males due to bilateral absence of vas deferens"
-                    ],
-                    category: "Genetics / Pulmonology",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "DiGeorge Syndrome",
-                    alternativeNames: ["22q11.2 Deletion Syndrome"],
-                    hints: [
-                        "Neonate with hypocalcemic tetany (seizures) and cleft palate",
-                        "Absent thymic shadow on X-ray",
-                        "Recurrent viral and fungal infections (T-cell deficiency)",
-                        "Truncus arteriosus or interrupted aortic arch",
-                        "Failure of 3rd and 4th pharyngeal pouches to develop"
-                    ],
-                    category: "Immunology / Genetics",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Pheochromocytoma",
-                    alternativeNames: ["Adrenal Medulla Tumor"],
-                    hints: [
-                        "Adult with episodic 'Pounding' headache, 'Palpitations', and 'Perspiration'",
-                        "Severe hypertension that is paroxysmal",
-                        "Elevated urinary metanephrines and vanillylmandelic acid (VMA)",
-                        "Chromaffin cell tumor derived from neural crest",
-                        "Associated with MEN 2A and 2B"
-                    ],
-                    category: "Endocrinology",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Gaucher Disease",
-                    alternativeNames: ["Glucocerebrosidase Deficiency"],
-                    hints: [
-                        "Child with hepatosplenomegaly, bone pain, and pancytopenia",
-                        "Histology: Macrophages with 'crinkled paper' cytoplasm",
-                        "Most common lysosomal storage disease",
-                        "Deficiency of Glucocerebrosidase",
-                        "Accumulation of Glucocerebroside"
-                    ],
-                    category: "Genetics / Biochemistry",
-                    difficulty: 5),
-
-                MedicalCase(
-                    diagnosis: "Tay-Sachs Disease",
-                    alternativeNames: ["Hexosaminidase A Deficiency"],
-                    hints: [
-                        "6-month-old infant with developmental regression and exaggerated startle reflex",
-                        "'Cherry-red' spot on the macula",
-                        "No hepatosplenomegaly (distinguishes from Niemann-Pick)",
-                        "Lysosomes with 'onion-skin' appearance",
-                        "Deficiency of Hexosaminidase A; accumulation of GM2 ganglioside"
-                    ],
-                    category: "Genetics / Biochemistry",
-                    difficulty: 5),
-
-                MedicalCase(
-                    diagnosis: "Turner Syndrome",
-                    alternativeNames: ["45,X"],
-                    hints: [
-                        "Teenage girl with short stature and primary amenorrhea",
-                        "Webbed neck (cystic hygroma) and widely spaced nipples",
-                        "Bicuspid aortic valve or pre-ductal coarctation of the aorta",
-                        "'Streak ovaries' leading to low estrogen and high LH/FSH",
-                        "Loss of one X chromosome (non-disjunction during meiosis)"
-                    ],
-                    category: "Genetics / OBGYN",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Klinefelter Syndrome",
-                    alternativeNames: ["47,XXY"],
-                    hints: [
-                        "Tall male with small, firm testes and gynecomastia",
-                        "Infertility and increased risk of breast cancer",
-                        "Barr body present on buccal smear",
-                        "Low testosterone; elevated LH and FSH",
-                        "Dysgenesis of seminiferous tubules"
-                    ],
-                    category: "Genetics / Urology",
-                    difficulty: 3),
-
-                MedicalCase(
                     diagnosis: "Primary Hyperparathyroidism",
                     alternativeNames: ["Parathyroid Adenoma"],
                     hints: [
@@ -8238,58 +7160,6 @@ class CaseLibrary {
                         "Usually caused by a single parathyroid adenoma"
                     ],
                     category: "Endocrinology",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Wilson Disease",
-                    alternativeNames: ["Hepatolenticular Degeneration"],
-                    hints: [
-                        "Young patient with liver failure and parkinsonian tremors",
-                        "Kayser-Fleischer rings in the cornea",
-                        "Low serum ceruloplasmin; high urinary copper",
-                        "Basal ganglia atrophy (lenticular nucleus)",
-                        "Defect in ATP7B copper-transporting ATPase"
-                    ],
-                    category: "Gastroenterology / Neurology",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Multiple Myeloma",
-                    alternativeNames: ["Plasma Cell Dyscrasia"],
-                    hints: [
-                        "Elderly male with bone pain and 'punched-out' lytic lesions on X-ray",
-                        "Hypercalcemia, Renal failure, Anemia, Bone lesions (CRAB)",
-                        "M-protein spike on serum protein electrophoresis",
-                        "Bence-Jones proteins in urine (Ig light chains)",
-                        "Rouleaux formation on peripheral blood smear"
-                    ],
-                    category: "Hematology / Oncology",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Pyloric Stenosis",
-                    alternativeNames: ["Infantile Hypertrophic Pyloric Stenosis"],
-                    hints: [
-                        "3-week-old male with non-bilious, projectile vomiting",
-                        "'Olive-shaped' mass palpable in the epigastrium",
-                        "Hypochloremic, hypokalemic metabolic alkalosis",
-                        "String sign on barium swallow",
-                        "Hypertrophy of the pyloric sphincter"
-                    ],
-                    category: "Pediatrics / GI",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Goodpasture Syndrome",
-                    alternativeNames: ["Anti-GBM Disease"],
-                    hints: [
-                        "Young man with hemoptysis and hematuria",
-                        "Linear IgG and C3 deposition on glomerular basement membrane",
-                        "Type II hypersensitivity reaction",
-                        "Antibodies against alpha-3 chain of Type IV collagen",
-                        "Rapidly progressive glomerulonephritis (RPGN) with crescents"
-                    ],
-                    category: "Nephrology / Pulmonology",
                     difficulty: 4),
 
                 MedicalCase(
@@ -8306,86 +7176,8 @@ class CaseLibrary {
                     difficulty: 3),
 
                 MedicalCase(
-                    diagnosis: "Myasthenia Gravis",
-                    alternativeNames: ["MG"],
-                    hints: [
-                        "Woman with ptosis and diplopia that worsen at the end of the day",
-                        "Symptoms improve with ice pack or rest",
-                        "Antibodies against postsynaptic ACh receptors",
-                        "Associated with thymoma or thymic hyperplasia",
-                        "Edrophonium (Tensilon) test used for historical diagnosis"
-                    ],
-                    category: "Neurology / Immunology",
-                    difficulty: 2),
-
-                MedicalCase(
-                    diagnosis: "Lambert-Eaton Myasthenic Syndrome",
-                    alternativeNames: ["LEMS"],
-                    hints: [
-                        "Patient with proximal muscle weakness that improves with use",
-                        "Associated with Small Cell Lung Cancer",
-                        "Antibodies against presynaptic voltage-gated calcium channels",
-                        "Autonomic dysfunction (dry mouth, impotence)",
-                        "Minimal response to AChE inhibitors"
-                    ],
-                    category: "Neurology / Oncology",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Hemochromatosis",
-                    alternativeNames: ["Bronze Diabetes"],
-                    hints: [
-                        "Middle-aged male with skin hyperpigmentation, diabetes, and cirrhosis",
-                        "High serum iron, high ferritin, and low TIBC",
-                        "HFE gene mutation (C282Y)",
-                        "Increased risk of hepatocellular carcinoma",
-                        "Treatment involves periodic therapeutic phlebotomy"
-                    ],
-                    category: "Gastroenterology / Genetics",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Marfan Syndrome",
-                    alternativeNames: ["MFS"],
-                    hints: [
-                        "Tall patient with long fingers, pectus excavatum, and lens dislocation",
-                        "Aortic root dilation and risk of dissection",
-                        "Mitral valve prolapse (holosystolic murmur with click)",
-                        "Defect in Fibrillin-1 (FBN1) on chromosome 15",
-                        "Cystic medial necrosis of the aorta"
-                    ],
-                    category: "Genetics / Cardiology",
-                    difficulty: 2),
-
-                MedicalCase(
-                    diagnosis: "Fragile X Syndrome",
-                    alternativeNames: ["CGG Repeat Disorder"],
-                    hints: [
-                        "Male child with intellectual disability and large ears",
-                        "Macroorchidism (enlarged testes) post-puberty",
-                        "Long face with a prominent jaw",
-                        "CGG trinucleotide repeat expansion in the FMR1 gene",
-                        "X-linked dominant inheritance with anticipation"
-                    ],
-                    category: "Genetics / Psychiatry",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Neurofibromatosis Type 1",
-                    alternativeNames: ["von Recklinghausen Disease"],
-                    hints: [
-                        "Child with café-au-lait spots and axillary freckling",
-                        "Lisch nodules (pigmented hamartomas of the iris)",
-                        "Multiple cutaneous neurofibromas",
-                        "Optic gliomas and pheochromocytomas",
-                        "NF1 gene mutation on chromosome 17"
-                    ],
-                    category: "Genetics / Dermatology",
-                    difficulty: 3),
-
-                MedicalCase(
                     diagnosis: "Von Hippel-Lindau Disease",
-                    alternativeNames: ["VHL"],
+                    alternativeNames: ["VHL", "Von Hippel Lindau Disease"],
                     hints: [
                         "Patient with hemangioblastomas in the cerebellum and retina",
                         "Bilateral renal cell carcinomas (clear cell)",
@@ -8410,110 +7202,6 @@ class CaseLibrary {
                     difficulty: 3),
 
                 MedicalCase(
-                    diagnosis: "Pemphigus Vulgaris",
-                    alternativeNames: ["Acantholysis"],
-                    hints: [
-                        "Patient with painful, flaccid bullae and oral ulcers",
-                        "Positive Nikolsky sign (skin sloughs with pressure)",
-                        "Antibodies against Desmoglein-1 and Desmoglein-3",
-                        "Histology: 'Tombstone' appearance of the basal layer",
-                        "Immunofluorescence shows 'fishnet' pattern"
-                    ],
-                    category: "Dermatology",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Bullous Pemphigoid",
-                    alternativeNames: [],
-                    hints: [
-                        "Elderly patient with tense bullae; no oral involvement",
-                        "Negative Nikolsky sign",
-                        "Antibodies against hemidesmosomes (BP180/230)",
-                        "Subepidermal blisters on histology",
-                        "Immunofluorescence shows linear pattern at the epidermal-dermal junction"
-                    ],
-                    category: "Dermatology",
-                    difficulty: 3),
-
-                MedicalCase(
-                    diagnosis: "Lesch-Nyhan Syndrome",
-                    alternativeNames: ["HGPRT Deficiency"],
-                    hints: [
-                        "Male child with intellectual disability and self-mutilation (lip/finger biting)",
-                        "Orange 'sand' in the diaper (uric acid crystals)",
-                        "Gouty arthritis and choreoathetosis",
-                        "Deficiency of HGPRT (salvage pathway)",
-                        "Excessive production of uric acid"
-                    ],
-                    category: "Biochemistry / Genetics",
-                    difficulty: 5),
-
-                MedicalCase(
-                    diagnosis: "Von Gierke Disease",
-                    alternativeNames: ["GSD Type I"],
-                    hints: [
-                        "Infant with doll-like face, thin extremities, and massive hepatomegaly",
-                        "Severe fasting hypoglycemia and lactic acidosis",
-                        "Elevated uric acid (gout) and triglycerides",
-                        "Deficiency of Glucose-6-phosphatase",
-                        "Liver does not respond to glucagon"
-                    ],
-                    category: "Biochemistry",
-                    difficulty: 5),
-
-                MedicalCase(
-                    diagnosis: "Pompe Disease",
-                    alternativeNames: ["GSD Type II"],
-                    hints: [
-                        "Infant with hypertrophic cardiomyopathy and hypotonia ('floppy baby')",
-                        "Early death due to heart failure",
-                        "Deficiency of lysosomal alpha-1,4-glucosidase (acid maltase)",
-                        "PAS-positive material in lysosomes",
-                        "Pompe trashes the Pump (heart)"
-                    ],
-                    category: "Biochemistry",
-                    difficulty: 5),
-
-                MedicalCase(
-                    diagnosis: "Alkaptonuria",
-                    alternativeNames: ["Homogentisic Acid Oxidase Deficiency"],
-                    hints: [
-                        "Patient with dark connective tissue and brown-pigmented sclera",
-                        "Urine turns black when left standing",
-                        "Severe arthritis later in life",
-                        "Deficiency of homogentisate oxidase",
-                        "Disruption of tyrosine metabolism"
-                    ],
-                    category: "Biochemistry",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Galactosemia",
-                    alternativeNames: ["Classic Galactosemia"],
-                    hints: [
-                        "Neonate with jaundice, hepatomegaly, and cataracts shortly after starting milk",
-                        "Increased risk of E. coli sepsis",
-                        "Absence of galactose-1-phosphate uridyltransferase (GALT)",
-                        "Reducing substances in the urine (not glucose)",
-                        "Requires exclusion of galactose and lactose from diet"
-                    ],
-                    category: "Biochemistry / Pediatrics",
-                    difficulty: 4),
-
-                MedicalCase(
-                    diagnosis: "Wiskott-Aldrich Syndrome",
-                    alternativeNames: ["WAS"],
-                    hints: [
-                        "Male infant with eczema, recurrent infections, and small platelets",
-                        "Bleeding (thrombocytopenic purpura)",
-                        "Low IgM; high IgA and IgE",
-                        "Mutation in the WAS gene; actin cytoskeleton defect",
-                        "WATER: Wiskott-Aldrich, Thrombocytopenia, Eczema, Recurrent infections"
-                    ],
-                    category: "Immunology",
-                    difficulty: 5
-            ),
-            MedicalCase(
                 diagnosis: "Botulism",
                 alternativeNames: [],
                 hints: [

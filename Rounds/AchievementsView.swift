@@ -487,16 +487,18 @@ struct AchievementDetailSheet: View {
             }
             
             Spacer()
-            
-            Button("Done") {
+
+            Button {
                 dismiss()
+            } label: {
+                Text("Done")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundStyle(.white)
+                    .cornerRadius(12)
             }
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.blue)
-            .foregroundStyle(.white)
-            .cornerRadius(12)
             .padding(.horizontal)
             .padding(.bottom)
         }
