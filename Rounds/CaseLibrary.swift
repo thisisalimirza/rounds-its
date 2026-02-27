@@ -317,6 +317,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Acute Appendicitis",
+                diagnosisSlug: "appendicitis",
                 alternativeNames: ["Appendicitis"],
                 hints: [
                     "Teenager with periumbilical pain migrating to right lower quadrant",
@@ -395,6 +396,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Poststreptococcal Glomerulonephritis",
+                diagnosisSlug: "psgn",
                 alternativeNames: ["PSGN"],
                 hints: [
                     "Child with cola-colored urine and periorbital edema",
@@ -499,6 +501,7 @@ class CaseLibrary {
             ),
             MedicalCase(
                 diagnosis: "Temporal Arteritis",
+                diagnosisSlug: "giant-cell-arteritis",
                 alternativeNames: ["Giant Cell Arteritis", "GCA"],
                 hints: [
                     "Elderly woman with new-onset headache and jaw claudication",
@@ -1021,6 +1024,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Appendicitis",
+                diagnosisSlug: "appendicitis",
                 alternativeNames: ["Acute Appendicitis"],
                 hints: [
                     "Adolescent with periumbilical pain migrating to RLQ",
@@ -1106,6 +1110,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Polycystic Kidney Disease",
+                diagnosisSlug: "polycystic-kidney-disease",
                 alternativeNames: ["PKD", "ADPKD"],
                 hints: [
                     "Adult with bilateral flank masses and hypertension",
@@ -1219,6 +1224,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Diabetes Insipidus",
+                diagnosisSlug: "diabetes-insipidus",
                 alternativeNames: ["DI"],
                 hints: [
                     "Patient with polyuria and polydipsia",
@@ -1614,6 +1620,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Sjogren Syndrome",
+                diagnosisSlug: "sjogren-syndrome",
                 alternativeNames: ["Sjogren's"],
                 hints: [
                     "Middle-aged woman with dry eyes and dry mouth",
@@ -1642,6 +1649,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Scleroderma",
+                diagnosisSlug: "systemic-sclerosis",
                 alternativeNames: ["Systemic Sclerosis"],
                 hints: [
                     "Woman with skin thickening and Raynaud phenomenon",
@@ -2462,6 +2470,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Post-Streptococcal Glomerulonephritis",
+                diagnosisSlug: "psgn",
                 alternativeNames: ["PSGN", "Post Streptococcal Glomerulonephritis"],
                 hints: [
                     "Child with hematuria 2 weeks after pharyngitis",
@@ -2914,6 +2923,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Giant Cell Arteritis",
+                diagnosisSlug: "giant-cell-arteritis",
                 alternativeNames: ["Temporal Arteritis", "GCA"],
                 hints: [
                     "Elderly with new headache and jaw claudication",
@@ -3397,6 +3407,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Wegener Granulomatosis",
+                diagnosisSlug: "granulomatosis-with-polyangiitis",
                 alternativeNames: ["Granulomatosis with Polyangiitis", "GPA"],
                 hints: [
                     "Patient with sinusitis, hemoptysis, and hematuria",
@@ -3425,6 +3436,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Kartagener Syndrome",
+                diagnosisSlug: "kartagener-syndrome",
                 alternativeNames: ["Primary Ciliary Dyskinesia"],
                 hints: [
                     "Patient with chronic sinusitis, bronchiectasis, and infertility",
@@ -4940,6 +4952,7 @@ class CaseLibrary {
             
             MedicalCase(
                 diagnosis: "Kartagener Syndrome Ciliary Defect",
+                diagnosisSlug: "kartagener-syndrome",
                 alternativeNames: ["Primary Ciliary Dyskinesia"],
                 hints: [
                     "Patient with chronic sinusitis and bronchiectasis",
@@ -7060,6 +7073,7 @@ class CaseLibrary {
 
                 MedicalCase(
                     diagnosis: "Granulomatosis with Polyangiitis",
+                    diagnosisSlug: "granulomatosis-with-polyangiitis",
                     alternativeNames: ["Wegener Granulomatosis", "GPA"],
                     hints: [
                         "50-year-old male with chronic sinusitis and bloody sputum",
@@ -7073,6 +7087,7 @@ class CaseLibrary {
 
                 MedicalCase(
                     diagnosis: "Diabetes Insipidus (Central)",
+                    diagnosisSlug: "diabetes-insipidus",
                     alternativeNames: ["Neurogenic DI"],
                     hints: [
                         "30-year-old following head trauma with intense thirst",
@@ -7125,6 +7140,7 @@ class CaseLibrary {
 
                 MedicalCase(
                     diagnosis: "Scleroderma (Diffuse)",
+                    diagnosisSlug: "systemic-sclerosis",
                     alternativeNames: ["Systemic Sclerosis"],
                     hints: [
                         "45-year-old female with stiff, tight skin on the chest and arms",
@@ -7164,6 +7180,7 @@ class CaseLibrary {
 
                 MedicalCase(
                     diagnosis: "Polycystic Kidney Disease (ADPKD)",
+                    diagnosisSlug: "polycystic-kidney-disease",
                     alternativeNames: ["Adult PKD"],
                     hints: [
                         "40-year-old with flank pain, hematuria, and hypertension",
@@ -7190,6 +7207,7 @@ class CaseLibrary {
 
                 MedicalCase(
                     diagnosis: "Sjögren Syndrome",
+                    diagnosisSlug: "sjogren-syndrome",
                     alternativeNames: ["Sicca Syndrome"],
                     hints: [
                         "Woman with dry eyes (xerophthalmia) and dry mouth (xerostomia)",

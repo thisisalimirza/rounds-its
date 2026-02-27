@@ -14,16 +14,18 @@ import CryptoKit
 final class MedicalCase {
     var id: UUID = UUID()
     var diagnosis: String = ""
-    var alternativeNames: [String] = [] // Accept alternative spellings/names
+    var diagnosisSlug: String? // Links to DiagnosisRegistry for consolidated alternatives
+    var alternativeNames: [String] = [] // Accept alternative spellings/names (legacy, use registry when slug is set)
     var hints: [String] = [] // 5 progressive hints
     var category: String = "" // e.g., "Cardiology", "Neurology"
     var difficulty: Int = 3 // 1-5
     var dateAdded: Date = Date()
-    
-    init(diagnosis: String, alternativeNames: [String] = [], hints: [String], category: String, difficulty: Int = 3) {
+
+    init(diagnosis: String, diagnosisSlug: String? = nil, alternativeNames: [String] = [], hints: [String], category: String, difficulty: Int = 3) {
         // Generate a deterministic UUID from the diagnosis so the same case always has the same ID
         self.id = Self.deterministicID(for: diagnosis)
         self.diagnosis = diagnosis
+        self.diagnosisSlug = diagnosisSlug
         self.alternativeNames = alternativeNames
         
         // Ensure we have exactly 5 hints (pad with empty strings or truncate if needed)
@@ -60,21 +62,32 @@ final class MedicalCase {
     }
     
     func isCorrectDiagnosis(_ guess: String) -> Bool {
-        // Normalize: lowercase, trim whitespace, remove extra spaces
+        // If we have a registry slug, use the registry's comprehensive alternatives
+        if let slug = diagnosisSlug,
+           let definition = DiagnosisRegistry.find(bySlug: slug) {
+            return definition.matches(guess)
+        }
+
+        // Fallback: try to find diagnosis in registry by name (for cases without explicit slug)
+        if let definition = DiagnosisRegistry.find(byName: diagnosis) {
+            return definition.matches(guess)
+        }
+
+        // Legacy fallback for cases not in registry (backwards compatibility)
         let normalizedGuess = guess.lowercased()
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-        
+
         guard !normalizedGuess.isEmpty else { return false }
-        
+
         let normalizedDiagnosis = diagnosis.lowercased()
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-        
+
         if normalizedGuess == normalizedDiagnosis {
             return true
         }
-        
+
         // Check alternative names with same normalization
         return alternativeNames.contains { alt in
             let normalizedAlt = alt.lowercased()

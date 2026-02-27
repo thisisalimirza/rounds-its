@@ -1,21 +1,22 @@
 import Foundation
 
 public struct DiagnosisLexicon {
-    // Automatically build lexicon from all cases in CaseLibrary
+    // Build lexicon from DiagnosisRegistry canonical names (deduplicated by design)
+    // Falls back to CaseLibrary for any diagnoses not yet in registry
     public static let all: [String] = {
-        var allDiagnoses = Set<String>()
-        
-        // Get all cases from CaseLibrary
+        // Primary source: Registry canonical names (already deduplicated)
+        var allDiagnoses = Set(DiagnosisRegistry.autocompleteNames)
+
+        // Secondary: Add any diagnoses from CaseLibrary not covered by registry
+        // This ensures gradual migration - new cases work even if not in registry yet
         let cases = CaseLibrary.getSampleCases()
-        
-        // Add primary diagnosis and alternative names for each case
         for medicalCase in cases {
-            allDiagnoses.insert(medicalCase.diagnosis)
-            for altName in medicalCase.alternativeNames {
-                allDiagnoses.insert(altName)
+            // Only add if not already covered by registry lookup
+            if DiagnosisRegistry.find(byName: medicalCase.diagnosis) == nil {
+                allDiagnoses.insert(medicalCase.diagnosis)
             }
         }
-        
+
         // Return sorted array for consistent ordering
         return Array(allDiagnoses).sorted()
     }()
