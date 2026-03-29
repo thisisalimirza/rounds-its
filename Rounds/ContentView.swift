@@ -123,12 +123,10 @@ struct ContentView: View {
                             }
                             .buttonStyle(.plain)
 
-                            // Streak Pill — tap to expand full streak detail
+                            // Streak Pill — tap to open streak detail modal
                             Button {
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                                    showingStreakDetail.toggle()
-                                }
+                                showingStreakDetail = true
                             } label: {
                                 AnimatedStreakPill(streak: stats.currentStreak, freezes: stats.streakFreezesAvailable, isPro: subscriptionManager.isProUser)
                             }
@@ -161,31 +159,6 @@ struct ContentView: View {
                 }
                 .adaptiveContentWidth()
 
-                // Streak detail popover — animates in from the top-right pill
-                if showingStreakDetail {
-                    // Tap-outside-to-dismiss backdrop
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                showingStreakDetail = false
-                            }
-                        }
-                        .ignoresSafeArea()
-
-                    VStack {
-                        CompactStreakCard(stats: stats, isPro: subscriptionManager.isProUser)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 64) // clear the header row
-                        Spacer()
-                    }
-                    .transition(
-                        .asymmetric(
-                            insertion: .scale(scale: 0.3, anchor: .topTrailing).combined(with: .opacity),
-                            removal: .scale(scale: 0.3, anchor: .topTrailing).combined(with: .opacity)
-                        )
-                    )
-                }
             }
             .navigationDestination(isPresented: $showingGame) {
                 if let currentCase = currentCase {
@@ -199,6 +172,9 @@ struct ContentView: View {
                         }
                     )
                 }
+            }
+            .sheet(isPresented: $showingStreakDetail) {
+                StreakDetailView()
             }
             .sheet(isPresented: $showingStatsAnalytics) {
                 StatsAnalyticsView(isPro: subscriptionManager.isProUser, onShowPaywall: { showingPaywall = true })
@@ -1285,6 +1261,247 @@ struct StreakFreezeIndicator: View {
 }
 
 import MessageUI
+
+// MARK: - Streak Detail Modal
+struct StreakDetailView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Query private var playerStats: [PlayerStats]
+    @Query(sort: \CaseHistoryEntry.playedAt) private var historyEntries: [CaseHistoryEntry]
+
+    private var stats: PlayerStats? { playerStats.first }
+
+    // Map "yyyy-MM-dd" → case count
+    private var activityByDay: [String: Int] {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        var map: [String: Int] = [:]
+        for entry in historyEntries {
+            let key = fmt.string(from: entry.playedAt)
+            map[key, default: 0] += 1
+        }
+        return map
+    }
+
+    // 52 full weeks ending with the current week (Mon-Sun rows per column)
+    // Each column is one week: index 0 = Mon, index 6 = Sun
+    private var weeks: [[Date?]] {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.firstWeekday = 2 // Monday
+        let today = calendar.startOfDay(for: Date())
+        // Weekday offset from Monday (Mon=0, Tue=1, … Sun=6)
+        let weekdayRaw = calendar.component(.weekday, from: today) // 1=Sun..7=Sat
+        let offsetFromMonday = (weekdayRaw + 5) % 7 // Mon→0, Tue→1, … Sun→6
+
+        // The last column ends on the Sunday of the current week
+        guard let currentSunday = calendar.date(byAdding: .day, value: 6 - offsetFromMonday, to: today) else { return [] }
+
+        var result: [[Date?]] = []
+        for weekIndex in stride(from: 51, through: 0, by: -1) {
+            var week: [Date?] = Array(repeating: nil, count: 7)
+            for dayIndex in 0..<7 {
+                let daysBack = weekIndex * 7 + (6 - dayIndex)
+                if let d = calendar.date(byAdding: .day, value: -daysBack, to: currentSunday) {
+                    week[dayIndex] = d
+                }
+            }
+            result.append(week)
+        }
+        return result
+    }
+
+    // Returns list of (weekIndex, monthAbbrev) for month header labels
+    private var monthLabels: [(index: Int, text: String)] {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "MMM"
+        var labels: [(Int, String)] = []
+        var lastMonth = -1
+        for (i, week) in weeks.enumerated() {
+            if let firstDay = week.compactMap({ $0 }).first {
+                let month = Calendar.current.component(.month, from: firstDay)
+                if month != lastMonth {
+                    labels.append((i, fmt.string(from: firstDay)))
+                    lastMonth = month
+                }
+            }
+        }
+        return labels
+    }
+
+    private func cellColor(for date: Date?) -> Color {
+        guard let date else { return Color.clear }
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        let key = fmt.string(from: date)
+        let count = activityByDay[key] ?? 0
+        if date > Date() { return Color(.systemGray6) }
+        switch count {
+        case 0: return Color(.systemGray5)
+        case 1: return Color.orange.opacity(0.35)
+        case 2: return Color.orange.opacity(0.6)
+        case 3: return Color.orange.opacity(0.8)
+        default: return Color.orange
+        }
+    }
+
+    private var legendColors: [Color] {
+        [Color(.systemGray5), .orange.opacity(0.35), .orange.opacity(0.6), .orange.opacity(0.8), .orange]
+    }
+
+    private var streakMessage: String {
+        let s = stats?.currentStreak ?? 0
+        if s == 0 { return "Start today! 💪" }
+        else if s == 1 { return "Great start! 🌟" }
+        else if s < 7 { return "On fire! 🚀" }
+        else if s < 30 { return "Amazing! 🎯" }
+        else { return "Legendary! 👑" }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 28) {
+                    // ── Hero ──────────────────────────────────────────
+                    VStack(spacing: 6) {
+                        Text("🔥")
+                            .font(.system(size: 64))
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text("\(stats?.currentStreak ?? 0)")
+                                .font(.system(size: 56, weight: .bold, design: .rounded))
+                                .foregroundStyle(
+                                    LinearGradient(colors: [.orange, .red], startPoint: .leading, endPoint: .trailing)
+                                )
+                            Text("day streak")
+                                .font(.title3.weight(.medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(streakMessage)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 8)
+
+                    // ── Stats Grid ───────────────────────────────────
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                        StreakStatCell(label: "Best Streak", value: "\(stats?.maxStreak ?? 0)", icon: "crown.fill", color: .orange)
+                        StreakStatCell(label: "Total Played", value: "\(stats?.gamesPlayed ?? 0)", icon: "checkmark.circle.fill", color: .blue)
+                        StreakStatCell(label: "Win Rate", value: "\(stats?.winPercentage ?? 0)%", icon: "target", color: .green)
+                    }
+                    .padding(.horizontal, 20)
+
+                    // ── Activity Heatmap ─────────────────────────────
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Activity")
+                            .font(.headline)
+                            .padding(.horizontal, 20)
+
+                        HStack(alignment: .top, spacing: 4) {
+                            // Day-of-week labels (Mon–Sun)
+                            VStack(spacing: 0) {
+                                Text("").frame(height: 14) // spacer for month row
+                                VStack(spacing: 3) {
+                                    ForEach(Array(["M","T","W","T","F","S","S"].enumerated()), id: \.offset) { _, label in
+                                        Text(label)
+                                            .font(.system(size: 9, weight: .medium))
+                                            .foregroundStyle(.secondary)
+                                            .frame(width: 11, height: 11)
+                                    }
+                                }
+                            }
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    // Month labels row
+                                    HStack(alignment: .top, spacing: 3) {
+                                        ForEach(0..<weeks.count, id: \.self) { i in
+                                            let label = monthLabels.first(where: { $0.index == i })?.text
+                                            Text(label ?? "")
+                                                .font(.system(size: 9, weight: .medium))
+                                                .foregroundStyle(.secondary)
+                                                .frame(width: 11, height: 14, alignment: .leading)
+                                        }
+                                    }
+
+                                    // Grid cells
+                                    HStack(spacing: 3) {
+                                        ForEach(0..<weeks.count, id: \.self) { wi in
+                                            VStack(spacing: 3) {
+                                                ForEach(0..<7, id: \.self) { di in
+                                                    RoundedRectangle(cornerRadius: 2)
+                                                        .fill(cellColor(for: weeks[wi][di]))
+                                                        .frame(width: 11, height: 11)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, 4)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+
+                        // Legend
+                        HStack(spacing: 4) {
+                            Spacer()
+                            Text("Less")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                            ForEach(legendColors.indices, id: \.self) { i in
+                                RoundedRectangle(cornerRadius: 2).fill(legendColors[i]).frame(width: 11, height: 11)
+                            }
+                            Text("More")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal, 20)
+                    }
+                    .padding(.vertical, 16)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(16)
+                    .shadow(color: .black.opacity(0.05), radius: 6, y: 2)
+                    .padding(.horizontal, 20)
+
+                    Spacer(minLength: 24)
+                }
+            }
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .navigationTitle("Streak")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .fontWeight(.semibold)
+                }
+            }
+        }
+    }
+}
+
+struct StreakStatCell: View {
+    let label: String
+    let value: String
+    let icon: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundStyle(color)
+            Text(value)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .background(Color(.systemBackground))
+        .cornerRadius(14)
+        .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
+    }
+}
 
 struct FeedbackSheet: View {
     @Environment(\.dismiss) private var dismiss
