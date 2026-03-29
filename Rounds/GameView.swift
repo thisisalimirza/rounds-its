@@ -473,13 +473,24 @@ struct GameView: View {
                 studyNudgeCard
             }
 
-            // Share button - challenge a friend! (use actual hints for won games)
+            // Share buttons
             ShareResultButton(
                 won: gameSession.gameState == .won,
                 diagnosis: currentCase.diagnosis,
                 guessCount: gameSession.guesses.count,
                 hintsUsed: gameSession.gameState == .won ? gameSession.hintsRevealedAtWin : gameSession.hintsRevealed,
                 score: gameSession.score,
+                isDailyCase: isDailyCase,
+                caseID: isDailyCase ? nil : currentCase.id.uuidString
+            )
+
+            // Story card — teases 1-2 hints and challenges friends to guess
+            SocialShareButton(
+                firstHint: currentCase.hints.first ?? "",
+                secondHint: currentCase.hints.count > 1 ? currentCase.hints[1] : nil,
+                category: currentCase.category,
+                score: gameSession.score,
+                won: gameSession.gameState == .won,
                 isDailyCase: isDailyCase,
                 caseID: isDailyCase ? nil : currentCase.id.uuidString
             )

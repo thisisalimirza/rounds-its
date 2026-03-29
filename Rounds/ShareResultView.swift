@@ -171,7 +171,8 @@ struct ShareResultCard: View {
 struct ShareTextGenerator {
 
     /// Generate share text to accompany the rich share card image.
-    /// Keep it short — the image already shows score, hints grid, and the CTA.
+    /// Includes a deep link so existing users jump straight to the case,
+    /// and an App Store link so new users can download the app first.
     static func generateShareText(
         won: Bool,
         hintsUsed: Int,
@@ -185,7 +186,19 @@ struct ShareTextGenerator {
         schoolName: String? = nil
     ) -> String {
         let hook = won ? "Think you can diagnose it faster? 🩺" : "This case stumped me — can you get it? 🩺"
-        return "\(hook)\nrounds.app"
+        let appStoreLink = "apps.apple.com/app/id6740487567"
+
+        if let caseID, !isDailyCase {
+            // Non-daily: deep link opens the exact case; App Store link for new users
+            return """
+            \(hook)
+            Have Rounds? rounds://case/\(caseID)
+            New here? \(appStoreLink)
+            """
+        } else {
+            // Daily case: just open the app — today's case will be there
+            return "\(hook)\n\(appStoreLink)"
+        }
     }
 
     /// Generate a compact share text for Instagram/TikTok stories
@@ -463,6 +476,269 @@ struct CopyShareButton: View {
             .cornerRadius(8)
         }
         .animation(.easeInOut(duration: 0.2), value: copied)
+    }
+}
+
+// MARK: - Social Story Card (portrait 9:16 for Instagram Stories, TikTok, etc.)
+
+/// A mystery-case card designed for social media stories.
+/// Shows 1–2 clinical hints and the sharer's score while hiding the diagnosis,
+/// challenging viewers to guess before downloading the app.
+struct SocialStoryCard: View {
+    let firstHint: String
+    let secondHint: String?
+    let category: String
+    let score: Int
+    let won: Bool
+    let isDailyCase: Bool
+    let dailyCaseNumber: Int?
+
+    private var scoreMessage: String {
+        won ? "I scored \(score) pts — can you beat me?" : "This one stumped me 😅 can you get it?"
+    }
+
+    var body: some View {
+        ZStack {
+            // Dark gradient background — looks great in dark mode stories
+            LinearGradient(
+                colors: [
+                    Color(red: 0.04, green: 0.04, blue: 0.12),
+                    Color(red: 0.05, green: 0.11, blue: 0.30),
+                    Color(red: 0.10, green: 0.04, blue: 0.18)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            VStack(spacing: 0) {
+                // ── Header ──────────────────────────────────────────────────
+                HStack {
+                    HStack(spacing: 8) {
+                        Image(systemName: "cross.case.fill")
+                            .font(.title2)
+                            .foregroundStyle(.white)
+                        Text("Rounds")
+                            .font(.title2.bold())
+                            .foregroundStyle(.white)
+                    }
+                    Spacer()
+                    if isDailyCase, let num = dailyCaseNumber {
+                        Text("Case #\(num)")
+                            .font(.caption.bold())
+                            .foregroundStyle(.white.opacity(0.7))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 5)
+                            .background(.white.opacity(0.12))
+                            .cornerRadius(8)
+                    }
+                }
+                .padding(.horizontal, 28)
+                .padding(.top, 56)
+
+                Spacer()
+
+                // ── Challenge headline ───────────────────────────────────────
+                VStack(spacing: 10) {
+                    Text("Can you guess\nthe diagnosis?")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(.white)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(2)
+
+                    Text(category.uppercased())
+                        .font(.caption.bold())
+                        .foregroundStyle(.white.opacity(0.5))
+                        .tracking(3)
+                }
+                .padding(.horizontal, 28)
+
+                Spacer()
+
+                // ── Clue cards ───────────────────────────────────────────────
+                VStack(spacing: 10) {
+                    HintTeaseCard(number: 1, text: firstHint)
+                    if let hint2 = secondHint {
+                        HintTeaseCard(number: 2, text: hint2)
+                    }
+
+                    // Hidden diagnosis placeholder
+                    HStack(spacing: 10) {
+                        Image(systemName: "questionmark.circle.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.4))
+                        HStack(spacing: 6) {
+                            ForEach(0..<3, id: \.self) { _ in
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(.white.opacity(0.18))
+                                    .frame(height: 18)
+                            }
+                        }
+                        Image(systemName: "questionmark.circle.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(.white.opacity(0.06))
+                    .cornerRadius(12)
+
+                    Text("diagnosis hidden")
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.3))
+                        .tracking(1)
+                }
+                .padding(.horizontal, 28)
+
+                Spacer()
+
+                // ── Score badge + CTA ────────────────────────────────────────
+                VStack(spacing: 14) {
+                    HStack(spacing: 10) {
+                        Image(systemName: won ? "checkmark.seal.fill" : "xmark.seal.fill")
+                            .font(.body)
+                            .foregroundStyle(won ? Color.green : Color.red)
+                        Text(scoreMessage)
+                            .font(.subheadline.bold())
+                            .foregroundStyle(.white)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(.white.opacity(0.10))
+                    .cornerRadius(14)
+
+                    Text("Download Rounds • rounds.app")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.4))
+                }
+                .padding(.horizontal, 28)
+                .padding(.bottom, 60)
+            }
+        }
+        // Portrait 9:16 — fills an iPhone screen / Instagram Story frame
+        .frame(width: 390, height: 693)
+    }
+}
+
+struct HintTeaseCard: View {
+    let number: Int
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.blue.opacity(0.8))
+                    .frame(width: 28, height: 28)
+                Text("\(number)")
+                    .font(.caption.bold())
+                    .foregroundStyle(.white)
+            }
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(.white.opacity(0.9))
+                .multilineTextAlignment(.leading)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(.white.opacity(0.08))
+        .cornerRadius(12)
+    }
+}
+
+// MARK: - Social Story Share Button
+
+struct SocialShareButton: View {
+    let firstHint: String
+    let secondHint: String?
+    let category: String
+    let score: Int
+    let won: Bool
+    let isDailyCase: Bool
+    let caseID: String?
+
+    @State private var showingShareSheet = false
+    @State private var shareItems: [Any] = []
+
+    private var dailyCaseNumber: Int {
+        let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 1))!
+        let today = Calendar.current.startOfDay(for: Date())
+        return (Calendar.current.dateComponents([.day], from: startDate, to: today).day ?? 0) + 1
+    }
+
+    var body: some View {
+        Button {
+            buildAndShare()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "camera.fill")
+                    .font(.subheadline.weight(.semibold))
+                Text("Share to Stories")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.88, green: 0.20, blue: 0.55), // Instagram pink
+                        Color(red: 0.93, green: 0.49, blue: 0.18)  // Instagram orange
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .foregroundStyle(.white)
+            .cornerRadius(10)
+        }
+        .sheet(isPresented: $showingShareSheet) {
+            ShareSheet(items: shareItems)
+        }
+    }
+
+    @MainActor
+    private func buildAndShare() {
+        HapticManager.shared.buttonTap()
+        AnalyticsManager.shared.track("social_story_share_initiated", properties: [
+            "won": won,
+            "score": score,
+            "is_daily": isDailyCase
+        ])
+
+        let caseNum = isDailyCase ? dailyCaseNumber : nil
+        let card = SocialStoryCard(
+            firstHint: firstHint,
+            secondHint: secondHint,
+            category: category,
+            score: score,
+            won: won,
+            isDailyCase: isDailyCase,
+            dailyCaseNumber: caseNum
+        )
+
+        let renderer = ImageRenderer(content: card)
+        renderer.scale = UIScreen.main.scale
+        // 3× scale produces a crisp image at Instagram's story resolution
+        renderer.scale = 3.0
+
+        var items: [Any] = []
+        if let image = renderer.uiImage {
+            items.append(image)
+        }
+
+        // Include deep link text so the image caption auto-populates
+        let appStoreLink = "apps.apple.com/app/id6740487567"
+        if let caseID, !isDailyCase {
+            items.append("rounds://case/\(caseID)\nNew? \(appStoreLink)")
+        } else {
+            items.append(appStoreLink)
+        }
+
+        shareItems = items
+        Task { @MainActor in
+            showingShareSheet = true
+        }
     }
 }
 
