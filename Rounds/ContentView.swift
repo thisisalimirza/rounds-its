@@ -18,7 +18,7 @@ struct ContentView: View {
     @State private var currentCase: MedicalCase?
     @State private var isDailyCase = false
     @State private var showingGame = false
-    @State private var showingStats = false
+    @State private var showingStats = false // kept for any external callsites
     @State private var showingAbout = false
     @State private var showingCaseBrowser = false
     @State private var showingFeedback = false
@@ -35,6 +35,7 @@ struct ContentView: View {
     @State private var showingWhatsNew = false
     @State private var showingRoadmap = false
     @State private var showingStreakDetail = false
+    @State private var showingStatsAnalytics = false
     @StateObject private var whatsNewManager = WhatsNewManager.shared
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
@@ -95,15 +96,35 @@ struct ContentView: View {
 
                         Spacer()
 
-                        // Streak Pill — tap to expand full streak detail
-                        Button {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                                showingStreakDetail.toggle()
+                        HStack(spacing: 8) {
+                            // Badges shortcut
+                            Button {
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                showingAchievements = true
+                            } label: {
+                                Image(systemName: "medal.fill")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(.yellow)
+                                    .padding(8)
+                                    .background(
+                                        Capsule()
+                                            .fill(Color(.systemBackground))
+                                            .shadow(color: .yellow.opacity(0.25), radius: 4, y: 2)
+                                    )
                             }
-                        } label: {
-                            AnimatedStreakPill(streak: stats.currentStreak, freezes: stats.streakFreezesAvailable, isPro: subscriptionManager.isProUser)
+                            .buttonStyle(.plain)
+
+                            // Streak Pill — tap to expand full streak detail
+                            Button {
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                                    showingStreakDetail.toggle()
+                                }
+                            } label: {
+                                AnimatedStreakPill(streak: stats.currentStreak, freezes: stats.streakFreezesAvailable, isPro: subscriptionManager.isProUser)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
@@ -144,13 +165,9 @@ struct ContentView: View {
                         .ignoresSafeArea()
 
                     VStack {
-                        HStack {
-                            Spacer()
-                            CompactStreakCard(stats: stats, isPro: subscriptionManager.isProUser)
-                                .frame(maxWidth: 340)
-                                .padding(.trailing, 16)
-                                .padding(.top, 60) // clear the header row
-                        }
+                        CompactStreakCard(stats: stats, isPro: subscriptionManager.isProUser)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 64) // clear the header row
                         Spacer()
                     }
                     .transition(
@@ -174,17 +191,14 @@ struct ContentView: View {
                     )
                 }
             }
-            .sheet(isPresented: $showingStats) {
-                StatsView()
+            .sheet(isPresented: $showingStatsAnalytics) {
+                StatsAnalyticsView(isPro: subscriptionManager.isProUser, onShowPaywall: { showingPaywall = true })
             }
             .sheet(isPresented: $showingCaseHistory) {
                 CaseHistoryView()
             }
             .sheet(isPresented: $showingAchievements) {
                 AchievementsView()
-            }
-            .sheet(isPresented: $showingCategoryAnalytics) {
-                CategoryAnalyticsView()
             }
             .sheet(isPresented: $showingLeaderboard) {
                 LeaderboardView()
@@ -393,44 +407,13 @@ struct ContentView: View {
         VStack(spacing: 16) {
             Spacer()
 
-            // Stats Grid (3 items - Statistics, Analytics, History) with enhanced interactions
-            VStack(spacing: 12) {
-                HStack(spacing: 12) {
-                    EnhancedFeatureCard(
-                        icon: "chart.bar.fill",
-                        title: "Statistics",
-                        color: .blue
-                    ) {
-                        showingStats = true
-                    }
-
-                    EnhancedFeatureCard(
-                        icon: "chart.pie.fill",
-                        title: "Analytics",
-                        color: .indigo,
-                        isLocked: !subscriptionManager.isProUser
-                    ) {
-                        if subscriptionManager.isProUser {
-                            showingCategoryAnalytics = true
-                        } else {
-                            showingPaywall = true
-                        }
-                    }
-                }
-
-                EnhancedFeatureCard(
-                    icon: "clock.arrow.circlepath",
-                    title: "Case History",
-                    badgeText: (!subscriptionManager.isProUser || missedCaseEntries.isEmpty) ? nil : "\(missedCaseEntries.count) missed",
-                    color: .cyan,
-                    isLocked: !subscriptionManager.isProUser
-                ) {
-                    if subscriptionManager.isProUser {
-                        showingCaseHistory = true
-                    } else {
-                        showingPaywall = true
-                    }
-                }
+            // Stats & Analytics — combined into one card
+            EnhancedFeatureCard(
+                icon: "chart.bar.fill",
+                title: "Stats & Analytics",
+                color: .blue
+            ) {
+                showingStatsAnalytics = true
             }
             .padding(.horizontal, 20)
 
@@ -796,6 +779,62 @@ struct PunchyFeatureCard: View {
         }
         .buttonStyle(.plain)
         .opacity(isLocked ? 0.7 : 1)
+    }
+}
+
+// MARK: - Stats + Analytics Combined Modal
+
+struct StatsAnalyticsView: View {
+    let isPro: Bool
+    let onShowPaywall: () -> Void
+    @State private var selectedTab = 0
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        // Each child (StatsView / CategoryAnalyticsView) already owns its own
+        // NavigationStack + Done button, so we just wrap them in a TabView.
+        TabView(selection: $selectedTab) {
+            StatsView()
+                .tabItem { Label("Statistics", systemImage: "chart.bar.fill") }
+                .tag(0)
+
+            Group {
+                if isPro {
+                    CategoryAnalyticsView()
+                } else {
+                    NavigationStack {
+                        VStack(spacing: 20) {
+                            Spacer()
+                            Image(systemName: "chart.pie.fill")
+                                .font(.system(size: 56))
+                                .foregroundStyle(.indigo.opacity(0.6))
+                            Text("Analytics is a Pro feature")
+                                .font(.title3.bold())
+                            Text("Upgrade to see how you perform across every category.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
+                            Button("Upgrade to Pro") {
+                                dismiss()
+                                onShowPaywall()
+                            }
+                            .buttonStyle(.borderedProminent)
+                            Spacer()
+                        }
+                        .navigationTitle("Analytics")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button("Done") { dismiss() }
+                            }
+                        }
+                    }
+                }
+            }
+            .tabItem { Label("Analytics", systemImage: "chart.pie.fill") }
+            .tag(1)
+        }
     }
 }
 
