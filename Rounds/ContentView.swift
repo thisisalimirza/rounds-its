@@ -1414,9 +1414,9 @@ struct StreakDetailView: View {
                             .padding(.horizontal, 20)
 
                         HStack(alignment: .top, spacing: 4) {
-                            // Day-of-week labels (Mon–Sun), fixed to left of scroll
+                            // Day-of-week labels — fixedSize so HStack never stretches them
                             VStack(spacing: 0) {
-                                Color.clear.frame(height: 18) // aligns with month label row
+                                Color.clear.frame(height: 18) // spacer matching month label row
                                 VStack(spacing: 3) {
                                     ForEach(Array(["M","T","W","T","F","S","S"].enumerated()), id: \.offset) { _, lbl in
                                         Text(lbl)
@@ -1426,14 +1426,13 @@ struct StreakDetailView: View {
                                     }
                                 }
                             }
+                            .fixedSize(horizontal: false, vertical: true) // ← prevents vertical stretch
 
-                            // Scrollable grid — auto-scrolls to current week on appear
-                            // Column width: 12px cell + 3px spacing = 15px per week
-                            let colW: CGFloat = 15
+                            // Scrollable grid (colW = 12px cell + 3px gap = 15px per week)
                             ScrollViewReader { proxy in
                                 ScrollView(.horizontal, showsIndicators: false) {
                                     VStack(alignment: .leading, spacing: 3) {
-                                        // Month labels: ZStack overlay so text never clips
+                                        // Month labels via ZStack+offset so text is never clipped
                                         ZStack(alignment: .topLeading) {
                                             Color.clear.frame(height: 18)
                                             ForEach(monthLabels, id: \.index) { month in
@@ -1441,10 +1440,10 @@ struct StreakDetailView: View {
                                                     .font(.system(size: 9, weight: .medium))
                                                     .foregroundStyle(.secondary)
                                                     .fixedSize()
-                                                    .offset(x: CGFloat(month.index) * colW)
+                                                    .offset(x: CGFloat(month.index) * 15)
                                             }
                                         }
-                                        .frame(width: CGFloat(weeks.count) * colW)
+                                        .frame(width: CGFloat(weeks.count) * 15)
 
                                         // Cell grid
                                         HStack(spacing: 3) {
