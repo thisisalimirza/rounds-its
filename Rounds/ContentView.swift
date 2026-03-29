@@ -97,20 +97,26 @@ struct ContentView: View {
                         Spacer()
 
                         HStack(spacing: 8) {
-                            // Badges shortcut
+                            // Badges shortcut with unlocked/total count
                             Button {
                                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                 showingAchievements = true
                             } label: {
-                                Image(systemName: "medal.fill")
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundStyle(.yellow)
-                                    .padding(8)
-                                    .background(
-                                        Capsule()
-                                            .fill(Color(.systemBackground))
-                                            .shadow(color: .yellow.opacity(0.25), radius: 4, y: 2)
-                                    )
+                                HStack(spacing: 5) {
+                                    Image(systemName: "medal.fill")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(.yellow)
+                                    Text(achievementBadgeText)
+                                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(
+                                    Capsule()
+                                        .fill(Color(.systemBackground))
+                                        .shadow(color: .yellow.opacity(0.25), radius: 4, y: 2)
+                                )
                             }
                             .buttonStyle(.plain)
 
@@ -372,7 +378,7 @@ struct ContentView: View {
             }
             .padding(.horizontal, 20)
 
-            // Fun Section: Leaderboard & Badges with enhanced interactions
+            // Secondary row: Leaderboard + Case History
             HStack(spacing: 12) {
                 EnhancedFeatureCard(
                     icon: "trophy.fill",
@@ -398,24 +404,80 @@ struct ContentView: View {
             }
             .padding(.horizontal, 20)
 
+            // Tertiary: Stats & Analytics — smaller, full-width, lower visual weight
+            Button {
+                showingStatsAnalytics = true
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "chart.bar.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.blue)
+                    Text("Stats & Analytics")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color(.systemBackground))
+                .cornerRadius(12)
+                .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 20)
+
             Spacer()
         }
     }
 
-    // MARK: - Progress Tab Content
+    // MARK: - Train Tab Content
     private var progressTabContent: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 24) {
             Spacer()
 
-            // Stats & Analytics — combined into one card
-            EnhancedFeatureCard(
-                icon: "chart.bar.fill",
-                title: "Stats & Analytics",
-                color: .blue
-            ) {
-                showingStatsAnalytics = true
+            // Coming soon section
+            VStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.blue.opacity(0.15), Color.purple.opacity(0.15)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 80, height: 80)
+                    Image(systemName: "dumbbell.fill")
+                        .font(.system(size: 34))
+                        .foregroundStyle(
+                            LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
+                        )
+                }
+
+                VStack(spacing: 8) {
+                    Text("New Game Modes")
+                        .font(.title2.bold())
+                    Text("We're building focused training modes to help you practice timed diagnosis, weak categories, and spaced repetition — all designed to get you exam-ready faster.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 8)
+                }
+
+                Text("Coming Soon")
+                    .font(.caption.bold())
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 6)
+                    .background(
+                        LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
+                    )
+                    .cornerRadius(20)
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 32)
 
             Spacer()
         }
@@ -541,13 +603,13 @@ struct ContentView: View {
 // MARK: - Home Tab Enum
 enum HomeTab: String, CaseIterable {
     case play = "Play"
-    case progress = "Progress"
+    case progress = "Train"
     case more = "More"
 
     var icon: String {
         switch self {
         case .play: return "play.circle.fill"
-        case .progress: return "chart.line.uptrend.xyaxis"
+        case .progress: return "dumbbell.fill"
         case .more: return "ellipsis.circle.fill"
         }
     }
