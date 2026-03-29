@@ -112,6 +112,8 @@ struct ContentView: View {
                                     Text(achievementBadgeText)
                                         .font(.system(size: 13, weight: .bold, design: .rounded))
                                         .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                        .fixedSize()
                                 }
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
