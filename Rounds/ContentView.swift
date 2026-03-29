@@ -34,6 +34,7 @@ struct ContentView: View {
     @State private var streakRecoveryChecked = false
     @State private var showingWhatsNew = false
     @State private var showingRoadmap = false
+    @State private var showingStreakDetail = false
     @StateObject private var whatsNewManager = WhatsNewManager.shared
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
@@ -94,8 +95,15 @@ struct ContentView: View {
 
                         Spacer()
 
-                        // Streak Pill with animated fire effect
-                        AnimatedStreakPill(streak: stats.currentStreak, freezes: stats.streakFreezesAvailable, isPro: subscriptionManager.isProUser)
+                        // Streak Pill — tap to expand full streak detail
+                        Button {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                                showingStreakDetail.toggle()
+                            }
+                        } label: {
+                            AnimatedStreakPill(streak: stats.currentStreak, freezes: stats.streakFreezesAvailable, isPro: subscriptionManager.isProUser)
+                        }
+                        .buttonStyle(.plain)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
@@ -122,6 +130,36 @@ struct ContentView: View {
                         .padding(.bottom, 8)
                 }
                 .adaptiveContentWidth()
+
+                // Streak detail popover — animates in from the top-right pill
+                if showingStreakDetail {
+                    // Tap-outside-to-dismiss backdrop
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                showingStreakDetail = false
+                            }
+                        }
+                        .ignoresSafeArea()
+
+                    VStack {
+                        HStack {
+                            Spacer()
+                            CompactStreakCard(stats: stats, isPro: subscriptionManager.isProUser)
+                                .frame(maxWidth: 340)
+                                .padding(.trailing, 16)
+                                .padding(.top, 60) // clear the header row
+                        }
+                        Spacer()
+                    }
+                    .transition(
+                        .asymmetric(
+                            insertion: .scale(scale: 0.3, anchor: .topTrailing).combined(with: .opacity),
+                            removal: .scale(scale: 0.3, anchor: .topTrailing).combined(with: .opacity)
+                        )
+                    )
+                }
             }
             .navigationDestination(isPresented: $showingGame) {
                 if let currentCase = currentCase {
@@ -331,12 +369,17 @@ struct ContentView: View {
                 }
 
                 EnhancedFeatureCard(
-                    icon: "medal.fill",
-                    title: "Badges",
-                    badgeText: achievementBadgeText,
-                    color: .yellow
+                    icon: "clock.arrow.circlepath",
+                    title: "Case History",
+                    badgeText: (!subscriptionManager.isProUser || missedCaseEntries.isEmpty) ? nil : "\(missedCaseEntries.count) missed",
+                    color: .cyan,
+                    isLocked: !subscriptionManager.isProUser
                 ) {
-                    showingAchievements = true
+                    if subscriptionManager.isProUser {
+                        showingCaseHistory = true
+                    } else {
+                        showingPaywall = true
+                    }
                 }
             }
             .padding(.horizontal, 20)
@@ -349,11 +392,6 @@ struct ContentView: View {
     private var progressTabContent: some View {
         VStack(spacing: 16) {
             Spacer()
-
-            // Compact Streak Display with subtle breathing animation
-            CompactStreakCard(stats: stats, isPro: subscriptionManager.isProUser)
-                .breathing(intensity: 0.01, duration: 3.0)
-                .padding(.horizontal, 20)
 
             // Stats Grid (3 items - Statistics, Analytics, History) with enhanced interactions
             VStack(spacing: 12) {
