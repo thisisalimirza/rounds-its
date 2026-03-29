@@ -170,7 +170,8 @@ struct ShareResultCard: View {
 // MARK: - Share Text Generator
 struct ShareTextGenerator {
 
-    /// Generate share text with optional streak and rank info for viral sharing
+    /// Generate share text to accompany the rich share card image.
+    /// Keep it short — the image already shows score, hints grid, and the CTA.
     static func generateShareText(
         won: Bool,
         hintsUsed: Int,
@@ -183,63 +184,8 @@ struct ShareTextGenerator {
         schoolRank: Int? = nil,
         schoolName: String? = nil
     ) -> String {
-        // Wordle-style grid: 🟩 = unused hints (good), 🟥 = used hints
-        // Fewer red squares = better performance (more intuitive)
-        let usedSquares = String(repeating: "🟥", count: min(hintsUsed, 5))
-        let unusedSquares = String(repeating: "🟩", count: max(0, 5 - hintsUsed))
-        let hintGrid = usedSquares + unusedSquares
-
-        var text = "🩺 Rounds"
-
-        if isDailyCase, let caseNum = dailyCaseNumber {
-            text += " #\(caseNum)"
-        }
-
-        text += "\n\n"
-        text += hintGrid
-
-        if won {
-            text += " \(score)pts"
-
-            // Add streak for bragging rights
-            if let streak = streak, streak > 1 {
-                text += " 🔥\(streak)"
-            }
-
-            text += "\n\n"
-
-            // Performance message based on hints
-            switch hintsUsed {
-            case 1:
-                text += "💎 First-hint diagnosis!"
-            case 2:
-                text += "🔥 Solved in 2 hints!"
-            case 3:
-                text += "⭐️ Got it in 3!"
-            case 4:
-                text += "✨ Figured it out!"
-            default:
-                text += "✅ Diagnosed!"
-            }
-
-            // Add school rank if impressive (top 10)
-            if let rank = schoolRank, rank <= 10, let school = schoolName {
-                text += "\n📊 #\(rank) at \(school)"
-            }
-        } else {
-            text += "\n\n❌ This one stumped me"
-        }
-
-        text += "\n\nCan you beat my score?"
-
-        // Add app link
-        if isDailyCase {
-            text += "\n🔗 apps.apple.com/app/id6740487567"
-        } else if let caseID = caseID {
-            text += "\n🔗 rounds://case/\(caseID)"
-        }
-
-        return text
+        let hook = won ? "Think you can diagnose it faster? 🩺" : "This case stumped me — can you get it? 🩺"
+        return "\(hook)\nrounds.app"
     }
 
     /// Generate a compact share text for Instagram/TikTok stories
