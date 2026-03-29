@@ -236,8 +236,18 @@ struct ContentView: View {
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
-                // Also check when app becomes active (in case opened via URL while running)
+                // Check for deep linked case
                 checkForDeepLinkedCase()
+                // Reschedule notifications with fresh context every time the app comes to foreground.
+                // This ensures the message reflects today's actual play state and streak.
+                SmartNotificationManager.shared.clearBadge()
+                if let stats = playerStats.first {
+                    let context = SmartNotificationManager.buildContext(
+                        from: stats,
+                        achievements: achievementProgressList.first
+                    )
+                    SmartNotificationManager.shared.rescheduleAll(context: context)
+                }
             }
         }
     }

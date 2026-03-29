@@ -82,12 +82,28 @@ class SmartNotificationManager {
 
     private let center = UNUserNotificationCenter.current()
     private let dailyIdentifier = "rounds.daily.smart"
+    private let morningTeaserIdentifier = "rounds.morning.teaser"
+    private let streakRescueIdentifier = "rounds.streak.rescue"
 
     // UserDefaults keys
     private let intensityKey = "notification_intensity"
     private let lastMessageIndexKey = "notification_lastMessageIndex"
+    // Reminder time keys — same keys used by AboutView's @AppStorage so they stay in sync
+    private let reminderHourKey = "dailyReminderHour"
+    private let reminderMinuteKey = "dailyReminderMinute"
 
     private init() {}
+
+    // MARK: - Stored Reminder Time
+
+    var reminderHour: Int {
+        let stored = UserDefaults.standard.object(forKey: reminderHourKey)
+        return (stored as? Int) ?? 19
+    }
+
+    var reminderMinute: Int {
+        return UserDefaults.standard.integer(forKey: reminderMinuteKey)
+    }
 
     // MARK: - Public Interface
 
@@ -112,40 +128,174 @@ class SmartNotificationManager {
         }
     }
 
-    /// Schedule smart daily notification with context-aware messaging
+    /// Schedule smart daily notification with context-aware messaging.
+    /// Persists the user's chosen reminder time and delegates to rescheduleAll.
     func scheduleSmartReminder(
         hour: Int = 19,
         minute: Int = 0,
         context: NotificationContext? = nil
     ) {
-        // Remove existing
-        center.removePendingNotificationRequests(withIdentifiers: [dailyIdentifier])
+        // Persist the user's chosen time (same keys as AboutView's @AppStorage)
+        UserDefaults.standard.set(hour, forKey: reminderHourKey)
+        UserDefaults.standard.set(minute, forKey: reminderMinuteKey)
 
-        let content = UNMutableNotificationContent()
-        let message = generateMessage(context: context, intensity: currentIntensity)
+        if let context = context {
+            rescheduleAll(context: context)
+        } else {
+            // No context yet (e.g. during onboarding): fall back to a simple generic repeating
+            // notification. It will be replaced with context-aware scheduling on first app open.
+            cancelTodaysReminders()
+            let content = UNMutableNotificationContent()
+            let message = getGenericMessage(intensity: currentIntensity)
+            content.title = message.title
+            content.body = message.body
+            content.sound = .default
+            var dc = DateComponents()
+            dc.hour = hour
+            dc.minute = minute
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dc, repeats: true)
+            let request = UNNotificationRequest(identifier: dailyIdentifier, content: content, trigger: trigger)
+            center.add(request)
+        }
+    }
 
-        content.title = message.title
-        content.body = message.body
-        content.sound = .default
-        content.badge = 1
+    // MARK: - Main Rescheduling API
 
-        // Add category for potential future actions
-        content.categoryIdentifier = "DAILY_REMINDER"
+    /// Reschedule all daily reminders using the latest player context.
+    /// Call this every time the app comes to foreground and after the user completes a game.
+    func rescheduleAll(context: NotificationContext) {
+        cancelTodaysReminders()
 
-        var dateComponents = DateComponents()
-        dateComponents.hour = hour
-        dateComponents.minute = minute
+        let hour = reminderHour
+        let minute = reminderMinute
+        let now = Date()
+        let calendar = Calendar.current
 
-        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-        let request = UNNotificationRequest(identifier: dailyIdentifier, content: content, trigger: trigger)
+        // --- TODAY ---
+        // Only schedule today's notifications if the user hasn't already played today.
+        if !context.hasPlayedToday {
+            // 1. Morning teaser at 8 am — gentle nudge that today's case is live
+            scheduleNotificationForToday(
+                identifier: morningTeaserIdentifier,
+                hour: 8, minute: 0,
+                content: makeMorningTeaserContent(context: context)
+            )
 
-        center.add(request) { error in
-            if let error = error {
-                print("SmartNotificationManager: Failed to schedule - \(error)")
-            } else {
-                print("SmartNotificationManager: Scheduled smart reminder for \(hour):\(String(format: "%02d", minute))")
+            // 2. Main evening reminder at user's chosen time
+            scheduleNotificationForToday(
+                identifier: dailyIdentifier,
+                hour: hour, minute: minute,
+                content: generateMessage(context: context, intensity: currentIntensity)
+            )
+
+            // 3. Streak rescue at 9:30 pm — high urgency, only when streak is at risk
+            if context.currentStreak > 0 {
+                scheduleNotificationForToday(
+                    identifier: streakRescueIdentifier,
+                    hour: 21, minute: 30,
+                    content: makeStreakRescueContent(streak: context.currentStreak)
+                )
             }
         }
+
+        // --- NEXT 6 DAYS ---
+        // Pre-schedule so the user gets reminded even if they never open the app.
+        // Context is projected forward: daysSinceLastPlay escalates naturally to win-back tone.
+        for daysAhead in 1...6 {
+            guard let futureDay = calendar.date(
+                byAdding: .day, value: daysAhead,
+                to: calendar.startOfDay(for: now)
+            ) else { continue }
+
+            let projectedDaysSince = context.hasPlayedToday
+                ? daysAhead
+                : (context.daysSinceLastPlay + daysAhead)
+
+            let futureContext = NotificationContext(
+                currentStreak: context.currentStreak,
+                maxStreak: context.maxStreak,
+                gamesPlayed: context.gamesPlayed,
+                gamesWon: context.gamesWon,
+                daysSinceLastPlay: projectedDaysSince,
+                hasPlayedToday: false,
+                unlockedAchievements: context.unlockedAchievements,
+                totalAchievements: context.totalAchievements
+            )
+
+            let message = generateMessage(context: futureContext, intensity: currentIntensity)
+            var dc = calendar.dateComponents([.year, .month, .day], from: futureDay)
+            dc.hour = hour
+            dc.minute = minute
+
+            guard let fireDate = calendar.date(from: dc), fireDate > now else { continue }
+
+            let notifContent = UNMutableNotificationContent()
+            notifContent.title = message.title
+            notifContent.body = message.body
+            notifContent.sound = .default
+
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dc, repeats: false)
+            let request = UNNotificationRequest(
+                identifier: "rounds.future.\(daysAhead)",
+                content: notifContent,
+                trigger: trigger
+            )
+            center.add(request)
+        }
+
+        print("SmartNotificationManager: Rescheduled — hasPlayedToday=\(context.hasPlayedToday), streak=\(context.currentStreak), reminder=\(hour):\(String(format: "%02d", minute))")
+    }
+
+    /// Cancel today's reminder notifications (morning teaser, main nudge, streak rescue, and
+    /// any pre-scheduled future-day reminders). Leaves competitive/streak-warning notifications alone.
+    func cancelTodaysReminders() {
+        var ids = [morningTeaserIdentifier, dailyIdentifier, streakRescueIdentifier]
+        ids += (1...6).map { "rounds.future.\($0)" }
+        center.removePendingNotificationRequests(withIdentifiers: ids)
+    }
+
+    // MARK: - Private Scheduling Helpers
+
+    /// Schedule a one-shot notification for today at the given hour:minute.
+    /// Does nothing if that time has already passed today.
+    private func scheduleNotificationForToday(
+        identifier: String,
+        hour: Int,
+        minute: Int,
+        content: (title: String, body: String)
+    ) {
+        let now = Date()
+        let calendar = Calendar.current
+        var dc = calendar.dateComponents([.year, .month, .day], from: now)
+        dc.hour = hour
+        dc.minute = minute
+        dc.second = 0
+
+        guard let fireDate = calendar.date(from: dc), fireDate > now else { return }
+
+        let notifContent = UNMutableNotificationContent()
+        notifContent.title = content.title
+        notifContent.body = content.body
+        notifContent.sound = .default
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dc, repeats: false)
+        let request = UNNotificationRequest(identifier: identifier, content: notifContent, trigger: trigger)
+        center.add(request)
+    }
+
+    private func makeMorningTeaserContent(context: NotificationContext) -> (title: String, body: String) {
+        if context.currentStreak > 0 {
+            return ("🏥 Today's case is live", "Keep your \(context.currentStreak)-day streak going — a quick diagnosis before rounds?")
+        } else {
+            return ("🏥 New case available", "Today's medical mystery is waiting. Can you solve it?")
+        }
+    }
+
+    private func makeStreakRescueContent(streak: Int) -> (title: String, body: String) {
+        return (
+            "⚠️ Streak rescue — \(streak) days at risk!",
+            "Midnight is coming. 5 minutes is all it takes — don't lose your streak now."
+        )
     }
 
     /// Schedule a one-time notification (for streak warnings, achievements, etc.)
@@ -206,16 +356,14 @@ class SmartNotificationManager {
     // MARK: - Message Generation
 
     private func generateMessage(context: NotificationContext?, intensity: NotificationIntensity) -> (title: String, body: String) {
-        // If no context, use generic messages
         guard let ctx = context else {
             return getGenericMessage(intensity: intensity)
         }
 
-        // Choose message based on context
+        // NOTE: hasPlayedToday is intentionally NOT used here. When the user has already played
+        // today we cancel notifications instead of sending an irrelevant "great job" message.
         if ctx.daysSinceLastPlay >= 3 {
             return getWinBackMessage(context: ctx, intensity: intensity)
-        } else if ctx.hasPlayedToday {
-            return getAlreadyPlayedMessage(context: ctx)
         } else if ctx.currentStreak > 0 {
             return getStreakMessage(context: ctx, intensity: intensity)
         } else {

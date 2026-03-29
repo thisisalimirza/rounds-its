@@ -720,19 +720,26 @@ struct GameView: View {
             
             // Check achievements
             checkAchievements(stats: stats, won: won, hintsUsed: actualHintsUsed)
+
+            // User played — cancel today's reminders immediately so they don't get
+            // irrelevant nudges for the rest of the day.
+            SmartNotificationManager.shared.cancelTodaysReminders()
         } else {
             let newStats = PlayerStats()
             newStats.recordGame(won: won, guessCount: gameSession.guesses.count, score: gameSession.score, isPro: isPro)
-            
+
             // Mark daily case as completed
             if isDailyCase {
                 newStats.markDailyCaseCompleted()
             }
-            
+
             modelContext.insert(newStats)
-            
+
             // Check achievements for new stats
             checkAchievements(stats: newStats, won: won, hintsUsed: actualHintsUsed)
+
+            // Cancel today's reminders for new player too
+            SmartNotificationManager.shared.cancelTodaysReminders()
         }
         
         // Save to case history - use actual hints used
