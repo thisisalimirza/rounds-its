@@ -247,6 +247,12 @@ struct ContentView: View {
                         achievements: achievementProgressList.first
                     )
                     SmartNotificationManager.shared.rescheduleAll(context: context)
+                    // Refresh the Monday recap so its copy stays current (streak count, rank, etc.)
+                    let schoolRank = SmartNotificationManager.shared.getPreviousRank()?.rank
+                    SmartNotificationManager.shared.scheduleWeeklyRecap(
+                        streak: stats.currentStreak,
+                        schoolRank: schoolRank
+                    )
                 }
             }
         }

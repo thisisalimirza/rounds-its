@@ -18,6 +18,8 @@ struct LeaderboardView: View {
     @State private var viewMode: LeaderboardViewMode = .individuals
     @State private var showingProfileSetup = false
     @State private var isRefreshing = false
+    @State private var showingInvitePrompt = false
+    @State private var joinedSchoolName: String = ""
 
     private var profile: LeaderboardProfile? {
         profiles.first
@@ -80,8 +82,17 @@ struct LeaderboardView: View {
                         }
                         // Then fetch the leaderboard to show updated data
                         await fetchLeaderboard(for: selectedScope, profile: newProfile)
+
+                        // Prompt new member to invite classmates — leaderboards are more
+                        // fun (and useful) when the whole class is competing.
+                        joinedSchoolName = newProfile.schoolName
+                        showingInvitePrompt = true
                     }
                 }
+            }
+            .sheet(isPresented: $showingInvitePrompt) {
+                LeaderboardInvitePromptView(schoolName: joinedSchoolName)
+                    .presentationDetents([.medium])
             }
         }
     }
@@ -642,6 +653,100 @@ struct SchoolLeaderboardRow: View {
         case 2: return Color(.systemGray)
         case 3: return .orange
         default: return Color(.systemGray5)
+        }
+    }
+}
+
+// MARK: - Leaderboard Invite Prompt
+
+/// Shown immediately after a user joins the leaderboard.
+/// The pitch is self-interested: more classmates = a leaderboard worth competing on.
+struct LeaderboardInvitePromptView: View {
+    @Environment(\.dismiss) private var dismiss
+    let schoolName: String
+
+    @State private var showingShareSheet = false
+
+    private var inviteText: String {
+        """
+        I just joined Rounds — a daily medical diagnosis game for med students. \
+        Challenge me on the \(schoolName) leaderboard 🩺
+        Download it: https://apps.apple.com/app/id6740487567
+        """
+    }
+
+    var body: some View {
+        VStack(spacing: 24) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.blue.opacity(0.15), .purple.opacity(0.15)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 80, height: 80)
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: 32))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.blue, .purple],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+            }
+
+            VStack(spacing: 8) {
+                Text("You're on the leaderboard!")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .multilineTextAlignment(.center)
+
+                Text("A leaderboard is more fun when your whole class is competing. Invite classmates to \(schoolName) and actually fight for #1.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 8)
+            }
+
+            // Invite button
+            Button {
+                showingShareSheet = true
+                AnalyticsManager.shared.track("leaderboard_invite_tapped", properties: [
+                    "school": schoolName
+                ])
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "paperplane.fill")
+                    Text("Invite Classmates")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    LinearGradient(
+                        colors: [.blue, .purple],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .foregroundStyle(.white)
+                .cornerRadius(12)
+            }
+
+            Button("Maybe later") {
+                dismiss()
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        }
+        .padding(28)
+        .sheet(isPresented: $showingShareSheet) {
+            ShareSheet(text: inviteText)
+                .presentationDetents([.medium])
         }
     }
 }

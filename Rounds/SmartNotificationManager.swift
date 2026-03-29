@@ -316,6 +316,50 @@ class SmartNotificationManager {
         center.add(request)
     }
 
+    /// Schedule (or refresh) a weekly Monday-morning recap notification.
+    /// Call this every time the app comes to foreground so the content stays current.
+    /// Only fires if the user has played in the last 14 days — lapser win-back is
+    /// handled by the daily pre-scheduled reminders instead.
+    func scheduleWeeklyRecap(streak: Int, schoolRank: Int? = nil) {
+        let identifier = "rounds.weekly.recap"
+        center.removePendingNotificationRequests(withIdentifiers: [identifier])
+
+        let content = UNMutableNotificationContent()
+        content.sound = .default
+
+        if streak > 0 {
+            content.title = "📊 Your weekly Rounds recap"
+            var body = "\(streak)-day streak and counting"
+            if let rank = schoolRank, rank <= 20 {
+                body += " — you're #\(rank) at your school"
+            }
+            body += ". This week's cases await."
+            content.body = body
+        } else {
+            content.title = "📊 New week, fresh start 🩺"
+            content.body = "A new week means a new streak. Today's case is ready — can you solve it?"
+        }
+
+        // Fire on the next Monday at 8 am (specific date so content is refreshed on each app open)
+        let now = Date()
+        let calendar = Calendar.current
+        var mondayComponents = DateComponents()
+        mondayComponents.weekday = 2 // Monday
+        mondayComponents.hour = 8
+        mondayComponents.minute = 0
+
+        guard let nextMonday = calendar.nextDate(
+            after: now,
+            matching: mondayComponents,
+            matchingPolicy: .nextTime
+        ) else { return }
+
+        let fireComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: nextMonday)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: fireComponents, repeats: false)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        center.add(request)
+    }
+
     /// Schedule streak warning notification for evening before streak expires
     func scheduleStreakWarning(currentStreak: Int, hour: Int = 21) {
         guard currentStreak > 0 else { return }

@@ -78,17 +78,27 @@ class ShareManager {
     }
 }
 
-// SwiftUI wrapper
+// SwiftUI wrapper — accepts any mix of share items (text, UIImage, URL, etc.)
 struct ShareSheet: UIViewControllerRepresentable {
-    let text: String
-    
+    let items: [Any]
+
+    /// Convenience init for plain-text-only shares
+    init(text: String) {
+        self.items = [text]
+    }
+
+    /// Full init for rich shares (e.g. UIImage + text)
+    init(items: [Any]) {
+        self.items = items
+    }
+
     func makeUIViewController(context: Context) -> UIActivityViewController {
         let activityVC = UIActivityViewController(
-            activityItems: [text],
+            activityItems: items,
             applicationActivities: nil
         )
         return activityVC
     }
-    
+
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

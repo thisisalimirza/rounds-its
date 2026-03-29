@@ -290,9 +290,9 @@ struct ShareResultButton: View {
     var schoolName: String? = nil
 
     @State private var showingShareSheet = false
+    @State private var shareItems: [Any] = []
 
     private var dailyCaseNumber: Int {
-        // Calculate day number since Jan 1, 2025
         let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 1))!
         let today = Calendar.current.startOfDay(for: Date())
         let daysSinceStart = Calendar.current.dateComponents([.day], from: startDate, to: today).day ?? 0
@@ -301,16 +301,7 @@ struct ShareResultButton: View {
 
     var body: some View {
         Button {
-            showingShareSheet = true
-            HapticManager.shared.buttonTap()
-            // Track share with more context
-            AnalyticsManager.shared.track("share_initiated", properties: [
-                "won": won,
-                "score": score,
-                "hints_used": hintsUsed,
-                "streak": streak ?? 0,
-                "has_school_rank": schoolRank != nil
-            ])
+            buildShareItemsAndPresent()
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "paperplane.fill")
@@ -332,20 +323,59 @@ struct ShareResultButton: View {
             .cornerRadius(10)
         }
         .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(text: ShareTextGenerator.generateShareText(
-                won: won,
-                hintsUsed: hintsUsed,
-                score: score,
-                guessCount: guessCount,
-                isDailyCase: isDailyCase,
-                dailyCaseNumber: isDailyCase ? dailyCaseNumber : nil,
-                caseID: caseID,
-                streak: streak,
-                schoolRank: schoolRank,
-                schoolName: schoolName
-            ))
-            .presentationDetents([.medium])
+            ShareSheet(items: shareItems)
+                .presentationDetents([.medium])
         }
+    }
+
+    @MainActor
+    private func buildShareItemsAndPresent() {
+        HapticManager.shared.buttonTap()
+        AnalyticsManager.shared.track("share_initiated", properties: [
+            "won": won,
+            "score": score,
+            "hints_used": hintsUsed,
+            "streak": streak ?? 0,
+            "has_school_rank": schoolRank != nil
+        ])
+
+        let caseNum = isDailyCase ? dailyCaseNumber : nil
+        let text = ShareTextGenerator.generateShareText(
+            won: won,
+            hintsUsed: hintsUsed,
+            score: score,
+            guessCount: guessCount,
+            isDailyCase: isDailyCase,
+            dailyCaseNumber: caseNum,
+            caseID: caseID,
+            streak: streak,
+            schoolRank: schoolRank,
+            schoolName: schoolName
+        )
+
+        // Render the card to a UIImage so receivers see a rich visual alongside the text
+        let card = ShareResultCard(
+            won: won,
+            diagnosis: diagnosis,
+            guessCount: guessCount,
+            hintsUsed: hintsUsed,
+            score: score,
+            isDailyCase: isDailyCase,
+            dailyCaseNumber: caseNum,
+            streak: streak,
+            schoolRank: schoolRank,
+            schoolName: schoolName
+        )
+        let renderer = ImageRenderer(content: card.environment(\.colorScheme, .light))
+        renderer.scale = UIScreen.main.scale
+        // Image first so messaging apps (iMessage, WhatsApp) use it as the preview thumbnail
+        if let image = renderer.uiImage {
+            shareItems = [image, text]
+        } else {
+            shareItems = [text]
+        }
+
+        showingShareSheet = true
     }
 }
 
@@ -360,8 +390,11 @@ struct CompactShareButton: View {
     var streak: Int? = nil
     var schoolRank: Int? = nil
     var schoolName: String? = nil
+    // diagnosis is needed to render the card image
+    var diagnosis: String = ""
 
     @State private var showingShareSheet = false
+    @State private var shareItems: [Any] = []
 
     private var dailyCaseNumber: Int {
         let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 1))!
@@ -372,32 +405,61 @@ struct CompactShareButton: View {
 
     var body: some View {
         Button {
-            showingShareSheet = true
-            HapticManager.shared.buttonTap()
-            AnalyticsManager.shared.track("share_initiated", properties: [
-                "won": won,
-                "score": score,
-                "source": "compact_button"
-            ])
+            buildShareItemsAndPresent()
         } label: {
             Image(systemName: "square.and.arrow.up")
                 .font(.body.weight(.medium))
         }
         .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(text: ShareTextGenerator.generateShareText(
-                won: won,
-                hintsUsed: hintsUsed,
-                score: score,
-                guessCount: guessCount,
-                isDailyCase: isDailyCase,
-                dailyCaseNumber: isDailyCase ? dailyCaseNumber : nil,
-                caseID: caseID,
-                streak: streak,
-                schoolRank: schoolRank,
-                schoolName: schoolName
-            ))
-            .presentationDetents([.medium])
+            ShareSheet(items: shareItems)
+                .presentationDetents([.medium])
         }
+    }
+
+    @MainActor
+    private func buildShareItemsAndPresent() {
+        HapticManager.shared.buttonTap()
+        AnalyticsManager.shared.track("share_initiated", properties: [
+            "won": won,
+            "score": score,
+            "source": "compact_button"
+        ])
+
+        let caseNum = isDailyCase ? dailyCaseNumber : nil
+        let text = ShareTextGenerator.generateShareText(
+            won: won,
+            hintsUsed: hintsUsed,
+            score: score,
+            guessCount: guessCount,
+            isDailyCase: isDailyCase,
+            dailyCaseNumber: caseNum,
+            caseID: caseID,
+            streak: streak,
+            schoolRank: schoolRank,
+            schoolName: schoolName
+        )
+
+        let card = ShareResultCard(
+            won: won,
+            diagnosis: diagnosis,
+            guessCount: guessCount,
+            hintsUsed: hintsUsed,
+            score: score,
+            isDailyCase: isDailyCase,
+            dailyCaseNumber: caseNum,
+            streak: streak,
+            schoolRank: schoolRank,
+            schoolName: schoolName
+        )
+        let renderer = ImageRenderer(content: card.environment(\.colorScheme, .light))
+        renderer.scale = UIScreen.main.scale
+        if let image = renderer.uiImage {
+            shareItems = [image, text]
+        } else {
+            shareItems = [text]
+        }
+
+        showingShareSheet = true
     }
 }
 
