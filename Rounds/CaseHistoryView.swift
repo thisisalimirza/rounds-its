@@ -58,14 +58,6 @@ struct CaseHistoryView: View {
                 // Filter Picker
                 filterPicker
 
-                // Study list framing — shown when browsing missed cases so the
-                // educational value of this view is immediately obvious.
-                if selectedFilter == .incorrect && !filteredEntries.isEmpty {
-                    studyListBanner
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-                }
-
                 // History List
                 if filteredEntries.isEmpty {
                     emptyStateView
@@ -167,6 +159,16 @@ struct CaseHistoryView: View {
     
     private var historyList: some View {
         List {
+            // Study list banner scrolls with content (not sticky)
+            if selectedFilter == .incorrect {
+                Section {
+                    studyListBanner
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                }
+            }
+
             ForEach(filteredEntries) { entry in
                 Button {
                     selectedEntry = entry
