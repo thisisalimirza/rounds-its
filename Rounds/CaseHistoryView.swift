@@ -57,7 +57,15 @@ struct CaseHistoryView: View {
                 
                 // Filter Picker
                 filterPicker
-                
+
+                // Study list framing — shown when browsing missed cases so the
+                // educational value of this view is immediately obvious.
+                if selectedFilter == .incorrect && !filteredEntries.isEmpty {
+                    studyListBanner
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                }
+
                 // History List
                 if filteredEntries.isEmpty {
                     emptyStateView
@@ -218,8 +226,36 @@ struct CaseHistoryView: View {
         switch selectedFilter {
         case .all: return "Your case history will appear here after you play some cases."
         case .correct: return "Cases you diagnose correctly will appear here."
-        case .incorrect: return "Great job! You haven't missed any cases yet. Keep it up!"
+        case .incorrect: return "Nothing here yet — every case you miss will appear here as a study item. Think of it as a personalised to-do list for AMBOSS or UWorld."
         }
+    }
+
+    // MARK: - Study List Banner
+
+    private var studyListBanner: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "graduationcap.fill")
+                .font(.subheadline)
+                .foregroundStyle(.orange)
+                .padding(.top, 1)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Your personal study list")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                Text("These are the diagnoses that stumped you. Tap any case and look it up on AMBOSS or UWorld to fill in the gap before it comes up again.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.08))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+        )
+        .cornerRadius(10)
     }
 }
 
@@ -493,25 +529,38 @@ struct CaseHistoryDetailView: View {
                     .foregroundStyle(entry.wasCorrect ? .green : .red)
             }
             
-            // Diagnosis - tappable to open AMBOSS
-            Button {
-                openAMBOSS(for: entry.diagnosis)
-            } label: {
-                HStack(spacing: 6) {
-                    Text(entry.diagnosis)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    Image(systemName: "arrow.up.right.square")
-                        .font(.subheadline)
-                }
+            // Diagnosis name
+            Text(entry.diagnosis)
+                .font(.title2)
+                .fontWeight(.bold)
                 .foregroundStyle(entry.wasCorrect ? .green : .red)
+
+            // Study resource buttons — one-tap access to AMBOSS and UWorld
+            HStack(spacing: 8) {
+                Button {
+                    openAMBOSS(for: entry.diagnosis)
+                } label: {
+                    Label("AMBOSS", systemImage: "book.fill")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.blue.opacity(0.12))
+                        .foregroundStyle(.blue)
+                        .cornerRadius(8)
+                }
+
+                Button {
+                    searchUWorld(for: entry.diagnosis)
+                } label: {
+                    Label("UWorld", systemImage: "magnifyingglass")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.purple.opacity(0.12))
+                        .foregroundStyle(.purple)
+                        .cornerRadius(8)
+                }
             }
-            .buttonStyle(.plain)
-            
-            Text("Tap to learn more on AMBOSS")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
             
             // Category & Difficulty
             HStack(spacing: 12) {
@@ -820,6 +869,15 @@ struct CaseHistoryDetailView: View {
     private func openAMBOSS(for diagnosis: String) {
         let query = diagnosis.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? diagnosis
         if let url = URL(string: "https://next.amboss.com/us/search?q=\(query)") {
+            UIApplication.shared.open(url)
+        }
+    }
+
+    private func searchUWorld(for diagnosis: String) {
+        // UWorld doesn't have a public deep-link search; surface UWorld results via Google.
+        let query = ("uworld " + diagnosis)
+            .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        if let url = URL(string: "https://www.google.com/search?q=\(query)") {
             UIApplication.shared.open(url)
         }
     }

@@ -468,6 +468,12 @@ struct GameView: View {
                 }
             }
             
+            // Study nudge: for losses, surface the case history + quick resource links
+            // immediately while the learning moment is hot.
+            if gameSession.gameState != .won {
+                studyNudgeCard
+            }
+
             // Share button - challenge a friend! (use actual hints for won games)
             ShareResultButton(
                 won: gameSession.gameState == .won,
@@ -478,7 +484,7 @@ struct GameView: View {
                 isDailyCase: isDailyCase,
                 caseID: isDailyCase ? nil : currentCase.id.uuidString
             )
-            
+
             // Hint about AMBOSS link
             Text("Tap diagnosis to learn more on AMBOSS")
                 .font(.caption2)
@@ -487,6 +493,76 @@ struct GameView: View {
         .padding(14)
         .background(Color(.systemGray6))
         .cornerRadius(14)
+    }
+
+    // MARK: - Study Nudge (post-loss)
+
+    /// Shown immediately after a loss while the learning motivation is highest.
+    /// Connects the missed diagnosis to the Case History study list and surfaces
+    /// AMBOSS and UWorld as one-tap next steps.
+    private var studyNudgeCard: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 6) {
+                Image(systemName: "books.vertical.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(.blue)
+                Text("Saved to your missed cases")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+            }
+
+            Text("Look up **\(currentCase.diagnosis)** now — seeing it twice will make it stick.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: 10) {
+                Button {
+                    let q = currentCase.diagnosis
+                        .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                    if let url = URL(string: "https://next.amboss.com/us/search?q=\(q)") {
+                        UIApplication.shared.open(url)
+                    }
+                } label: {
+                    Label("AMBOSS", systemImage: "book.fill")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.blue.opacity(0.12))
+                        .foregroundStyle(.blue)
+                        .cornerRadius(8)
+                }
+
+                Button {
+                    let q = ("uworld " + currentCase.diagnosis)
+                        .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                    if let url = URL(string: "https://www.google.com/search?q=\(q)") {
+                        UIApplication.shared.open(url)
+                    }
+                } label: {
+                    Label("UWorld", systemImage: "magnifyingglass")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.purple.opacity(0.12))
+                        .foregroundStyle(.purple)
+                        .cornerRadius(8)
+                }
+            }
+
+            Text("Review all missed cases in Case History → Progress tab")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity)
+        .background(Color.blue.opacity(0.06))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.blue.opacity(0.15), lineWidth: 1)
+        )
+        .cornerRadius(12)
     }
 
     // MARK: - Swipe Progress

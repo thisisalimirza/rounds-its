@@ -13,6 +13,8 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var playerStats: [PlayerStats]
     @Query private var achievementProgressList: [AchievementProgress]
+    @Query(filter: #Predicate<CaseHistoryEntry> { entry in entry.wasCorrect == false })
+    private var missedCaseEntries: [CaseHistoryEntry]
     @State private var currentCase: MedicalCase?
     @State private var isDailyCase = false
     @State private var showingGame = false
@@ -381,6 +383,7 @@ struct ContentView: View {
                 EnhancedFeatureCard(
                     icon: "clock.arrow.circlepath",
                     title: "Case History",
+                    badgeText: (!subscriptionManager.isProUser || missedCaseEntries.isEmpty) ? nil : "\(missedCaseEntries.count) missed",
                     color: .cyan,
                     isLocked: !subscriptionManager.isProUser
                 ) {
