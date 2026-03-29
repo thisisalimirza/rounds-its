@@ -102,3 +102,23 @@ struct ShareSheet: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
+
+/// Present a UIActivityViewController directly via UIKit, bypassing SwiftUI's
+/// sheet state machinery. This avoids the race where SwiftUI evaluates the sheet
+/// body before share items have been committed to state.
+@MainActor
+func presentShareSheet(items: [Any]) {
+    guard
+        let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+        let window = windowScene.windows.first,
+        let rootVC = window.rootViewController
+    else { return }
+
+    var topVC = rootVC
+    while let presented = topVC.presentedViewController {
+        topVC = presented
+    }
+
+    let activityVC = UIActivityViewController(activityItems: items, applicationActivities: nil)
+    topVC.present(activityVC, animated: true)
+}

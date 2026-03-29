@@ -248,9 +248,6 @@ struct ShareResultButton: View {
     var schoolRank: Int? = nil
     var schoolName: String? = nil
 
-    @State private var showingShareSheet = false
-    @State private var shareItems: [Any] = []
-
     private var dailyCaseNumber: Int {
         let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 1))!
         let today = Calendar.current.startOfDay(for: Date())
@@ -260,7 +257,7 @@ struct ShareResultButton: View {
 
     var body: some View {
         Button {
-            buildShareItemsAndPresent()
+            buildAndPresent()
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "paperplane.fill")
@@ -281,65 +278,37 @@ struct ShareResultButton: View {
             .foregroundStyle(.white)
             .cornerRadius(10)
         }
-        .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(items: shareItems)
-                .presentationDetents([.medium])
-        }
     }
 
     @MainActor
-    private func buildShareItemsAndPresent() {
+    private func buildAndPresent() {
         HapticManager.shared.buttonTap()
         AnalyticsManager.shared.track("share_initiated", properties: [
-            "won": won,
-            "score": score,
-            "hints_used": hintsUsed,
-            "streak": streak ?? 0,
-            "has_school_rank": schoolRank != nil
+            "won": won, "score": score, "hints_used": hintsUsed,
+            "streak": streak ?? 0, "has_school_rank": schoolRank != nil
         ])
 
         let caseNum = isDailyCase ? dailyCaseNumber : nil
         let text = ShareTextGenerator.generateShareText(
-            won: won,
-            hintsUsed: hintsUsed,
-            score: score,
-            guessCount: guessCount,
-            isDailyCase: isDailyCase,
-            dailyCaseNumber: caseNum,
-            caseID: caseID,
-            streak: streak,
-            schoolRank: schoolRank,
-            schoolName: schoolName
+            won: won, hintsUsed: hintsUsed, score: score, guessCount: guessCount,
+            isDailyCase: isDailyCase, dailyCaseNumber: caseNum, caseID: caseID,
+            streak: streak, schoolRank: schoolRank, schoolName: schoolName
         )
 
-        // Render the card to a UIImage so receivers see a rich visual alongside the text
         let card = ShareResultCard(
-            won: won,
-            diagnosis: diagnosis,
-            guessCount: guessCount,
-            hintsUsed: hintsUsed,
-            score: score,
-            isDailyCase: isDailyCase,
-            dailyCaseNumber: caseNum,
-            streak: streak,
-            schoolRank: schoolRank,
-            schoolName: schoolName
+            won: won, diagnosis: diagnosis, guessCount: guessCount,
+            hintsUsed: hintsUsed, score: score, isDailyCase: isDailyCase,
+            dailyCaseNumber: caseNum, streak: streak,
+            schoolRank: schoolRank, schoolName: schoolName
         )
         let renderer = ImageRenderer(content: card.environment(\.colorScheme, .light))
         renderer.scale = UIScreen.main.scale
-        // Image first so messaging apps (iMessage, WhatsApp) use it as the preview thumbnail
-        if let image = renderer.uiImage {
-            shareItems = [image, text]
-        } else {
-            shareItems = [text]
-        }
 
-        // Present on the next run-loop tick so SwiftUI commits the shareItems state
-        // update before the sheet body is evaluated. Without this, the sheet captures
-        // the stale empty-array value and shows a blank UIActivityViewController.
-        Task { @MainActor in
-            showingShareSheet = true
-        }
+        var items: [Any] = []
+        if let image = renderer.uiImage { items.append(image) }
+        items.append(text)
+
+        presentShareSheet(items: items)
     }
 }
 
@@ -354,11 +323,7 @@ struct CompactShareButton: View {
     var streak: Int? = nil
     var schoolRank: Int? = nil
     var schoolName: String? = nil
-    // diagnosis is needed to render the card image
     var diagnosis: String = ""
-
-    @State private var showingShareSheet = false
-    @State private var shareItems: [Any] = []
 
     private var dailyCaseNumber: Int {
         let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 1))!
@@ -368,64 +333,39 @@ struct CompactShareButton: View {
     }
 
     var body: some View {
-        Button {
-            buildShareItemsAndPresent()
-        } label: {
+        Button { buildAndPresent() } label: {
             Image(systemName: "square.and.arrow.up")
                 .font(.body.weight(.medium))
-        }
-        .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(items: shareItems)
-                .presentationDetents([.medium])
         }
     }
 
     @MainActor
-    private func buildShareItemsAndPresent() {
+    private func buildAndPresent() {
         HapticManager.shared.buttonTap()
         AnalyticsManager.shared.track("share_initiated", properties: [
-            "won": won,
-            "score": score,
-            "source": "compact_button"
+            "won": won, "score": score, "source": "compact_button"
         ])
 
         let caseNum = isDailyCase ? dailyCaseNumber : nil
         let text = ShareTextGenerator.generateShareText(
-            won: won,
-            hintsUsed: hintsUsed,
-            score: score,
-            guessCount: guessCount,
-            isDailyCase: isDailyCase,
-            dailyCaseNumber: caseNum,
-            caseID: caseID,
-            streak: streak,
-            schoolRank: schoolRank,
-            schoolName: schoolName
+            won: won, hintsUsed: hintsUsed, score: score, guessCount: guessCount,
+            isDailyCase: isDailyCase, dailyCaseNumber: caseNum, caseID: caseID,
+            streak: streak, schoolRank: schoolRank, schoolName: schoolName
         )
-
         let card = ShareResultCard(
-            won: won,
-            diagnosis: diagnosis,
-            guessCount: guessCount,
-            hintsUsed: hintsUsed,
-            score: score,
-            isDailyCase: isDailyCase,
-            dailyCaseNumber: caseNum,
-            streak: streak,
-            schoolRank: schoolRank,
-            schoolName: schoolName
+            won: won, diagnosis: diagnosis, guessCount: guessCount,
+            hintsUsed: hintsUsed, score: score, isDailyCase: isDailyCase,
+            dailyCaseNumber: caseNum, streak: streak,
+            schoolRank: schoolRank, schoolName: schoolName
         )
         let renderer = ImageRenderer(content: card.environment(\.colorScheme, .light))
         renderer.scale = UIScreen.main.scale
-        if let image = renderer.uiImage {
-            shareItems = [image, text]
-        } else {
-            shareItems = [text]
-        }
 
-        Task { @MainActor in
-            showingShareSheet = true
-        }
+        var items: [Any] = []
+        if let image = renderer.uiImage { items.append(image) }
+        items.append(text)
+
+        presentShareSheet(items: items)
     }
 }
 
@@ -497,38 +437,57 @@ struct SocialStoryCard: View {
         won ? "I scored \(score) pts — can you beat me?" : "This one stumped me 😅 can you get it?"
     }
 
+    // Brand purple used throughout
+    private static let brandPurple = Color(red: 0.38, green: 0.30, blue: 0.82)
+    private static let brandBlue   = Color(red: 0.22, green: 0.48, blue: 0.92)
+    private static let navyText    = Color(red: 0.08, green: 0.06, blue: 0.22)
+
     var body: some View {
         ZStack {
-            // Dark gradient background — looks great in dark mode stories
+            // Light lavender gradient — matches getrounds.app website background
             LinearGradient(
                 colors: [
-                    Color(red: 0.04, green: 0.04, blue: 0.12),
-                    Color(red: 0.05, green: 0.11, blue: 0.30),
-                    Color(red: 0.10, green: 0.04, blue: 0.18)
+                    Color(red: 0.94, green: 0.92, blue: 1.00),
+                    Color(red: 0.88, green: 0.84, blue: 0.98),
+                    Color(red: 0.92, green: 0.87, blue: 1.00)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
 
             VStack(spacing: 0) {
-                // ── Header ──────────────────────────────────────────────────
+                // ── Header ───────────────────────────────────────────────────
                 HStack {
-                    HStack(spacing: 8) {
-                        Image(systemName: "cross.case.fill")
-                            .font(.title2)
-                            .foregroundStyle(.white)
+                    HStack(spacing: 10) {
+                        // App icon pill (purple gradient + white cross)
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(LinearGradient(
+                                    colors: [Self.brandPurple, Self.brandBlue],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ))
+                                .frame(width: 36, height: 36)
+                            Image(systemName: "cross.case.fill")
+                                .font(.system(size: 17))
+                                .foregroundStyle(.white)
+                        }
                         Text("Rounds")
-                            .font(.title2.bold())
-                            .foregroundStyle(.white)
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .foregroundStyle(LinearGradient(
+                                colors: [Self.brandPurple, Self.brandBlue],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            ))
                     }
                     Spacer()
                     if isDailyCase, let num = dailyCaseNumber {
                         Text("Case #\(num)")
                             .font(.caption.bold())
-                            .foregroundStyle(.white.opacity(0.7))
+                            .foregroundStyle(Self.brandPurple)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 5)
-                            .background(.white.opacity(0.12))
+                            .background(Self.brandPurple.opacity(0.12))
                             .cornerRadius(8)
                     }
                 }
@@ -537,85 +496,83 @@ struct SocialStoryCard: View {
 
                 Spacer()
 
-                // ── Challenge headline ───────────────────────────────────────
-                VStack(spacing: 10) {
+                // ── Challenge headline ────────────────────────────────────────
+                VStack(spacing: 8) {
                     Text("Can you guess\nthe diagnosis?")
-                        .font(.system(size: 34, weight: .bold))
-                        .foregroundStyle(.white)
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundStyle(Self.navyText)
                         .multilineTextAlignment(.center)
-                        .lineSpacing(2)
 
                     Text(category.uppercased())
                         .font(.caption.bold())
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(Self.brandPurple.opacity(0.65))
                         .tracking(3)
                 }
                 .padding(.horizontal, 28)
 
                 Spacer()
 
-                // ── Clue cards ───────────────────────────────────────────────
+                // ── Clue cards ────────────────────────────────────────────────
                 VStack(spacing: 10) {
                     HintTeaseCard(number: 1, text: firstHint)
                     if let hint2 = secondHint {
                         HintTeaseCard(number: 2, text: hint2)
                     }
 
-                    // Hidden diagnosis placeholder
-                    HStack(spacing: 10) {
+                    // Hidden diagnosis row
+                    HStack(spacing: 8) {
                         Image(systemName: "questionmark.circle.fill")
                             .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.4))
+                            .foregroundStyle(Self.brandPurple.opacity(0.45))
                         HStack(spacing: 6) {
                             ForEach(0..<3, id: \.self) { _ in
-                                RoundedRectangle(cornerRadius: 3)
-                                    .fill(.white.opacity(0.18))
-                                    .frame(height: 18)
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Self.brandPurple.opacity(0.15))
+                                    .frame(height: 16)
                             }
                         }
                         Image(systemName: "questionmark.circle.fill")
                             .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.4))
+                            .foregroundStyle(Self.brandPurple.opacity(0.45))
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .background(.white.opacity(0.06))
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(.white.opacity(0.55))
                     .cornerRadius(12)
 
                     Text("diagnosis hidden")
                         .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.3))
+                        .foregroundStyle(Self.brandPurple.opacity(0.45))
                         .tracking(1)
                 }
                 .padding(.horizontal, 28)
 
                 Spacer()
 
-                // ── Score badge + CTA ────────────────────────────────────────
-                VStack(spacing: 14) {
+                // ── Score badge + CTA ─────────────────────────────────────────
+                VStack(spacing: 12) {
                     HStack(spacing: 10) {
                         Image(systemName: won ? "checkmark.seal.fill" : "xmark.seal.fill")
                             .font(.body)
-                            .foregroundStyle(won ? Color.green : Color.red)
+                            .foregroundStyle(won ? Color(red: 0.98, green: 0.58, blue: 0.10) : Color.red)
                         Text(scoreMessage)
                             .font(.subheadline.bold())
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Self.navyText)
                             .multilineTextAlignment(.center)
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 18)
                     .padding(.vertical, 12)
-                    .background(.white.opacity(0.10))
+                    .background(.white.opacity(0.70))
                     .cornerRadius(14)
 
-                    Text("Download Rounds • rounds.app")
+                    Text("getrounds.app")
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(Self.brandPurple.opacity(0.55))
                 }
                 .padding(.horizontal, 28)
                 .padding(.bottom, 60)
             }
         }
-        // Portrait 9:16 — fills an iPhone screen / Instagram Story frame
         .frame(width: 390, height: 693)
     }
 }
@@ -624,11 +581,19 @@ struct HintTeaseCard: View {
     let number: Int
     let text: String
 
+    private static let brandPurple = Color(red: 0.38, green: 0.30, blue: 0.82)
+    private static let brandBlue   = Color(red: 0.22, green: 0.48, blue: 0.92)
+    private static let navyText    = Color(red: 0.08, green: 0.06, blue: 0.22)
+
     var body: some View {
         HStack(spacing: 12) {
             ZStack {
                 Circle()
-                    .fill(Color.blue.opacity(0.8))
+                    .fill(LinearGradient(
+                        colors: [Self.brandBlue, Self.brandPurple],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
                     .frame(width: 28, height: 28)
                 Text("\(number)")
                     .font(.caption.bold())
@@ -636,13 +601,17 @@ struct HintTeaseCard: View {
             }
             Text(text)
                 .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyle(Self.navyText)
                 .multilineTextAlignment(.leading)
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(.white.opacity(0.08))
+        .background(.white.opacity(0.70))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Self.brandBlue.opacity(0.18), lineWidth: 1)
+        )
         .cornerRadius(12)
     }
 }
@@ -658,9 +627,6 @@ struct SocialShareButton: View {
     let isDailyCase: Bool
     let caseID: String?
 
-    @State private var showingShareSheet = false
-    @State private var shareItems: [Any] = []
-
     private var dailyCaseNumber: Int {
         let startDate = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 1))!
         let today = Calendar.current.startOfDay(for: Date())
@@ -668,9 +634,7 @@ struct SocialShareButton: View {
     }
 
     var body: some View {
-        Button {
-            buildAndShare()
-        } label: {
+        Button { buildAndPresent() } label: {
             HStack(spacing: 8) {
                 Image(systemName: "camera.fill")
                     .font(.subheadline.weight(.semibold))
@@ -682,8 +646,8 @@ struct SocialShareButton: View {
             .background(
                 LinearGradient(
                     colors: [
-                        Color(red: 0.88, green: 0.20, blue: 0.55), // Instagram pink
-                        Color(red: 0.93, green: 0.49, blue: 0.18)  // Instagram orange
+                        Color(red: 0.88, green: 0.20, blue: 0.55),
+                        Color(red: 0.93, green: 0.49, blue: 0.18)
                     ],
                     startPoint: .leading,
                     endPoint: .trailing
@@ -692,53 +656,34 @@ struct SocialShareButton: View {
             .foregroundStyle(.white)
             .cornerRadius(10)
         }
-        .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(items: shareItems)
-        }
     }
 
     @MainActor
-    private func buildAndShare() {
+    private func buildAndPresent() {
         HapticManager.shared.buttonTap()
         AnalyticsManager.shared.track("social_story_share_initiated", properties: [
-            "won": won,
-            "score": score,
-            "is_daily": isDailyCase
+            "won": won, "score": score, "is_daily": isDailyCase
         ])
 
         let caseNum = isDailyCase ? dailyCaseNumber : nil
         let card = SocialStoryCard(
-            firstHint: firstHint,
-            secondHint: secondHint,
-            category: category,
-            score: score,
-            won: won,
-            isDailyCase: isDailyCase,
-            dailyCaseNumber: caseNum
+            firstHint: firstHint, secondHint: secondHint, category: category,
+            score: score, won: won, isDailyCase: isDailyCase, dailyCaseNumber: caseNum
         )
-
         let renderer = ImageRenderer(content: card)
-        renderer.scale = UIScreen.main.scale
-        // 3× scale produces a crisp image at Instagram's story resolution
         renderer.scale = 3.0
 
         var items: [Any] = []
-        if let image = renderer.uiImage {
-            items.append(image)
-        }
+        if let image = renderer.uiImage { items.append(image) }
 
-        // Include deep link text so the image caption auto-populates
-        let appStoreLink = "apps.apple.com/app/id6740487567"
+        let appStoreLink = "getrounds.app"
         if let caseID, !isDailyCase {
-            items.append("rounds://case/\(caseID)\nNew? \(appStoreLink)")
+            items.append("rounds://case/\(caseID)\nGet the app: \(appStoreLink)")
         } else {
             items.append(appStoreLink)
         }
 
-        shareItems = items
-        Task { @MainActor in
-            showingShareSheet = true
-        }
+        presentShareSheet(items: items)
     }
 }
 
