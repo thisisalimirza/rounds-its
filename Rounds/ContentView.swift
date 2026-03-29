@@ -1361,6 +1361,18 @@ struct StreakDetailView: View {
         }
     }
 
+    // Last 18 weeks — always ends at the current week
+    private var recentWeeks: [[Date?]] { Array(weeks.suffix(18)) }
+
+    // Returns month abbreviation only for the first week of each new month, else ""
+    private func recentMonthLabel(forWeek wi: Int) -> String {
+        let globalIndex = weeks.count - recentWeeks.count + wi
+        if let label = monthLabels.first(where: { $0.index == globalIndex }) {
+            return label.text
+        }
+        return ""
+    }
+
     private var legendColors: [Color] {
         [Color(.systemGray5), .orange.opacity(0.35), .orange.opacity(0.6), .orange.opacity(0.8), .orange]
     }
@@ -1408,65 +1420,54 @@ struct StreakDetailView: View {
                     .padding(.horizontal, 20)
 
                     // ── Activity Heatmap ─────────────────────────────
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 10) {
                         Text("Activity")
                             .font(.headline)
                             .padding(.horizontal, 20)
 
-                        HStack(alignment: .top, spacing: 4) {
-                            // Day-of-week labels — fixedSize so HStack never stretches them
-                            VStack(spacing: 0) {
-                                Color.clear.frame(width: 12, height: 18) // spacer matching month label row
-                                VStack(spacing: 3) {
-                                    ForEach(Array(["M","T","W","T","F","S","S"].enumerated()), id: \.offset) { _, lbl in
-                                        Text(lbl)
+                        // No ScrollView — show the last 18 weeks (always ends at today)
+                        HStack(alignment: .top, spacing: 6) {
+                            // Day labels: fixed 14pt wide column
+                            VStack(alignment: .trailing, spacing: 3) {
+                                Text("").font(.system(size: 9)).frame(height: 14) // month row spacer
+                                ForEach(Array(["M","T","W","T","F","S","S"].enumerated()), id: \.offset) { _, lbl in
+                                    Text(lbl)
+                                        .font(.system(size: 9, weight: .medium))
+                                        .foregroundStyle(.secondary)
+                                        .frame(height: 12)
+                                }
+                            }
+                            .fixedSize()
+
+                            // Grid: fills remaining width via Spacer
+                            VStack(alignment: .leading, spacing: 3) {
+                                // Month labels row
+                                HStack(spacing: 3) {
+                                    ForEach(recentWeeks.indices, id: \.self) { wi in
+                                        Text(recentMonthLabel(forWeek: wi))
                                             .font(.system(size: 9, weight: .medium))
                                             .foregroundStyle(.secondary)
-                                            .frame(width: 12, height: 12)
+                                            .frame(width: 12, height: 14, alignment: .leading)
+                                            .fixedSize(horizontal: true, vertical: false)
                                     }
                                 }
-                            }
-                            .fixedSize(horizontal: false, vertical: true) // ← prevents vertical stretch
-
-                            // Scrollable grid (colW = 12px cell + 3px gap = 15px per week)
-                            ScrollViewReader { proxy in
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        // Month labels via ZStack+offset so text is never clipped
-                                        ZStack(alignment: .topLeading) {
-                                            Color.clear.frame(height: 18)
-                                            ForEach(monthLabels, id: \.index) { month in
-                                                Text(month.text)
-                                                    .font(.system(size: 9, weight: .medium))
-                                                    .foregroundStyle(.secondary)
-                                                    .fixedSize()
-                                                    .offset(x: CGFloat(month.index) * 15)
-                                            }
-                                        }
-                                        .frame(width: CGFloat(weeks.count) * 15)
-
-                                        // Cell grid
-                                        HStack(spacing: 3) {
-                                            ForEach(0..<weeks.count, id: \.self) { wi in
-                                                VStack(spacing: 3) {
-                                                    ForEach(0..<7, id: \.self) { di in
-                                                        RoundedRectangle(cornerRadius: 2)
-                                                            .fill(cellColor(for: weeks[wi][di]))
-                                                            .frame(width: 12, height: 12)
-                                                    }
-                                                }
-                                                .id(wi)
+                                // Cell grid
+                                HStack(spacing: 3) {
+                                    ForEach(recentWeeks.indices, id: \.self) { wi in
+                                        VStack(spacing: 3) {
+                                            ForEach(0..<7, id: \.self) { di in
+                                                RoundedRectangle(cornerRadius: 2)
+                                                    .fill(cellColor(for: recentWeeks[wi][di]))
+                                                    .frame(width: 12, height: 12)
                                             }
                                         }
                                     }
-                                    .padding(.horizontal, 4)
-                                }
-                                .onAppear {
-                                    proxy.scrollTo(weeks.count - 1, anchor: .trailing)
                                 }
                             }
+
+                            Spacer(minLength: 0)
                         }
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, 20)
 
                         // Legend
                         HStack(spacing: 4) {
