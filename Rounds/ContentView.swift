@@ -75,12 +75,14 @@ struct ContentView: View {
                 VStack(spacing: 0) {
                     // MARK: - Compact Header
                     HStack {
-                        // Logo + Title
+                        // Logo + Title — fixed size so right-side pills can't squeeze it
                         HStack(spacing: 10) {
                             AnimatedLogo()
 
                             Text("Rounds")
                                 .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                                 .foregroundStyle(
                                     LinearGradient(
                                         colors: [.blue, .purple],
@@ -93,8 +95,9 @@ struct ContentView: View {
                                 ProBadge(size: .small)
                             }
                         }
+                        .layoutPriority(1)
 
-                        Spacer()
+                        Spacer(minLength: 8)
 
                         HStack(spacing: 8) {
                             // Badges shortcut with unlocked/total count
