@@ -537,9 +537,11 @@ struct GameView: View {
                     LazyVStack(spacing: 0) {
                         ForEach(suggestions.prefix(6), id: \.self) { suggestion in
                             Button {
-                                currentGuess = suggestion
-                                showingSuggestions = false
-                                suggestions = []
+                                withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                    currentGuess = suggestion
+                                    showingSuggestions = false
+                                    suggestions = []
+                                }
                             } label: {
                                 HStack {
                                     Text(suggestion)
@@ -644,6 +646,16 @@ struct GameView: View {
             .padding(.horizontal)
             .padding(.vertical, 10)
             .background(.regularMaterial)
+            .clipShape(
+                UnevenRoundedRectangle(
+                    topLeadingRadius: 16,
+                    bottomLeadingRadius: 0,
+                    bottomTrailingRadius: 0,
+                    topTrailingRadius: 16,
+                    style: .continuous
+                )
+            )
+            .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: -2)
         }
     }
 
