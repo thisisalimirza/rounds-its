@@ -1416,7 +1416,7 @@ struct StreakDetailView: View {
                         HStack(alignment: .top, spacing: 4) {
                             // Day-of-week labels — fixedSize so HStack never stretches them
                             VStack(spacing: 0) {
-                                Color.clear.frame(height: 18) // spacer matching month label row
+                                Color.clear.frame(width: 12, height: 18) // spacer matching month label row
                                 VStack(spacing: 3) {
                                     ForEach(Array(["M","T","W","T","F","S","S"].enumerated()), id: \.offset) { _, lbl in
                                         Text(lbl)
