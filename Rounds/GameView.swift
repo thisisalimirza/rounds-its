@@ -54,6 +54,7 @@ struct GameView: View {
     @State private var showingStats = false
     @State private var suggestions: [String] = []
     @State private var showingSuggestions = false
+    @State private var suppressNextSuggestionUpdate = false
     @State private var showingReport = false
     @State private var isEnteringDiagnosis = false
     @State private var showingLevelUp = false
@@ -542,6 +543,7 @@ struct GameView: View {
                     LazyVStack(spacing: 0) {
                         ForEach(suggestions.prefix(6), id: \.self) { suggestion in
                             Button {
+                                suppressNextSuggestionUpdate = true
                                 withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
                                     currentGuess = suggestion
                                     showingSuggestions = false
@@ -591,6 +593,10 @@ struct GameView: View {
                     .autocapitalization(.words)
                     .disableAutocorrection(true)
                     .onChange(of: currentGuess) { _, newValue in
+                        if suppressNextSuggestionUpdate {
+                            suppressNextSuggestionUpdate = false
+                            return
+                        }
                         updateSuggestions(for: newValue)
                     }
                     .onSubmit {
