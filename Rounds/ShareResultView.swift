@@ -375,7 +375,12 @@ struct ShareResultButton: View {
             shareItems = [text]
         }
 
-        showingShareSheet = true
+        // Present on the next run-loop tick so SwiftUI commits the shareItems state
+        // update before the sheet body is evaluated. Without this, the sheet captures
+        // the stale empty-array value and shows a blank UIActivityViewController.
+        Task { @MainActor in
+            showingShareSheet = true
+        }
     }
 }
 
@@ -459,7 +464,9 @@ struct CompactShareButton: View {
             shareItems = [text]
         }
 
-        showingShareSheet = true
+        Task { @MainActor in
+            showingShareSheet = true
+        }
     }
 }
 
