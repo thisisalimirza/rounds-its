@@ -298,22 +298,27 @@ struct GameView: View {
             Label("\(gameSession.guesses.count)/\(gameSession.maxGuesses)", systemImage: "brain.head.profile")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            
+
             Spacer()
-            
-            // Category label - can be hidden via Settings for harder gameplay
-            if !hideCategoryLabel {
-                Text(currentCase.category)
-                    .font(.caption)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.2))
-                    .foregroundStyle(.blue)
-                    .cornerRadius(8)
-                
-                Spacer()
+
+            HStack(spacing: 6) {
+                // Category label - can be hidden via Settings for harder gameplay
+                if !hideCategoryLabel {
+                    Text(currentCase.category)
+                        .font(.caption)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.blue.opacity(0.15))
+                        .foregroundStyle(.blue)
+                        .cornerRadius(8)
+                }
+
+                // Difficulty badge — always visible
+                DifficultyBadge(difficulty: currentCase.difficulty)
             }
-            
+
+            Spacer()
+
             Label("\(gameSession.hintsRevealed)/\(gameSession.maxHints)", systemImage: "lightbulb.fill")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
@@ -1332,6 +1337,42 @@ struct ConfettiPieceView: View {
                     rotationAmount = Double.random(in: 360...1080)
                 }
             }
+    }
+}
+
+// MARK: - Difficulty Badge
+
+struct DifficultyBadge: View {
+    let difficulty: Int
+
+    private var label: String {
+        switch difficulty {
+        case 1: return "Easy"
+        case 2: return "Medium"
+        case 3: return "Hard"
+        case 4: return "Expert"
+        default: return "Legendary"
+        }
+    }
+
+    private var color: Color {
+        switch difficulty {
+        case 1: return .green
+        case 2: return .blue
+        case 3: return .orange
+        case 4: return .red
+        default: return .purple
+        }
+    }
+
+    var body: some View {
+        Text(label)
+            .font(.caption)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(color.opacity(0.15))
+            .foregroundStyle(color)
+            .cornerRadius(8)
     }
 }
 
