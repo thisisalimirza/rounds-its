@@ -1272,16 +1272,35 @@ struct StreakDetailView: View {
 
     private var stats: PlayerStats? { playerStats.first }
 
+    private static let dayFmt: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f
+    }()
+
     // Map "yyyy-MM-dd" → case count
     private var activityByDay: [String: Int] {
-        let fmt = DateFormatter()
-        fmt.dateFormat = "yyyy-MM-dd"
         var map: [String: Int] = [:]
         for entry in historyEntries {
-            let key = fmt.string(from: entry.playedAt)
+            let key = Self.dayFmt.string(from: entry.playedAt)
             map[key, default: 0] += 1
         }
         return map
+    }
+
+    // True max streak computed from actual history (fixes stale PlayerStats.maxStreak)
+    private var computedMaxStreak: Int {
+        let stored = stats?.maxStreak ?? 0
+        let days = Set(historyEntries.map { Self.dayFmt.string(from: $0.playedAt) })
+            .sorted()
+        guard days.count > 1 else { return max(stored, days.isEmpty ? 0 : 1) }
+        var best = 1, run = 1
+        let calendar = Calendar.current
+        for i in 1..<days.count {
+            guard let prev = Self.dayFmt.date(from: days[i-1]),
+                  let curr = Self.dayFmt.date(from: days[i]) else { continue }
+            let gap = calendar.dateComponents([.day], from: prev, to: curr).day ?? 0
+            if gap == 1 { run += 1; best = max(best, run) } else { run = 1 }
+        }
+        return max(best, stored)
     }
 
     // 52 full weeks ending with the current week (Mon-Sun rows per column)
@@ -1331,11 +1350,8 @@ struct StreakDetailView: View {
 
     private func cellColor(for date: Date?) -> Color {
         guard let date else { return Color.clear }
-        let fmt = DateFormatter()
-        fmt.dateFormat = "yyyy-MM-dd"
-        let key = fmt.string(from: date)
-        let count = activityByDay[key] ?? 0
         if date > Date() { return Color(.systemGray6) }
+        let count = activityByDay[Self.dayFmt.string(from: date)] ?? 0
         switch count {
         case 0: return Color(.systemGray5)
         case 1: return Color.orange.opacity(0.35)
@@ -1385,7 +1401,7 @@ struct StreakDetailView: View {
 
                     // ── Stats Grid ───────────────────────────────────
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                        StreakStatCell(label: "Best Streak", value: "\(stats?.maxStreak ?? 0)", icon: "crown.fill", color: .orange)
+                        StreakStatCell(label: "Best Streak", value: "\(computedMaxStreak)", icon: "crown.fill", color: .orange)
                         StreakStatCell(label: "Total Played", value: "\(stats?.gamesPlayed ?? 0)", icon: "checkmark.circle.fill", color: .blue)
                         StreakStatCell(label: "Win Rate", value: "\(stats?.winPercentage ?? 0)%", icon: "target", color: .green)
                     }
@@ -1398,46 +1414,57 @@ struct StreakDetailView: View {
                             .padding(.horizontal, 20)
 
                         HStack(alignment: .top, spacing: 4) {
-                            // Day-of-week labels (Mon–Sun)
+                            // Day-of-week labels (Mon–Sun), fixed to left of scroll
                             VStack(spacing: 0) {
-                                Text("").frame(height: 14) // spacer for month row
+                                Color.clear.frame(height: 18) // aligns with month label row
                                 VStack(spacing: 3) {
-                                    ForEach(Array(["M","T","W","T","F","S","S"].enumerated()), id: \.offset) { _, label in
-                                        Text(label)
+                                    ForEach(Array(["M","T","W","T","F","S","S"].enumerated()), id: \.offset) { _, lbl in
+                                        Text(lbl)
                                             .font(.system(size: 9, weight: .medium))
                                             .foregroundStyle(.secondary)
-                                            .frame(width: 11, height: 11)
+                                            .frame(width: 12, height: 12)
                                     }
                                 }
                             }
 
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                VStack(alignment: .leading, spacing: 0) {
-                                    // Month labels row
-                                    HStack(alignment: .top, spacing: 3) {
-                                        ForEach(0..<weeks.count, id: \.self) { i in
-                                            let label = monthLabels.first(where: { $0.index == i })?.text
-                                            Text(label ?? "")
-                                                .font(.system(size: 9, weight: .medium))
-                                                .foregroundStyle(.secondary)
-                                                .frame(width: 11, height: 14, alignment: .leading)
+                            // Scrollable grid — auto-scrolls to current week on appear
+                            // Column width: 12px cell + 3px spacing = 15px per week
+                            let colW: CGFloat = 15
+                            ScrollViewReader { proxy in
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        // Month labels: ZStack overlay so text never clips
+                                        ZStack(alignment: .topLeading) {
+                                            Color.clear.frame(height: 18)
+                                            ForEach(monthLabels, id: \.index) { month in
+                                                Text(month.text)
+                                                    .font(.system(size: 9, weight: .medium))
+                                                    .foregroundStyle(.secondary)
+                                                    .fixedSize()
+                                                    .offset(x: CGFloat(month.index) * colW)
+                                            }
                                         }
-                                    }
+                                        .frame(width: CGFloat(weeks.count) * colW)
 
-                                    // Grid cells
-                                    HStack(spacing: 3) {
-                                        ForEach(0..<weeks.count, id: \.self) { wi in
-                                            VStack(spacing: 3) {
-                                                ForEach(0..<7, id: \.self) { di in
-                                                    RoundedRectangle(cornerRadius: 2)
-                                                        .fill(cellColor(for: weeks[wi][di]))
-                                                        .frame(width: 11, height: 11)
+                                        // Cell grid
+                                        HStack(spacing: 3) {
+                                            ForEach(0..<weeks.count, id: \.self) { wi in
+                                                VStack(spacing: 3) {
+                                                    ForEach(0..<7, id: \.self) { di in
+                                                        RoundedRectangle(cornerRadius: 2)
+                                                            .fill(cellColor(for: weeks[wi][di]))
+                                                            .frame(width: 12, height: 12)
+                                                    }
                                                 }
+                                                .id(wi)
                                             }
                                         }
                                     }
+                                    .padding(.horizontal, 4)
                                 }
-                                .padding(.horizontal, 4)
+                                .onAppear {
+                                    proxy.scrollTo(weeks.count - 1, anchor: .trailing)
+                                }
                             }
                         }
                         .padding(.horizontal, 16)
@@ -1449,7 +1476,7 @@ struct StreakDetailView: View {
                                 .font(.system(size: 9))
                                 .foregroundStyle(.secondary)
                             ForEach(legendColors.indices, id: \.self) { i in
-                                RoundedRectangle(cornerRadius: 2).fill(legendColors[i]).frame(width: 11, height: 11)
+                                RoundedRectangle(cornerRadius: 2).fill(legendColors[i]).frame(width: 12, height: 12)
                             }
                             Text("More")
                                 .font(.system(size: 9))
