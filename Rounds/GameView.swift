@@ -507,72 +507,25 @@ struct GameView: View {
 
     // MARK: - Study Nudge (post-loss)
 
-    /// Shown immediately after a loss while the learning motivation is highest.
-    /// Connects the missed diagnosis to the Case History study list and surfaces
-    /// AMBOSS and UWorld as one-tap next steps.
+    /// Compact nudge shown after a loss. Stays small so the swipe-up CTA stays visible.
     private var studyNudgeCard: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 6) {
-                Image(systemName: "books.vertical.fill")
-                    .font(.subheadline)
-                    .foregroundStyle(.blue)
-                Text("Saved to your missed cases")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-            }
-
-            Text("Look up **\(currentCase.diagnosis)** now — seeing it twice will make it stick.")
+        HStack(spacing: 10) {
+            Image(systemName: "books.vertical.fill")
+                .font(.subheadline)
+                .foregroundStyle(.blue)
+            Text("Added to your **Case History** study list")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-
-            HStack(spacing: 10) {
-                Button {
-                    let q = currentCase.diagnosis
-                        .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-                    if let url = URL(string: "https://next.amboss.com/us/search?q=\(q)") {
-                        UIApplication.shared.open(url)
-                    }
-                } label: {
-                    Label("AMBOSS", systemImage: "book.fill")
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(Color.blue.opacity(0.12))
-                        .foregroundStyle(.blue)
-                        .cornerRadius(8)
-                }
-
-                Button {
-                    let q = ("uworld " + currentCase.diagnosis)
-                        .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-                    if let url = URL(string: "https://www.google.com/search?q=\(q)") {
-                        UIApplication.shared.open(url)
-                    }
-                } label: {
-                    Label("UWorld", systemImage: "magnifyingglass")
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(Color.purple.opacity(0.12))
-                        .foregroundStyle(.purple)
-                        .cornerRadius(8)
-                }
-            }
-
-            Text("Review all missed cases in Case History → Progress tab")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-                .multilineTextAlignment(.center)
         }
-        .padding(12)
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.blue.opacity(0.06))
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 10)
                 .stroke(Color.blue.opacity(0.15), lineWidth: 1)
         )
-        .cornerRadius(12)
+        .cornerRadius(10)
     }
 
     // MARK: - Inline Diagnosis Input
