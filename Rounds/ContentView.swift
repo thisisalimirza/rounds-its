@@ -13,10 +13,12 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var playerStats: [PlayerStats]
     @Query private var achievementProgressList: [AchievementProgress]
+    @Query(filter: #Predicate<CaseHistoryEntry> { entry in entry.wasCorrect == false })
+    private var missedCaseEntries: [CaseHistoryEntry]
     @State private var currentCase: MedicalCase?
     @State private var isDailyCase = false
     @State private var showingGame = false
-    @State private var showingStats = false
+    @State private var showingStats = false // kept for any external callsites
     @State private var showingAbout = false
     @State private var showingCaseBrowser = false
     @State private var showingFeedback = false
@@ -32,6 +34,8 @@ struct ContentView: View {
     @State private var streakRecoveryChecked = false
     @State private var showingWhatsNew = false
     @State private var showingRoadmap = false
+    @State private var showingStreakDetail = false
+    @State private var showingStatsAnalytics = false
     @StateObject private var whatsNewManager = WhatsNewManager.shared
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
@@ -71,12 +75,14 @@ struct ContentView: View {
                 VStack(spacing: 0) {
                     // MARK: - Compact Header
                     HStack {
-                        // Logo + Title
+                        // Logo + Title — fixed size so right-side pills can't squeeze it
                         HStack(spacing: 10) {
                             AnimatedLogo()
 
                             Text("Rounds")
                                 .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                                 .foregroundStyle(
                                     LinearGradient(
                                         colors: [.blue, .purple],
@@ -89,11 +95,45 @@ struct ContentView: View {
                                 ProBadge(size: .small)
                             }
                         }
+                        .layoutPriority(1)
 
-                        Spacer()
+                        Spacer(minLength: 8)
 
-                        // Streak Pill with animated fire effect
-                        AnimatedStreakPill(streak: stats.currentStreak, freezes: stats.streakFreezesAvailable, isPro: subscriptionManager.isProUser)
+                        HStack(spacing: 8) {
+                            // Badges shortcut with unlocked/total count
+                            Button {
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                showingAchievements = true
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Image(systemName: "medal.fill")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(.yellow)
+                                    Text(achievementBadgeText)
+                                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                        .fixedSize()
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(
+                                    Capsule()
+                                        .fill(Color(.systemBackground))
+                                        .shadow(color: .yellow.opacity(0.25), radius: 4, y: 2)
+                                )
+                            }
+                            .buttonStyle(.plain)
+
+                            // Streak Pill — tap to open streak detail modal
+                            Button {
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                showingStreakDetail = true
+                            } label: {
+                                AnimatedStreakPill(streak: stats.currentStreak, freezes: stats.streakFreezesAvailable, isPro: subscriptionManager.isProUser)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
@@ -120,6 +160,7 @@ struct ContentView: View {
                         .padding(.bottom, 8)
                 }
                 .adaptiveContentWidth()
+
             }
             .navigationDestination(isPresented: $showingGame) {
                 if let currentCase = currentCase {
@@ -134,17 +175,17 @@ struct ContentView: View {
                     )
                 }
             }
-            .sheet(isPresented: $showingStats) {
-                StatsView()
+            .sheet(isPresented: $showingStreakDetail) {
+                StreakDetailView()
+            }
+            .sheet(isPresented: $showingStatsAnalytics) {
+                StatsAnalyticsView(isPro: subscriptionManager.isProUser, onShowPaywall: { showingPaywall = true })
             }
             .sheet(isPresented: $showingCaseHistory) {
                 CaseHistoryView()
             }
             .sheet(isPresented: $showingAchievements) {
                 AchievementsView()
-            }
-            .sheet(isPresented: $showingCategoryAnalytics) {
-                CategoryAnalyticsView()
             }
             .sheet(isPresented: $showingLeaderboard) {
                 LeaderboardView()
@@ -236,8 +277,24 @@ struct ContentView: View {
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
-                // Also check when app becomes active (in case opened via URL while running)
+                // Check for deep linked case
                 checkForDeepLinkedCase()
+                // Reschedule notifications with fresh context every time the app comes to foreground.
+                // This ensures the message reflects today's actual play state and streak.
+                SmartNotificationManager.shared.clearBadge()
+                if let stats = playerStats.first {
+                    let context = SmartNotificationManager.buildContext(
+                        from: stats,
+                        achievements: achievementProgressList.first
+                    )
+                    SmartNotificationManager.shared.rescheduleAll(context: context)
+                    // Refresh the Monday recap so its copy stays current (streak count, rank, etc.)
+                    let schoolRank = SmartNotificationManager.shared.getPreviousRank()?.rank
+                    SmartNotificationManager.shared.scheduleWeeklyRecap(
+                        streak: stats.currentStreak,
+                        schoolRank: schoolRank
+                    )
+                }
             }
         }
     }
@@ -302,7 +359,7 @@ struct ContentView: View {
             }
             .padding(.horizontal, 20)
 
-            // Fun Section: Leaderboard & Badges with enhanced interactions
+            // Secondary row: Leaderboard + Case History
             HStack(spacing: 12) {
                 EnhancedFeatureCard(
                     icon: "trophy.fill",
@@ -313,58 +370,9 @@ struct ContentView: View {
                 }
 
                 EnhancedFeatureCard(
-                    icon: "medal.fill",
-                    title: "Badges",
-                    badgeText: achievementBadgeText,
-                    color: .yellow
-                ) {
-                    showingAchievements = true
-                }
-            }
-            .padding(.horizontal, 20)
-
-            Spacer()
-        }
-    }
-
-    // MARK: - Progress Tab Content
-    private var progressTabContent: some View {
-        VStack(spacing: 16) {
-            Spacer()
-
-            // Compact Streak Display with subtle breathing animation
-            CompactStreakCard(stats: stats, isPro: subscriptionManager.isProUser)
-                .breathing(intensity: 0.01, duration: 3.0)
-                .padding(.horizontal, 20)
-
-            // Stats Grid (3 items - Statistics, Analytics, History) with enhanced interactions
-            VStack(spacing: 12) {
-                HStack(spacing: 12) {
-                    EnhancedFeatureCard(
-                        icon: "chart.bar.fill",
-                        title: "Statistics",
-                        color: .blue
-                    ) {
-                        showingStats = true
-                    }
-
-                    EnhancedFeatureCard(
-                        icon: "chart.pie.fill",
-                        title: "Analytics",
-                        color: .indigo,
-                        isLocked: !subscriptionManager.isProUser
-                    ) {
-                        if subscriptionManager.isProUser {
-                            showingCategoryAnalytics = true
-                        } else {
-                            showingPaywall = true
-                        }
-                    }
-                }
-
-                EnhancedFeatureCard(
                     icon: "clock.arrow.circlepath",
                     title: "Case History",
+                    badgeText: (!subscriptionManager.isProUser || missedCaseEntries.isEmpty) ? nil : "\(missedCaseEntries.count) missed",
                     color: .cyan,
                     isLocked: !subscriptionManager.isProUser
                 ) {
@@ -376,6 +384,81 @@ struct ContentView: View {
                 }
             }
             .padding(.horizontal, 20)
+
+            // Tertiary: Stats & Analytics — smaller, full-width, lower visual weight
+            Button {
+                showingStatsAnalytics = true
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "chart.bar.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.blue)
+                    Text("Stats & Analytics")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color(.systemBackground))
+                .cornerRadius(12)
+                .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 20)
+
+            Spacer()
+        }
+    }
+
+    // MARK: - Train Tab Content
+    private var progressTabContent: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            // Coming soon section
+            VStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.blue.opacity(0.15), Color.purple.opacity(0.15)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 80, height: 80)
+                    Image(systemName: "dumbbell.fill")
+                        .font(.system(size: 34))
+                        .foregroundStyle(
+                            LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
+                        )
+                }
+
+                VStack(spacing: 8) {
+                    Text("New Game Modes")
+                        .font(.title2.bold())
+                    Text("We're building focused training modes to help you practice timed diagnosis, weak categories, and spaced repetition — all designed to get you exam-ready faster.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 8)
+                }
+
+                Text("Coming Soon")
+                    .font(.caption.bold())
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 6)
+                    .background(
+                        LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
+                    )
+                    .cornerRadius(20)
+            }
+            .padding(.horizontal, 32)
 
             Spacer()
         }
@@ -501,13 +584,13 @@ struct ContentView: View {
 // MARK: - Home Tab Enum
 enum HomeTab: String, CaseIterable {
     case play = "Play"
-    case progress = "Progress"
+    case progress = "Train"
     case more = "More"
 
     var icon: String {
         switch self {
         case .play: return "play.circle.fill"
-        case .progress: return "chart.line.uptrend.xyaxis"
+        case .progress: return "dumbbell.fill"
         case .more: return "ellipsis.circle.fill"
         }
     }
@@ -739,6 +822,62 @@ struct PunchyFeatureCard: View {
         }
         .buttonStyle(.plain)
         .opacity(isLocked ? 0.7 : 1)
+    }
+}
+
+// MARK: - Stats + Analytics Combined Modal
+
+struct StatsAnalyticsView: View {
+    let isPro: Bool
+    let onShowPaywall: () -> Void
+    @State private var selectedTab = 0
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        // Each child (StatsView / CategoryAnalyticsView) already owns its own
+        // NavigationStack + Done button, so we just wrap them in a TabView.
+        TabView(selection: $selectedTab) {
+            StatsView()
+                .tabItem { Label("Statistics", systemImage: "chart.bar.fill") }
+                .tag(0)
+
+            Group {
+                if isPro {
+                    CategoryAnalyticsView()
+                } else {
+                    NavigationStack {
+                        VStack(spacing: 20) {
+                            Spacer()
+                            Image(systemName: "chart.pie.fill")
+                                .font(.system(size: 56))
+                                .foregroundStyle(.indigo.opacity(0.6))
+                            Text("Analytics is a Pro feature")
+                                .font(.title3.bold())
+                            Text("Upgrade to see how you perform across every category.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
+                            Button("Upgrade to Pro") {
+                                dismiss()
+                                onShowPaywall()
+                            }
+                            .buttonStyle(.borderedProminent)
+                            Spacer()
+                        }
+                        .navigationTitle("Analytics")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button("Done") { dismiss() }
+                            }
+                        }
+                    }
+                }
+            }
+            .tabItem { Label("Analytics", systemImage: "chart.pie.fill") }
+            .tag(1)
+        }
     }
 }
 
@@ -1124,6 +1263,272 @@ struct StreakFreezeIndicator: View {
 }
 
 import MessageUI
+
+// MARK: - Streak Detail Modal
+struct StreakDetailView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Query private var playerStats: [PlayerStats]
+    @Query(sort: \CaseHistoryEntry.playedAt) private var historyEntries: [CaseHistoryEntry]
+
+    private var stats: PlayerStats? { playerStats.first }
+
+    private static let dayFmt: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f
+    }()
+
+    // Map "yyyy-MM-dd" → case count
+    private var activityByDay: [String: Int] {
+        var map: [String: Int] = [:]
+        for entry in historyEntries {
+            let key = Self.dayFmt.string(from: entry.playedAt)
+            map[key, default: 0] += 1
+        }
+        return map
+    }
+
+    // True max streak computed from actual history (fixes stale PlayerStats.maxStreak)
+    private var computedMaxStreak: Int {
+        let stored = stats?.maxStreak ?? 0
+        let days = Set(historyEntries.map { Self.dayFmt.string(from: $0.playedAt) })
+            .sorted()
+        guard days.count > 1 else { return max(stored, days.isEmpty ? 0 : 1) }
+        var best = 1, run = 1
+        let calendar = Calendar.current
+        for i in 1..<days.count {
+            guard let prev = Self.dayFmt.date(from: days[i-1]),
+                  let curr = Self.dayFmt.date(from: days[i]) else { continue }
+            let gap = calendar.dateComponents([.day], from: prev, to: curr).day ?? 0
+            if gap == 1 { run += 1; best = max(best, run) } else { run = 1 }
+        }
+        return max(best, stored)
+    }
+
+    // 52 full weeks ending with the current week (Mon-Sun rows per column)
+    // Each column is one week: index 0 = Mon, index 6 = Sun
+    private var weeks: [[Date?]] {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.firstWeekday = 2 // Monday
+        let today = calendar.startOfDay(for: Date())
+        // Weekday offset from Monday (Mon=0, Tue=1, … Sun=6)
+        let weekdayRaw = calendar.component(.weekday, from: today) // 1=Sun..7=Sat
+        let offsetFromMonday = (weekdayRaw + 5) % 7 // Mon→0, Tue→1, … Sun→6
+
+        // The last column ends on the Sunday of the current week
+        guard let currentSunday = calendar.date(byAdding: .day, value: 6 - offsetFromMonday, to: today) else { return [] }
+
+        var result: [[Date?]] = []
+        for weekIndex in stride(from: 51, through: 0, by: -1) {
+            var week: [Date?] = Array(repeating: nil, count: 7)
+            for dayIndex in 0..<7 {
+                let daysBack = weekIndex * 7 + (6 - dayIndex)
+                if let d = calendar.date(byAdding: .day, value: -daysBack, to: currentSunday) {
+                    week[dayIndex] = d
+                }
+            }
+            result.append(week)
+        }
+        return result
+    }
+
+    // Returns list of (weekIndex, monthAbbrev) for month header labels
+    private var monthLabels: [(index: Int, text: String)] {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "MMM"
+        var labels: [(Int, String)] = []
+        var lastMonth = -1
+        for (i, week) in weeks.enumerated() {
+            if let firstDay = week.compactMap({ $0 }).first {
+                let month = Calendar.current.component(.month, from: firstDay)
+                if month != lastMonth {
+                    labels.append((i, fmt.string(from: firstDay)))
+                    lastMonth = month
+                }
+            }
+        }
+        return labels
+    }
+
+    private func cellColor(for date: Date?) -> Color {
+        guard let date else { return Color.clear }
+        if date > Date() { return Color(.systemGray6) }
+        let count = activityByDay[Self.dayFmt.string(from: date)] ?? 0
+        switch count {
+        case 0: return Color(.systemGray5)
+        case 1: return Color.orange.opacity(0.35)
+        case 2: return Color.orange.opacity(0.6)
+        case 3: return Color.orange.opacity(0.8)
+        default: return Color.orange
+        }
+    }
+
+    private var legendColors: [Color] {
+        [Color(.systemGray5), .orange.opacity(0.35), .orange.opacity(0.6), .orange.opacity(0.8), .orange]
+    }
+
+    private var streakMessage: String {
+        let s = stats?.currentStreak ?? 0
+        if s == 0 { return "Start today! 💪" }
+        else if s == 1 { return "Great start! 🌟" }
+        else if s < 7 { return "On fire! 🚀" }
+        else if s < 30 { return "Amazing! 🎯" }
+        else { return "Legendary! 👑" }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 28) {
+                    // ── Hero ──────────────────────────────────────────
+                    VStack(spacing: 6) {
+                        Text("🔥")
+                            .font(.system(size: 64))
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text("\(stats?.currentStreak ?? 0)")
+                                .font(.system(size: 56, weight: .bold, design: .rounded))
+                                .foregroundStyle(
+                                    LinearGradient(colors: [.orange, .red], startPoint: .leading, endPoint: .trailing)
+                                )
+                            Text("day streak")
+                                .font(.title3.weight(.medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(streakMessage)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 8)
+
+                    // ── Stats Grid ───────────────────────────────────
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                        StreakStatCell(label: "Best Streak", value: "\(computedMaxStreak)", icon: "crown.fill", color: .orange)
+                        StreakStatCell(label: "Total Played", value: "\(stats?.gamesPlayed ?? 0)", icon: "checkmark.circle.fill", color: .blue)
+                        StreakStatCell(label: "Win Rate", value: "\(stats?.winPercentage ?? 0)%", icon: "target", color: .green)
+                    }
+                    .padding(.horizontal, 20)
+
+                    // ── Activity Heatmap ─────────────────────────────
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Activity")
+                            .font(.headline)
+                            .padding(.horizontal, 20)
+
+                        HStack(alignment: .top, spacing: 4) {
+                            // Day labels — hard-pinned 16pt wide so ScrollView gets the rest
+                            VStack(spacing: 0) {
+                                Rectangle().fill(.clear).frame(width: 16, height: 16)
+                                VStack(spacing: 3) {
+                                    ForEach(Array(["M","T","W","T","F","S","S"].enumerated()), id: \.offset) { _, lbl in
+                                        Text(lbl)
+                                            .font(.system(size: 9, weight: .medium))
+                                            .foregroundStyle(.secondary)
+                                            .frame(width: 16, height: 12, alignment: .trailing)
+                                    }
+                                }
+                            }
+                            .frame(width: 16) // ← hard pin: nothing inside can flex this wider
+
+                            // Full 52-week scrollable grid, auto-positioned to current week
+                            ScrollViewReader { proxy in
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        // Month labels: ZStack so text isn't clipped by column width
+                                        ZStack(alignment: .topLeading) {
+                                            Rectangle().fill(.clear)
+                                                .frame(width: CGFloat(weeks.count) * 15, height: 16)
+                                            ForEach(monthLabels, id: \.index) { month in
+                                                Text(month.text)
+                                                    .font(.system(size: 9, weight: .medium))
+                                                    .foregroundStyle(.secondary)
+                                                    .fixedSize()
+                                                    .offset(x: CGFloat(month.index) * 15)
+                                            }
+                                        }
+                                        // Cell grid
+                                        HStack(spacing: 3) {
+                                            ForEach(0..<weeks.count, id: \.self) { wi in
+                                                VStack(spacing: 3) {
+                                                    ForEach(0..<7, id: \.self) { di in
+                                                        RoundedRectangle(cornerRadius: 2)
+                                                            .fill(cellColor(for: weeks[wi][di]))
+                                                            .frame(width: 12, height: 12)
+                                                    }
+                                                }
+                                                .id(wi)
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal, 4)
+                                }
+                                .onAppear {
+                                    proxy.scrollTo(weeks.count - 1, anchor: .trailing)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+
+                        // Legend
+                        HStack(spacing: 4) {
+                            Spacer()
+                            Text("Less")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                            ForEach(legendColors.indices, id: \.self) { i in
+                                RoundedRectangle(cornerRadius: 2).fill(legendColors[i]).frame(width: 12, height: 12)
+                            }
+                            Text("More")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal, 20)
+                    }
+                    .padding(.vertical, 16)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(16)
+                    .shadow(color: .black.opacity(0.05), radius: 6, y: 2)
+                    .padding(.horizontal, 20)
+
+                    Spacer(minLength: 24)
+                }
+            }
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .navigationTitle("Streak")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .fontWeight(.semibold)
+                }
+            }
+        }
+    }
+}
+
+struct StreakStatCell: View {
+    let label: String
+    let value: String
+    let icon: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundStyle(color)
+            Text(value)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .background(Color(.systemBackground))
+        .cornerRadius(14)
+        .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
+    }
+}
 
 struct FeedbackSheet: View {
     @Environment(\.dismiss) private var dismiss

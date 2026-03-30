@@ -54,8 +54,9 @@ struct GameView: View {
     @State private var showingStats = false
     @State private var suggestions: [String] = []
     @State private var showingSuggestions = false
+    @State private var suppressNextSuggestionUpdate = false
     @State private var showingReport = false
-    @State private var showingInputSheet = false
+    @State private var isEnteringDiagnosis = false
     @State private var showingLevelUp = false
     @State private var newLevel: MedicalTrainingLevel?
     @State private var showConfetti = false
@@ -108,7 +109,9 @@ struct GameView: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Main content - full screen scrollable
+            // Main content - full screen scrollable.
+            // .ignoresSafeArea(.keyboard) keeps hints fully visible when the keyboard
+            // is up; the inline input panel at the bottom handles its own positioning.
             ScrollView {
                 VStack(spacing: 16) {
                     // Header
@@ -151,65 +154,77 @@ struct GameView: View {
                     ? swipeUpGesture
                     : nil
             )
-            
-            // Floating action buttons for input (only when playing)
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+
+            // Bottom action area — shows either the inline diagnosis input (when
+            // the user is actively typing) or the regular floating action buttons.
             if gameSession.gameState == .playing {
-                HStack(spacing: 12) {
-                    // Primary Enter Diagnosis button (2/3 width, on left)
-                    Button {
-                        showingInputSheet = true
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "stethoscope")
-                                .font(.body)
-                            Text(gameSession.hintsRevealed >= gameSession.maxHints ? "Make Final Guess" : "Enter Diagnosis")
-                                .fontWeight(.semibold)
-                        }
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(gameSession.hintsRevealed >= gameSession.maxHints ? Color.orange : Color.blue)
-                        .foregroundStyle(.white)
-                        .cornerRadius(16)
-                        .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
-                    }
-                    
-                    // Reveal Hint button (1/3 width, on right, similar style)
-                    if gameSession.canRevealHint() {
+                if isEnteringDiagnosis {
+                    inlineDiagnosisInput
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                } else {
+                    HStack(spacing: 12) {
+                        // Primary Enter Diagnosis button (2/3 width, on left)
                         Button {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                gameSession.revealNextHint()
+                                isEnteringDiagnosis = true
                             }
-                            HapticManager.shared.hintRevealed()
-                            
-                            // Track hint revealed
-                            AnalyticsManager.shared.trackHintRevealed(
-                                hintIndex: gameSession.hintsRevealed - 1,
-                                caseID: currentCase.id.uuidString
-                            )
+                            isTextFieldFocused = true
                         } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "lightbulb.fill")
+                            HStack(spacing: 8) {
+                                Image(systemName: "stethoscope")
                                     .font(.body)
-                                Text("Hint")
+                                Text(gameSession.hintsRevealed >= gameSession.maxHints ? "Make Final Guess" : "Enter Diagnosis")
                                     .fontWeight(.semibold)
                             }
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(Color.orange)
+                            .background(gameSession.hintsRevealed >= gameSession.maxHints ? Color.orange : Color.blue)
                             .foregroundStyle(.white)
                             .cornerRadius(16)
                             .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
                         }
-                        .frame(width: 90)
+
+                        // Reveal Hint button (1/3 width, on right, similar style)
+                        if gameSession.canRevealHint() {
+                            Button {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    gameSession.revealNextHint()
+                                }
+                                HapticManager.shared.hintRevealed()
+
+                                // Track hint revealed
+                                AnalyticsManager.shared.trackHintRevealed(
+                                    hintIndex: gameSession.hintsRevealed - 1,
+                                    caseID: currentCase.id.uuidString
+                                )
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "lightbulb.fill")
+                                        .font(.body)
+                                    Text("Hint")
+                                        .fontWeight(.semibold)
+                                }
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(Color.orange)
+                                .foregroundStyle(.white)
+                                .cornerRadius(16)
+                                .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
+                            }
+                            .frame(width: 90)
+                        }
                     }
+                    .adaptiveContentWidth()
+                    .padding(.horizontal)
+                    .padding(.bottom)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                .adaptiveContentWidth() // Apply iPad-friendly centering to buttons too
-                .padding(.horizontal)
-                .padding(.bottom)
             }
         }
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isEnteringDiagnosis)
         .navigationTitle("Rounds")
         .navigationBarTitleDisplayMode(.inline)
         .overlay(
@@ -244,21 +259,6 @@ struct GameView: View {
         }
         .sheet(isPresented: $showingReport) {
             ReportCaseSheet(caseTitle: currentCase.diagnosis)
-        }
-        .sheet(isPresented: $showingInputSheet) {
-            DiagnosisInputSheet(
-                currentGuess: $currentGuess,
-                suggestions: $suggestions,
-                showingSuggestions: $showingSuggestions,
-                onSubmit: {
-                    submitGuess()
-                    showingInputSheet = false
-                },
-                onTextChange: updateSuggestions,
-                isFinalGuess: gameSession.hintsRevealed >= gameSession.maxHints
-            )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
         }
         .alert("Result", isPresented: $showingResult) {
             Button("OK") { }
@@ -299,22 +299,27 @@ struct GameView: View {
             Label("\(gameSession.guesses.count)/\(gameSession.maxGuesses)", systemImage: "brain.head.profile")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            
+
             Spacer()
-            
-            // Category label - can be hidden via Settings for harder gameplay
-            if !hideCategoryLabel {
-                Text(currentCase.category)
-                    .font(.caption)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.2))
-                    .foregroundStyle(.blue)
-                    .cornerRadius(8)
-                
-                Spacer()
+
+            HStack(spacing: 6) {
+                // Category label - can be hidden via Settings for harder gameplay
+                if !hideCategoryLabel {
+                    Text(currentCase.category)
+                        .font(.caption)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.blue.opacity(0.15))
+                        .foregroundStyle(.blue)
+                        .cornerRadius(8)
+                }
+
+                // Difficulty badge — always visible
+                DifficultyBadge(difficulty: currentCase.difficulty)
             }
-            
+
+            Spacer()
+
             Label("\(gameSession.hintsRevealed)/\(gameSession.maxHints)", systemImage: "lightbulb.fill")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
@@ -468,7 +473,13 @@ struct GameView: View {
                 }
             }
             
-            // Share button - challenge a friend! (use actual hints for won games)
+            // Study nudge: for losses, surface the case history + quick resource links
+            // immediately while the learning moment is hot.
+            if gameSession.gameState != .won {
+                studyNudgeCard
+            }
+
+            // Share buttons
             ShareResultButton(
                 won: gameSession.gameState == .won,
                 diagnosis: currentCase.diagnosis,
@@ -478,7 +489,18 @@ struct GameView: View {
                 isDailyCase: isDailyCase,
                 caseID: isDailyCase ? nil : currentCase.id.uuidString
             )
-            
+
+            // Story card — teases 1-2 hints and challenges friends to guess
+            SocialShareButton(
+                firstHint: currentCase.hints.first ?? "",
+                secondHint: currentCase.hints.count > 1 ? currentCase.hints[1] : nil,
+                category: currentCase.category,
+                score: gameSession.score,
+                won: gameSession.gameState == .won,
+                isDailyCase: isDailyCase,
+                caseID: isDailyCase ? nil : currentCase.id.uuidString
+            )
+
             // Hint about AMBOSS link
             Text("Tap diagnosis to learn more on AMBOSS")
                 .font(.caption2)
@@ -487,6 +509,165 @@ struct GameView: View {
         .padding(14)
         .background(Color(.systemGray6))
         .cornerRadius(14)
+    }
+
+    // MARK: - Study Nudge (post-loss)
+
+    /// Compact nudge shown after a loss. Stays small so the swipe-up CTA stays visible.
+    private var studyNudgeCard: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "books.vertical.fill")
+                .font(.subheadline)
+                .foregroundStyle(.blue)
+            Text("Added to your **Case History** study list")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.blue.opacity(0.06))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.blue.opacity(0.15), lineWidth: 1)
+        )
+        .cornerRadius(10)
+    }
+
+    // MARK: - Inline Diagnosis Input
+    private var inlineDiagnosisInput: some View {
+        VStack(spacing: 0) {
+            // Suggestions panel — floats above the input bar
+            if showingSuggestions && !suggestions.isEmpty {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(suggestions.prefix(6), id: \.self) { suggestion in
+                            Button {
+                                suppressNextSuggestionUpdate = true
+                                withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                    currentGuess = suggestion
+                                    showingSuggestions = false
+                                    suggestions = []
+                                }
+                            } label: {
+                                HStack {
+                                    Text(suggestion)
+                                        .font(.body)
+                                        .foregroundStyle(.primary)
+                                    Spacer()
+                                    Image(systemName: "arrow.up.left")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            Divider().padding(.leading, 16)
+                        }
+                    }
+                }
+                .frame(maxHeight: 220)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Color(.separator), lineWidth: 0.5)
+                )
+                .padding(.horizontal)
+                .padding(.bottom, 6)
+            }
+
+            // Input bar
+            HStack(spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: "stethoscope")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    TextField(
+                        gameSession.hintsRevealed >= gameSession.maxHints ? "Final answer..." : "Type diagnosis...",
+                        text: $currentGuess
+                    )
+                    .focused($isTextFieldFocused)
+                    .autocapitalization(.words)
+                    .disableAutocorrection(true)
+                    .onChange(of: currentGuess) { _, newValue in
+                        if suppressNextSuggestionUpdate {
+                            suppressNextSuggestionUpdate = false
+                            return
+                        }
+                        updateSuggestions(for: newValue)
+                    }
+                    .onSubmit {
+                        guard !currentGuess.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+                        submitGuess()
+                        isEnteringDiagnosis = false
+                        isTextFieldFocused = false
+                    }
+                    if !currentGuess.isEmpty {
+                        Button {
+                            currentGuess = ""
+                            suggestions = []
+                            showingSuggestions = false
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(10)
+
+                Button {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        isEnteringDiagnosis = false
+                    }
+                    isTextFieldFocused = false
+                    currentGuess = ""
+                    suggestions = []
+                    showingSuggestions = false
+                } label: {
+                    Text("Cancel")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                Button {
+                    submitGuess()
+                    isEnteringDiagnosis = false
+                    isTextFieldFocused = false
+                } label: {
+                    Text(gameSession.hintsRevealed >= gameSession.maxHints ? "Final!" : "Submit")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(
+                            currentGuess.trimmingCharacters(in: .whitespaces).isEmpty
+                                ? Color.gray
+                                : (gameSession.hintsRevealed >= gameSession.maxHints ? Color.orange : Color.blue)
+                        )
+                        .foregroundStyle(.white)
+                        .cornerRadius(10)
+                }
+                .disabled(currentGuess.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+            .background(.regularMaterial)
+            .clipShape(
+                UnevenRoundedRectangle(
+                    topLeadingRadius: 16,
+                    bottomLeadingRadius: 0,
+                    bottomTrailingRadius: 0,
+                    topTrailingRadius: 16,
+                    style: .continuous
+                )
+            )
+            .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: -2)
+        }
     }
 
     // MARK: - Swipe Progress
@@ -720,19 +901,26 @@ struct GameView: View {
             
             // Check achievements
             checkAchievements(stats: stats, won: won, hintsUsed: actualHintsUsed)
+
+            // User played — cancel today's reminders immediately so they don't get
+            // irrelevant nudges for the rest of the day.
+            SmartNotificationManager.shared.cancelTodaysReminders()
         } else {
             let newStats = PlayerStats()
             newStats.recordGame(won: won, guessCount: gameSession.guesses.count, score: gameSession.score, isPro: isPro)
-            
+
             // Mark daily case as completed
             if isDailyCase {
                 newStats.markDailyCaseCompleted()
             }
-            
+
             modelContext.insert(newStats)
-            
+
             // Check achievements for new stats
             checkAchievements(stats: newStats, won: won, hintsUsed: actualHintsUsed)
+
+            // Cancel today's reminders for new player too
+            SmartNotificationManager.shared.cancelTodaysReminders()
         }
         
         // Save to case history - use actual hints used
@@ -968,166 +1156,6 @@ struct ReportCaseSheet: View {
         }
     }
 }
-// MARK: - Diagnosis Input Sheet
-struct DiagnosisInputSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @Binding var currentGuess: String
-    @Binding var suggestions: [String]
-    @Binding var showingSuggestions: Bool
-    @FocusState private var isTextFieldFocused: Bool
-    let onSubmit: () -> Void
-    let onTextChange: (String) -> Void
-    let isFinalGuess: Bool
-    
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Input section at top
-                VStack(spacing: 12) {
-                    TextField("Enter diagnosis", text: $currentGuess)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.body)
-                        .autocapitalization(.words)
-                        .disableAutocorrection(true)
-                        .focused($isTextFieldFocused)
-                        .onChange(of: currentGuess) { oldValue, newValue in
-                            onTextChange(newValue)
-                        }
-                        .padding(.horizontal)
-                        .padding(.top, 8)
-                    
-                    // Submit button - full width
-                    Button {
-                        onSubmit()
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: isFinalGuess ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
-                                .font(.body)
-                            Text(isFinalGuess ? "Submit Final Answer!" : "Check My Answer")
-                                .fontWeight(.semibold)
-                        }
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(currentGuess.isEmpty ? Color.gray : (isFinalGuess ? Color.orange : Color.blue))
-                        .foregroundStyle(.white)
-                        .cornerRadius(12)
-                    }
-                    .disabled(currentGuess.isEmpty)
-                    .padding(.horizontal)
-                }
-                .padding(.bottom, 12)
-                .background(Color(.systemBackground))
-                
-                Divider()
-                
-                // Suggestions list - takes remaining space
-                if showingSuggestions && !suggestions.isEmpty {
-                    VStack(alignment: .leading, spacing: 0) {
-                        // Header
-                        HStack {
-                            Text("Suggested Diagnoses")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                            Spacer()
-                            Text("\(suggestions.count) matches")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.horizontal)
-                        .padding(.vertical, 12)
-                        .background(Color(.systemGray6))
-                        
-                        Divider()
-                        
-                        // Scrollable suggestions
-                        ScrollView {
-                            LazyVStack(spacing: 0) {
-                                ForEach(suggestions, id: \.self) { suggestion in
-                                    Button {
-                                        currentGuess = suggestion
-                                        showingSuggestions = false
-                                        isTextFieldFocused = false
-                                    } label: {
-                                        HStack {
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                Text(suggestion)
-                                                    .font(.body)
-                                                    .foregroundStyle(.primary)
-                                                    .multilineTextAlignment(.leading)
-                                            }
-                                            
-                                            Spacer()
-                                            
-                                            Image(systemName: "arrow.up.left.circle.fill")
-                                                .font(.title3)
-                                                .foregroundStyle(.blue)
-                                        }
-                                        .padding(.horizontal)
-                                        .padding(.vertical, 14)
-                                        .background(Color(.systemBackground))
-                                        .contentShape(Rectangle())
-                                    }
-                                    .buttonStyle(.plain)
-                                    
-                                    Divider()
-                                        .padding(.leading)
-                                }
-                            }
-                        }
-                    }
-                } else if currentGuess.isEmpty {
-                    // Empty state
-                    VStack(spacing: 16) {
-                        Image(systemName: "text.cursor")
-                            .font(.system(size: 48))
-                            .foregroundStyle(.secondary)
-                        
-                        Text("Start typing to see diagnosis suggestions")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxHeight: .infinity)
-                    .padding()
-                } else {
-                    // No matches
-                    VStack(spacing: 16) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 48))
-                            .foregroundStyle(.secondary)
-                        
-                        VStack(spacing: 8) {
-                            Text("No matches found")
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                            
-                            Text("Try a different spelling or diagnosis name")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                        }
-                    }
-                    .frame(maxHeight: .infinity)
-                    .padding()
-                }
-            }
-            .navigationTitle("Enter Diagnosis")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
-            .onAppear {
-                isTextFieldFocused = true
-            }
-        }
-    }
-}
-
 // MARK: - Level Up Celebration View
 struct LevelUpView: View {
     @Environment(\.dismiss) private var dismiss
@@ -1315,6 +1343,42 @@ struct ConfettiPieceView: View {
                     rotationAmount = Double.random(in: 360...1080)
                 }
             }
+    }
+}
+
+// MARK: - Difficulty Badge
+
+struct DifficultyBadge: View {
+    let difficulty: Int
+
+    private var label: String {
+        switch difficulty {
+        case 1: return "Easy"
+        case 2: return "Medium"
+        case 3: return "Hard"
+        case 4: return "Expert"
+        default: return "Legendary"
+        }
+    }
+
+    private var color: Color {
+        switch difficulty {
+        case 1: return .green
+        case 2: return .blue
+        case 3: return .orange
+        case 4: return .red
+        default: return .purple
+        }
+    }
+
+    var body: some View {
+        Text(label)
+            .font(.caption)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(color.opacity(0.15))
+            .foregroundStyle(color)
+            .cornerRadius(8)
     }
 }
 
