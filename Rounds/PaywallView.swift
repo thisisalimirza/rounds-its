@@ -43,6 +43,15 @@ struct RoundsPaywallView: View {
                     onRestoreCompleted?(customerInfo)
                     if SubscriptionManager.shared.hasProAccess() {
                         dismiss()
+                    } else {
+                        // RevenueCat's internal restore misses Apple promo/offer code redemptions.
+                        // syncPurchases uploads the current receipt fresh, which catches them.
+                        Task {
+                            try? await SubscriptionManager.shared.syncPurchases()
+                            if SubscriptionManager.shared.hasProAccess() {
+                                dismiss()
+                            }
+                        }
                     }
                 }
                 .onPurchaseFailure { error in
@@ -305,13 +314,19 @@ struct CustomRoundsPaywallView: View {
     private func restorePurchases() async {
         isLoading = true
         defer { isLoading = false }
-        
+
         do {
             _ = try await subscriptionManager.restorePurchases()
+
+            // Fall back to syncPurchases for Apple promo/offer code redemptions.
+            if !subscriptionManager.hasProAccess() {
+                _ = try await subscriptionManager.syncPurchases()
+            }
+
             if subscriptionManager.hasProAccess() {
                 showingSuccess = true
             } else {
-                errorMessage = "No previous purchases found"
+                errorMessage = "No previous purchases found. If you redeemed a promo code, make sure it was applied in the App Store and try again."
                 showingError = true
             }
         } catch {

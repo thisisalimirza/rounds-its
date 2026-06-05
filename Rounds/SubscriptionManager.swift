@@ -166,8 +166,18 @@ final class SubscriptionManager {
     /// Restore previous purchases
     func restorePurchases() async throws -> CustomerInfo {
         AnalyticsManager.shared.trackPurchaseRestored()
-        
+
         let info = try await Purchases.shared.restorePurchases()
+        updateCustomerInfo(info)
+        return info
+    }
+
+    /// Sync purchases by uploading the current receipt to RevenueCat.
+    /// Use this after an Apple promo/offer code is redeemed — restorePurchases() won't
+    /// surface offer code transactions, but syncPurchases() will because it sends the
+    /// fresh device receipt directly to RevenueCat's backend.
+    func syncPurchases() async throws -> CustomerInfo {
+        let info = try await Purchases.shared.syncPurchases()
         updateCustomerInfo(info)
         return info
     }

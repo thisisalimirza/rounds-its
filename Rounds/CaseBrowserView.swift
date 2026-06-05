@@ -454,7 +454,7 @@ struct CaseBrowserView: View {
                             CompactCaseRow(
                                 medicalCase: medicalCase,
                                 caseNumber: index + 1,
-                                isLocked: !subscriptionManager.isProSubscriber,
+                                isLocked: !subscriptionManager.isProUser,
                                 isCompleted: isCompleted,
                                 wasCorrect: historyItem?.wasCorrect
                             )
@@ -656,7 +656,7 @@ struct CategoryCasesView: View {
                             CompactCaseRow(
                                 medicalCase: medicalCase,
                                 caseNumber: index + 1,
-                                isLocked: !subscriptionManager.isProSubscriber,
+                                isLocked: !subscriptionManager.isProUser,
                                 isCompleted: isCompleted,
                                 wasCorrect: historyItem?.wasCorrect
                             )
@@ -762,7 +762,7 @@ struct AllCasesView: View {
                     CompactCaseRow(
                         medicalCase: medicalCase,
                         caseNumber: index + 1,
-                        isLocked: !subscriptionManager.isProSubscriber,
+                        isLocked: !subscriptionManager.isProUser,
                         isCompleted: isCompleted,
                         wasCorrect: historyItem?.wasCorrect
                     )
