@@ -25,6 +25,9 @@ struct ContentView: View {
     @State private var showingDailyCompleteAlert = false
     @State private var showingPaywall = false
     @State private var showingConfetti = false
+    #if DEBUG
+    @State private var showingDebugMenu = false
+    #endif
     @State private var showingCaseHistory = false
     @State private var showingAchievements = false
     @State private var showingCategoryAnalytics = false
@@ -90,6 +93,11 @@ struct ContentView: View {
                                         endPoint: .trailing
                                     )
                                 )
+                                #if DEBUG
+                                .onTapGesture(count: 3) {
+                                    showingDebugMenu = true
+                                }
+                                #endif
 
                             if subscriptionManager.isProUser {
                                 ProBadge(size: .small)
@@ -193,6 +201,11 @@ struct ContentView: View {
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
+            #if DEBUG
+            .sheet(isPresented: $showingDebugMenu) {
+                DebugMenuView()
+            }
+            #endif
             .sheet(isPresented: $showingCaseBrowser) {
                 CaseBrowserView()
             }
