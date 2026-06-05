@@ -11,8 +11,13 @@ import SwiftUI
 
 struct DebugMenuView: View {
     @Environment(\.dismiss) private var dismiss
+
     @State private var showingPaywallPreview = false
-    @State private var showingRetentionPreview = false
+    @State private var showingRetentionOffer = false
+    @State private var showingMainPaywall = false
+
+    // Refreshable state readout
+    @State private var refreshToggle = false
 
     var body: some View {
         NavigationStack {
@@ -22,7 +27,10 @@ struct DebugMenuView: View {
                 Section {
                     Toggle(isOn: Binding(
                         get: { UserDefaults.standard.bool(forKey: "debug_simulate_free_user") },
-                        set: { UserDefaults.standard.set($0, forKey: "debug_simulate_free_user") }
+                        set: {
+                            UserDefaults.standard.set($0, forKey: "debug_simulate_free_user")
+                            refreshToggle.toggle()
+                        }
                     )) {
                         Label("Simulate Free User", systemImage: "person.slash")
                     }
@@ -30,39 +38,73 @@ struct DebugMenuView: View {
                 } header: {
                     Text("Subscription")
                 } footer: {
-                    Text("Forces free tier so you can test paywalls and locked UI. Stripped from App Store builds.")
+                    Text("Forces free tier so you can test paywalls and locked UI. Toggle flips instantly — no restart needed.")
                 }
 
-                // MARK: - Paywall previews
+                // MARK: - Paywall testing
                 Section {
+                    // Static screenshot preview
                     Button {
                         showingPaywallPreview = true
                     } label: {
-                        Label("Preview 3-Tier Paywall", systemImage: "camera")
+                        Label("3-Tier Paywall (screenshot mock)", systemImage: "camera")
                     }
 
+                    // Real interactive main paywall
                     Button {
-                        // Reset the seen flag so retention offer can show again
-                        UserDefaults.standard.removeObject(forKey: "hasSeenRetentionOffer")
+                        showingMainPaywall = true
                     } label: {
-                        Label("Reset Retention Offer (show again)", systemImage: "arrow.counterclockwise")
+                        Label("Main Paywall (live RevenueCat)", systemImage: "creditcard")
+                    }
+
+                    // Retention offer — direct launch
+                    Button {
+                        // Reset flag first so it can be shown, then present directly
+                        UserDefaults.standard.removeObject(forKey: "hasSeenRetentionOffer")
+                        refreshToggle.toggle()
+                        showingRetentionOffer = true
+                    } label: {
+                        Label("Retention Offer (live RevenueCat)", systemImage: "gift")
+                    }
+
+                    // Reset flag only, without showing
+                    Button(role: .destructive) {
+                        UserDefaults.standard.removeObject(forKey: "hasSeenRetentionOffer")
+                        refreshToggle.toggle()
+                    } label: {
+                        Label("Reset 'Seen Retention' flag only", systemImage: "arrow.counterclockwise")
                     }
                 } header: {
                     Text("Paywalls")
                 } footer: {
-                    Text("Use '3-Tier Paywall' to take App Store screenshots. Reset retention to re-trigger the one-time offer.")
+                    Text("'Screenshot mock' is static — for App Store submission only. 'Live RevenueCat' versions hit real offerings and are fully interactive.")
                 }
 
-                // MARK: - RevenueCat status
+                // MARK: - Live state readout
                 Section {
                     let sm = SubscriptionManager.shared
-                    DebugRow(label: "Pro Access", value: sm.isProUser ? "✅ Yes" : "❌ No")
-                    DebugRow(label: "Pro Subscriber", value: sm.isProSubscriber ? "✅ Yes" : "❌ No")
-                    DebugRow(label: "Status", value: sm.subscriptionStatus.displayName)
-                    DebugRow(label: "Free Simulation", value: UserDefaults.standard.bool(forKey: "debug_simulate_free_user") ? "ON" : "off")
-                    DebugRow(label: "Seen Retention", value: UserDefaults.standard.bool(forKey: "hasSeenRetentionOffer") ? "Yes" : "No")
+                    let _ = refreshToggle // force re-read on toggle
+                    DebugRow(
+                        label: "Pro Access",
+                        value: sm.isProUser ? "✅ Yes" : "❌ No",
+                        valueColor: sm.isProUser ? .green : .red
+                    )
+                    DebugRow(
+                        label: "RC Subscriber",
+                        value: sm.isProSubscriber ? "✅ Yes" : "❌ No",
+                        valueColor: sm.isProSubscriber ? .green : .red
+                    )
+                    DebugRow(label: "Plan", value: sm.subscriptionStatus.displayName)
+                    DebugRow(
+                        label: "Free Simulation",
+                        value: UserDefaults.standard.bool(forKey: "debug_simulate_free_user") ? "🟠 ON" : "off"
+                    )
+                    DebugRow(
+                        label: "Seen Retention",
+                        value: UserDefaults.standard.bool(forKey: "hasSeenRetentionOffer") ? "Yes" : "No"
+                    )
                 } header: {
-                    Text("Current State")
+                    Text("Live State")
                 }
             }
             .navigationTitle("🛠 Debug Menu")
@@ -75,6 +117,12 @@ struct DebugMenuView: View {
             .sheet(isPresented: $showingPaywallPreview) {
                 DebugPaywallPreview()
             }
+            .sheet(isPresented: $showingMainPaywall) {
+                RoundsPaywallView()
+            }
+            .sheet(isPresented: $showingRetentionOffer) {
+                RetentionOfferView()
+            }
         }
     }
 }
@@ -82,12 +130,16 @@ struct DebugMenuView: View {
 private struct DebugRow: View {
     let label: String
     let value: String
+    var valueColor: Color = .secondary
 
     var body: some View {
         HStack {
-            Text(label).foregroundStyle(.secondary)
+            Text(label)
+                .foregroundStyle(.secondary)
             Spacer()
-            Text(value).font(.system(.caption, design: .monospaced))
+            Text(value)
+                .font(.system(.caption, design: .monospaced))
+                .foregroundStyle(valueColor)
         }
     }
 }
