@@ -198,6 +198,15 @@ final class SubscriptionManager {
     /// Check if user has active Pro subscription
     /// Note: This is @MainActor isolated - call from SwiftUI views or main thread only
     func hasProAccess() -> Bool {
+        // DEBUG-only: allow simulating a free user for screenshots / UI testing.
+        // This flag is never compiled into App Store builds.
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "debug_simulate_free_user") {
+            print("🧪 Simulating free user (debug override active)")
+            return false
+        }
+        #endif
+
         // Auto-grant Pro access for TestFlight users
         if isTestFlightBuild() {
             print("✅ TestFlight detected - granting Pro access")

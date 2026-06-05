@@ -257,10 +257,26 @@ struct CustomSubscriptionSettingsView: View {
                     .foregroundStyle(.secondary)
             }
             .padding(.vertical, 4)
+
+            #if DEBUG
+            // Simulate free user — DEBUG builds only, stripped from App Store builds
+            Toggle(isOn: Binding(
+                get: { UserDefaults.standard.bool(forKey: "debug_simulate_free_user") },
+                set: { UserDefaults.standard.set($0, forKey: "debug_simulate_free_user") }
+            )) {
+                Label("Simulate Free User", systemImage: "person.slash")
+                    .foregroundStyle(.orange)
+            }
+            .tint(.orange)
+            #endif
         } header: {
             Text("Debug Info")
         } footer: {
+            #if DEBUG
+            Text("'Simulate Free User' forces free tier so you can screenshot paywalls. Stripped from App Store builds.")
+            #else
             Text("Use this to verify TestFlight detection and subscription status.")
+            #endif
         }
     }
     
