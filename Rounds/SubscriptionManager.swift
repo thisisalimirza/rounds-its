@@ -112,13 +112,24 @@ final class SubscriptionManager {
         self.isProSubscriber = proEntitlement?.isActive == true
         
         // Determine subscription status
+        // Supports both friendly identifiers (monthly/yearly/lifetime) and
+        // the short numeric App Store product IDs (01=monthly, 02=annual, 03=lifetime).
         if let entitlement = proEntitlement, entitlement.isActive {
             let productId = entitlement.productIdentifier
-            if productId.contains("lifetime") || (entitlement.expirationDate == nil && !entitlement.willRenew) {
+            let isLifetime = productId == "03"
+                || productId.contains("lifetime")
+                || (entitlement.expirationDate == nil && !entitlement.willRenew)
+            let isAnnual = productId == "02"
+                || productId.contains("yearly")
+                || productId.contains("annual")
+            let isMonthly = productId == "01"
+                || productId.contains("monthly")
+
+            if isLifetime {
                 self.subscriptionStatus = .lifetime
-            } else if productId.contains("yearly") {
+            } else if isAnnual {
                 self.subscriptionStatus = .yearly
-            } else if productId.contains("monthly") {
+            } else if isMonthly {
                 self.subscriptionStatus = .monthly
             } else {
                 self.subscriptionStatus = .monthly
