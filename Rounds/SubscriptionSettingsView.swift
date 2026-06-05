@@ -30,6 +30,7 @@ struct CustomSubscriptionSettingsView: View {
     @State private var errorMessage: String?
     @State private var showingPaywall = false
     @State private var didPresentCodeSheet = false
+    @State private var showingPaywallPreview = false
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     
@@ -259,7 +260,6 @@ struct CustomSubscriptionSettingsView: View {
             .padding(.vertical, 4)
 
             #if DEBUG
-            // Simulate free user — DEBUG builds only, stripped from App Store builds
             Toggle(isOn: Binding(
                 get: { UserDefaults.standard.bool(forKey: "debug_simulate_free_user") },
                 set: { UserDefaults.standard.set($0, forKey: "debug_simulate_free_user") }
@@ -268,6 +268,16 @@ struct CustomSubscriptionSettingsView: View {
                     .foregroundStyle(.orange)
             }
             .tint(.orange)
+
+            Button {
+                showingPaywallPreview = true
+            } label: {
+                Label("Preview 3-Tier Paywall (Screenshot)", systemImage: "camera")
+                    .foregroundStyle(.purple)
+            }
+            .sheet(isPresented: $showingPaywallPreview) {
+                DebugPaywallPreview()
+            }
             #endif
         } header: {
             Text("Debug Info")
