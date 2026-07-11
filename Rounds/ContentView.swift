@@ -27,6 +27,7 @@ struct ContentView: View {
     @State private var showingAchievements = false
     @State private var showingCategoryAnalytics = false
     @State private var showingLeaderboard = false
+    @State private var showingConnections = false
     @State private var showingInviteRedeem = false
     @State private var inviteCodeToRedeem: String?
     @State private var selectedTab: HomeTab = .play
@@ -94,8 +95,32 @@ struct ContentView: View {
 
                         Spacer()
 
-                        // Streak Pill with animated fire effect
-                        AnimatedStreakPill(streak: stats.currentStreak, freezes: stats.streakFreezesAvailable, isPro: subscriptionManager.isProUser)
+                        HStack(spacing: 10) {
+                            // Badges / Achievements
+                            Button {
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                showingAchievements = true
+                            } label: {
+                                Image(systemName: "medal.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundStyle(.yellow)
+                                    .frame(width: 36, height: 36)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Badges")
+
+                            // Streak Pill with animated fire effect (tap for stats)
+                            Button {
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                showingStats = true
+                            } label: {
+                                AnimatedStreakPill(streak: stats.currentStreak, freezes: stats.streakFreezesAvailable, isPro: subscriptionManager.isProUser)
+                                    .contentShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Current streak: \(stats.currentStreak). Tap for statistics.")
+                        }
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
@@ -150,6 +175,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingLeaderboard) {
                 LeaderboardView()
+            }
+            .sheet(isPresented: $showingConnections) {
+                ConnectionsGameView()
             }
             .sheet(isPresented: $showingAbout) {
                 AboutView()
@@ -331,14 +359,50 @@ struct ContentView: View {
                 }
 
                 EnhancedFeatureCard(
-                    icon: "medal.fill",
-                    title: "Badges",
-                    badgeText: achievementBadgeText,
-                    color: .yellow
+                    icon: "clock.arrow.circlepath",
+                    title: "Past Cases",
+                    color: .cyan,
+                    isLocked: !subscriptionManager.isProUser
                 ) {
-                    showingAchievements = true
+                    if subscriptionManager.isProUser {
+                        showingCaseHistory = true
+                    } else {
+                        showingPaywall = true
+                    }
                 }
             }
+            .padding(.horizontal, 20)
+
+            // Case Connections game mode
+            Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                showingConnections = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "square.grid.2x2.fill")
+                        .font(.title2)
+                        .foregroundStyle(.white)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Case Connections")
+                            .font(.system(.headline, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Group clinical concepts — 4 mistakes allowed")
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.9))
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.9))
+                }
+                .padding()
+                .background(
+                    LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing),
+                    in: RoundedRectangle(cornerRadius: 16)
+                )
+                .shadow(color: .purple.opacity(0.25), radius: 6, y: 3)
+            }
+            .buttonStyle(.plain)
             .padding(.horizontal, 20)
 
             Spacer()
@@ -377,19 +441,6 @@ struct ContentView: View {
                         } else {
                             showingPaywall = true
                         }
-                    }
-                }
-
-                EnhancedFeatureCard(
-                    icon: "clock.arrow.circlepath",
-                    title: "Case History",
-                    color: .cyan,
-                    isLocked: !subscriptionManager.isProUser
-                ) {
-                    if subscriptionManager.isProUser {
-                        showingCaseHistory = true
-                    } else {
-                        showingPaywall = true
                     }
                 }
             }
