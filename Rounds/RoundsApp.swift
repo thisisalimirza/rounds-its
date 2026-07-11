@@ -13,27 +13,42 @@ import SwiftData
 class DeepLinkManager {
     static let shared = DeepLinkManager()
     var pendingCaseID: String?
+    var pendingInviteCode: String?
 
     private init() {}
 
     func handleURL(_ url: URL) -> Bool {
-        // Handle rounds://case/{caseID}
-        guard url.scheme == "rounds",
-              url.host == "case",
-              let caseID = url.pathComponents.last,
-              !caseID.isEmpty,
-              caseID != "/" else {
-            return false
+        guard url.scheme == "rounds" else { return false }
+
+        // Handle rounds://invite/{code}
+        if url.host == "invite",
+           let code = url.pathComponents.last,
+           !code.isEmpty, code != "/" {
+            pendingInviteCode = code
+            return true
         }
 
-        pendingCaseID = caseID
-        return true
+        // Handle rounds://case/{caseID}
+        if url.host == "case",
+           let caseID = url.pathComponents.last,
+           !caseID.isEmpty, caseID != "/" {
+            pendingCaseID = caseID
+            return true
+        }
+
+        return false
     }
 
     func consumePendingCase() -> String? {
         let caseID = pendingCaseID
         pendingCaseID = nil
         return caseID
+    }
+
+    func consumePendingInvite() -> String? {
+        let code = pendingInviteCode
+        pendingInviteCode = nil
+        return code
     }
 }
 
@@ -105,12 +120,17 @@ struct RoundsApp: App {
                     await MainActor.run {
                         AnalyticsManager.shared.trackAppLaunch()
                         SessionTracker.shared.startSession()
-                        
+
                         // Show onboarding for first-time users
                         if !hasCompletedOnboarding {
                             showOnboarding = true
                         }
                     }
+                }
+                .task {
+                    // Ensure a (silent, anonymous) account exists and tie it to
+                    // RevenueCat so Pro syncs across devices; loads referral status.
+                    await AccountManager.shared.bootstrap()
                 }
                 .sheet(isPresented: $showOnboarding) {
                     OnboardingView()

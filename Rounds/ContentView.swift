@@ -27,6 +27,8 @@ struct ContentView: View {
     @State private var showingAchievements = false
     @State private var showingCategoryAnalytics = false
     @State private var showingLeaderboard = false
+    @State private var showingInviteRedeem = false
+    @State private var inviteCodeToRedeem: String?
     @State private var selectedTab: HomeTab = .play
     @State private var showingStreakRecovery = false
     @State private var streakRecoveryChecked = false
@@ -151,6 +153,22 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingAbout) {
                 AboutView()
+            }
+            .sheet(isPresented: $showingInviteRedeem) {
+                ReferralView(initialCode: inviteCodeToRedeem)
+            }
+            .onChange(of: DeepLinkManager.shared.pendingInviteCode) { _, newValue in
+                if let code = newValue {
+                    inviteCodeToRedeem = code
+                    showingInviteRedeem = true
+                    _ = DeepLinkManager.shared.consumePendingInvite()
+                }
+            }
+            .onAppear {
+                if let code = DeepLinkManager.shared.consumePendingInvite() {
+                    inviteCodeToRedeem = code
+                    showingInviteRedeem = true
+                }
             }
             .sheet(isPresented: $showingCaseBrowser) {
                 CaseBrowserView()

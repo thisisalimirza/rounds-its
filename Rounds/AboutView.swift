@@ -17,6 +17,7 @@ struct AboutView: View {
     @Query private var achievementProgress: [AchievementProgress]
     @State private var showingFeedback = false
     @State private var showingSubscription = false
+    @State private var showingReferral = false
     @State private var showingLeaderboardSetup = false
     @State private var showingLeaveLeaderboardAlert = false
     @State private var showingEditDisplayName = false
@@ -66,6 +67,7 @@ struct AboutView: View {
                 // MARK: - Account Section
                 Section {
                     subscriptionRow
+                    inviteAndRedeemRow
                 } header: {
                     Label("Account", systemImage: "person.crop.circle")
                 }
@@ -153,6 +155,9 @@ struct AboutView: View {
                 RoundsPaywallView()
             }
         }
+        .sheet(isPresented: $showingReferral) {
+            ReferralView()
+        }
         .sheet(isPresented: $showingLeaderboardSetup) {
             LeaderboardProfileSetupView()
         }
@@ -229,6 +234,38 @@ struct AboutView: View {
                 ? Color.yellow.opacity(0.1)
                 : Color(.systemBackground)
         )
+    }
+
+    // MARK: - Invite & Redeem Row
+
+    private var inviteAndRedeemRow: some View {
+        Button {
+            showingReferral = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "gift.fill")
+                    .font(.title2)
+                    .foregroundStyle(.pink)
+                    .frame(width: 32)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Invite Friends & Redeem Code")
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+
+                    Text("Share Pro with 3 friends, or enter a code")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+        }
     }
 
     // MARK: - Leaderboard Profile Rows
