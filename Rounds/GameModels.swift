@@ -332,6 +332,31 @@ final class PlayerStats {
         return true
     }
 
+    /// Automatically spends streak freezes to cover missed days so the streak
+    /// survives — no manual tap required. Returns the number of freezes consumed.
+    /// Call on app launch and at the start of recordGame(...).
+    @discardableResult
+    func applyStreakFreezeIfNeeded(isPro: Bool) -> Int {
+        guard isPro, currentStreak > 0, let lastPlayed = lastPlayedDate else { return 0 }
+
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
+        let gap = calendar.dateComponents([.day], from: lastPlayedDay, to: today).day ?? 0
+        let missedDays = gap - 1 // days with no play between last play and today
+
+        // Only bridge if we have enough freezes to cover every missed day.
+        guard missedDays >= 1, streakFreezesAvailable >= missedDays else { return 0 }
+
+        streakFreezesAvailable -= missedDays
+        streakFreezeUsedToday = true
+        // Pretend the last play was yesterday so the streak continues normally.
+        if let yesterday = calendar.date(byAdding: .day, value: -1, to: Date()) {
+            lastPlayedDate = yesterday
+        }
+        return missedDays
+    }
+
     /// Check if streak is about to be lost (missed a day but no freeze used yet)
     func isStreakAtRisk() -> Bool {
         guard currentStreak > 0, let lastPlayed = lastPlayedDate else {
@@ -354,7 +379,10 @@ final class PlayerStats {
         
         // Check and reset weekly streak freeze for Pro users
         checkWeeklyStreakFreezeReset(isPro: isPro)
-        
+
+        // Auto-spend freezes to bridge any missed days before computing the streak.
+        applyStreakFreezeIfNeeded(isPro: isPro)
+
         // Reset streakFreezeUsedToday if it's a new day
         if let lastPlayed = lastPlayedDate {
             let lastPlayedDay = calendar.startOfDay(for: lastPlayed)

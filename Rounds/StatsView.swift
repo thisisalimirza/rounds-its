@@ -70,11 +70,18 @@ struct StatsView: View {
                 Text("Longest: \(stats.maxStreak) \(stats.maxStreak == 1 ? "day" : "days")")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                if stats.streakFreezesAvailable > 0 {
-                    Label("\(stats.streakFreezesAvailable) streak freeze available",
+                if SubscriptionManager.shared.isProUser {
+                    Label(stats.streakFreezesAvailable > 0
+                          ? "\(stats.streakFreezesAvailable) freeze ready — auto-protects a missed day"
+                          : "Freeze used — refreshes weekly",
                           systemImage: "snowflake")
                         .font(.caption)
                         .foregroundStyle(.blue)
+                } else {
+                    Label("Go Pro to auto-protect your streak with freezes",
+                          systemImage: "snowflake")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
 

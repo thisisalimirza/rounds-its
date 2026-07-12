@@ -31,7 +31,8 @@ struct ContentView: View {
     @State private var showingInviteRedeem = false
     @State private var inviteCodeToRedeem: String?
     @State private var selectedTab: HomeTab = .play
-    @State private var showingStreakRecovery = false
+    @State private var showingFreezeSaved = false
+    @State private var freezeSavedDays = 0
     @State private var streakRecoveryChecked = false
     @State private var showingWhatsNew = false
     @State private var showingRoadmap = false
@@ -245,15 +246,9 @@ struct ContentView: View {
             } message: {
                 Text("Come back tomorrow for a new challenge, or play a random case now.")
             }
-            .sheet(isPresented: $showingStreakRecovery) {
-                StreakRecoverySheet(
-                    streak: stats.currentStreak,
-                    onSaveStreak: {
-                        _ = stats.saveStreakWithFreeze(isPro: subscriptionManager.isProUser)
-                        try? modelContext.save()
-                    }
-                )
-                .presentationDetents([.medium])
+            .sheet(isPresented: $showingFreezeSaved) {
+                StreakSavedSheet(daysSaved: freezeSavedDays, streak: stats.currentStreak)
+                    .presentationDetents([.medium])
             }
             .sheet(isPresented: $showingWhatsNew) {
                 if let data = whatsNewManager.whatsNewData {
@@ -272,12 +267,15 @@ struct ContentView: View {
                 AnalyticsManager.shared.trackAppLaunch()
                 SessionTracker.shared.startSession()
 
-                // Check if user needs to save their streak (only once per app launch)
+                // Auto-protect the streak with freezes (only once per app launch)
                 if !streakRecoveryChecked {
                     streakRecoveryChecked = true
                     stats.checkWeeklyStreakFreezeReset(isPro: subscriptionManager.isProUser)
-                    if stats.canSaveStreak(isPro: subscriptionManager.isProUser) {
-                        showingStreakRecovery = true
+                    let used = stats.applyStreakFreezeIfNeeded(isPro: subscriptionManager.isProUser)
+                    if used > 0 {
+                        try? modelContext.save()
+                        freezeSavedDays = used
+                        showingFreezeSaved = true
                     }
                 }
 
@@ -983,72 +981,53 @@ struct PunchyMenuItem: View {
 }
 
 // MARK: - Streak Recovery Sheet
-struct StreakRecoverySheet: View {
+/// Celebratory notice shown when a streak freeze automatically protected the streak.
+struct StreakSavedSheet: View {
     @Environment(\.dismiss) private var dismiss
+    let daysSaved: Int
     let streak: Int
-    let onSaveStreak: () -> Void
 
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
 
-            // Warning icon
             ZStack {
                 Circle()
-                    .fill(Color.orange.opacity(0.15))
+                    .fill(Color.blue.opacity(0.15))
                     .frame(width: 100, height: 100)
-
-                Text("🔥")
+                Text("❄️")
                     .font(.system(size: 50))
             }
 
             VStack(spacing: 8) {
-                Text("Your Streak is at Risk!")
+                Text("Streak Freeze Used!")
                     .font(.system(size: 24, weight: .bold, design: .rounded))
 
-                Text("You missed a day, but you can save your \(streak)-day streak!")
+                Text(daysSaved == 1
+                     ? "You missed a day, so a streak freeze kicked in automatically to protect your \(streak)-day streak. 🔥"
+                     : "A few streak freezes kicked in automatically to protect your \(streak)-day streak. 🔥")
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
 
-            VStack(spacing: 12) {
-                // Save streak button
-                Button {
-                    onSaveStreak()
-                    dismiss()
-                } label: {
-                    HStack {
-                        Image(systemName: "checkmark.shield.fill")
-                        Text("Save My Streak")
-                    }
+            Button {
+                dismiss()
+            } label: {
+                Text("Keep it going")
                     .font(.headline)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(
-                        LinearGradient(
-                            colors: [.orange, .red],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
+                        LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
                     )
                     .cornerRadius(14)
-                }
-
-                // Skip button
-                Button {
-                    dismiss()
-                } label: {
-                    Text("Let it go")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
             }
             .padding(.horizontal, 40)
 
-            Text("Pro members get 1 streak save per week")
+            Text("Pro members get a streak freeze each week.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
