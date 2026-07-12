@@ -79,12 +79,13 @@ struct ConnectionsGameView: View {
                         .foregroundStyle(
                             LinearGradient(colors: [.blue, .purple], startPoint: .top, endPoint: .bottom)
                         )
-                    Text("Find four groups of four")
-                        .font(.system(.headline, design: .rounded))
-                    Text("Group the clinical concepts. Four mistakes allowed.")
+                    Text("Choose a specialty")
+                        .font(.system(.title3, design: .rounded).weight(.bold))
+                    Text("Pick an area to practice, then group 16 terms into 4 clinical concepts. Four mistakes allowed.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
+                        .padding(.horizontal)
                 }
                 .padding(.top, 12)
 
@@ -135,15 +136,17 @@ struct ConnectionsGameView: View {
     private func gameBoard(_ game: ConnectionsGame) -> some View {
         ScrollView {
             VStack(spacing: 16) {
-                // Solved group bands
-                ForEach(game.solvedGroupIndices, id: \.self) { idx in
+                boardHeader(game)
+
+                // Solved (and, on loss, revealed) group bands
+                ForEach(game.revealedGroupIndices, id: \.self) { idx in
                     if let group = game.group(at: idx) {
                         solvedBand(group)
                     }
                 }
 
                 // Remaining tiles
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                     ForEach(game.boardTiles) { tile in
                         tileView(tile, game: game)
                     }
@@ -152,12 +155,10 @@ struct ConnectionsGameView: View {
 
                 if !message.isEmpty {
                     Text(message)
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .foregroundStyle(.orange)
                         .transition(.opacity)
                 }
-
-                mistakesRow(game)
 
                 if game.isOver {
                     resultControls(game)
@@ -169,19 +170,59 @@ struct ConnectionsGameView: View {
         }
     }
 
+    // Progress + mistakes header
+    private func boardHeader(_ game: ConnectionsGame) -> some View {
+        VStack(spacing: 10) {
+            Text(game.specialty.capitalized)
+                .font(.system(.headline, design: .rounded))
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 6) {
+                ForEach(0..<4, id: \.self) { i in
+                    Capsule()
+                        .fill(i < game.solvedGroupIndices.count
+                              ? AnyShapeStyle(LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing))
+                              : AnyShapeStyle(Color.secondary.opacity(0.2)))
+                        .frame(width: 40, height: 7)
+                }
+            }
+
+            HStack(spacing: 6) {
+                Text("Mistakes")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                ForEach(0..<game.maxMistakes, id: \.self) { i in
+                    Image(systemName: i < game.mistakes ? "heart.slash.fill" : "heart.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(i < game.mistakes ? Color.secondary.opacity(0.3) : Color.pink)
+                }
+            }
+        }
+    }
+
     private func solvedBand(_ group: ConnectionsGame.PuzzleGroup) -> some View {
-        VStack(spacing: 2) {
-            Text(group.concept)
-                .font(.system(.subheadline, design: .rounded).weight(.bold))
-            Text(group.elements.joined(separator: " · "))
-                .font(.caption)
-                .multilineTextAlignment(.center)
+        HStack(spacing: 10) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.title3)
+                .foregroundStyle(.black.opacity(0.65))
+            VStack(spacing: 3) {
+                Text(group.concept)
+                    .font(.system(.subheadline, design: .rounded).weight(.bold))
+                Text(group.elements.joined(separator: " · "))
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
         }
         .foregroundStyle(.black.opacity(0.85))
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .padding(.horizontal, 12)
-        .background(Self.palette[group.colorIndex], in: RoundedRectangle(cornerRadius: 14))
+        .padding(.vertical, 14)
+        .padding(.horizontal, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Self.palette[group.colorIndex])
+                .shadow(color: Self.palette[group.colorIndex].opacity(0.4), radius: 6, y: 3)
+        )
         .padding(.horizontal, 16)
         .transition(.scale.combined(with: .opacity))
     }
@@ -189,59 +230,78 @@ struct ConnectionsGameView: View {
     private func tileView(_ tile: ConnectionsGame.Tile, game: ConnectionsGame) -> some View {
         let isSelected = game.isSelected(tile.id)
         return Text(tile.text)
-            .font(.system(size: 13, weight: .semibold, design: .rounded))
+            .font(.system(size: 13, weight: .bold, design: .rounded))
             .multilineTextAlignment(.center)
-            .minimumScaleFactor(0.7)
+            .minimumScaleFactor(0.6)
             .lineLimit(3)
             .foregroundStyle(isSelected ? .white : .primary)
-            .frame(maxWidth: .infinity, minHeight: 68)
-            .padding(.horizontal, 6)
+            .frame(maxWidth: .infinity, minHeight: 76)
+            .padding(.horizontal, 8)
             .background(
-                RoundedRectangle(cornerRadius: 14)
+                RoundedRectangle(cornerRadius: 18)
                     .fill(isSelected
                           ? AnyShapeStyle(LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
-                          : AnyShapeStyle(Material.ultraThin))
+                          : AnyShapeStyle(Color(.secondarySystemBackground)))
+                    .shadow(color: isSelected ? Color.purple.opacity(0.35) : Color.black.opacity(0.06),
+                            radius: isSelected ? 8 : 3, y: isSelected ? 4 : 2)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.blue.opacity(isSelected ? 0 : 0.12), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(Color.blue.opacity(isSelected ? 0 : 0.10), lineWidth: 1)
             )
-            .scaleEffect(isSelected ? 0.96 : 1)
+            .scaleEffect(isSelected ? 1.04 : 1)
             .modifier(ShakeEffect(animatableData: CGFloat(shakeTrigger)))
-            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: isSelected)
+            .animation(.spring(response: 0.28, dampingFraction: 0.6), value: isSelected)
             .onTapGesture {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 game.toggle(tile.id)
             }
     }
 
-    private func mistakesRow(_ game: ConnectionsGame) -> some View {
-        HStack(spacing: 8) {
-            Text("Mistakes")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            ForEach(0..<game.maxMistakes, id: \.self) { i in
-                Circle()
-                    .fill(i < game.mistakes ? Color.red.opacity(0.8) : Color.secondary.opacity(0.25))
-                    .frame(width: 10, height: 10)
-            }
-        }
-    }
-
     private func liveControls(_ game: ConnectionsGame) -> some View {
         HStack(spacing: 12) {
-            Button("Shuffle") { withAnimation { game.shuffleBoard() } }
-                .buttonStyle(.bordered)
+            Button {
+                withAnimation { game.shuffleBoard() }
+            } label: {
+                Image(systemName: "shuffle")
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .frame(width: 48, height: 48)
+                    .background(Circle().fill(Color(.secondarySystemBackground)))
+            }
+            .buttonStyle(.plain)
 
-            Button("Deselect") { game.deselectAll() }
-                .buttonStyle(.bordered)
-                .disabled(game.selected.isEmpty)
+            Button {
+                game.deselectAll()
+            } label: {
+                Text("Deselect")
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .padding(.horizontal, 16)
+                    .frame(height: 48)
+                    .background(Capsule().fill(Color(.secondarySystemBackground)))
+            }
+            .buttonStyle(.plain)
+            .disabled(game.selected.isEmpty)
+            .opacity(game.selected.isEmpty ? 0.5 : 1)
 
-            Button("Submit") { submit(game) }
-                .buttonStyle(.borderedProminent)
-                .disabled(!game.canSubmit)
+            Button {
+                submit(game)
+            } label: {
+                Text("Submit")
+                    .font(.system(.subheadline, design: .rounded).weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .background(
+                        Capsule().fill(
+                            LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
+                        )
+                    )
+            }
+            .buttonStyle(.plain)
+            .disabled(!game.canSubmit)
+            .opacity(game.canSubmit ? 1 : 0.5)
         }
-        .font(.system(.subheadline, design: .rounded))
+        .padding(.horizontal, 24)
         .padding(.top, 4)
     }
 

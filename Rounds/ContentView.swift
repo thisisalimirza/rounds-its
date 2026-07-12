@@ -27,7 +27,7 @@ struct ContentView: View {
     @State private var showingAchievements = false
     @State private var showingCategoryAnalytics = false
     @State private var showingLeaderboard = false
-    @State private var showingConnections = false
+    @State private var showingGameModes = false
     @State private var showingInviteRedeem = false
     @State private var inviteCodeToRedeem: String?
     @State private var selectedTab: HomeTab = .play
@@ -96,15 +96,27 @@ struct ContentView: View {
                         Spacer()
 
                         HStack(spacing: 10) {
-                            // Badges / Achievements
+                            // Badges / Achievements (with unlocked count)
                             Button {
                                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                 showingAchievements = true
                             } label: {
+                                let unlocked = achievementProgressList.first?.unlockedAchievements.count ?? 0
                                 Image(systemName: "medal.fill")
                                     .font(.system(size: 20))
                                     .foregroundStyle(.yellow)
                                     .frame(width: 36, height: 36)
+                                    .overlay(alignment: .topTrailing) {
+                                        if unlocked > 0 {
+                                            Text("\(unlocked)")
+                                                .font(.system(size: 11, weight: .bold, design: .rounded))
+                                                .foregroundStyle(.white)
+                                                .padding(.horizontal, 5)
+                                                .padding(.vertical, 1)
+                                                .background(Capsule().fill(Color.orange))
+                                                .offset(x: 7, y: -4)
+                                        }
+                                    }
                                     .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
@@ -176,8 +188,8 @@ struct ContentView: View {
             .sheet(isPresented: $showingLeaderboard) {
                 LeaderboardView()
             }
-            .sheet(isPresented: $showingConnections) {
-                ConnectionsGameView()
+            .sheet(isPresented: $showingGameModes) {
+                GameModesView()
             }
             .sheet(isPresented: $showingAbout) {
                 AboutView()
@@ -373,20 +385,20 @@ struct ContentView: View {
             }
             .padding(.horizontal, 20)
 
-            // Case Connections game mode
+            // More game modes
             Button {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                showingConnections = true
+                showingGameModes = true
             } label: {
                 HStack(spacing: 12) {
-                    Image(systemName: "square.grid.2x2.fill")
+                    Image(systemName: "gamecontroller.fill")
                         .font(.title2)
                         .foregroundStyle(.white)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Case Connections")
+                        Text("Game Modes")
                             .font(.system(.headline, design: .rounded))
                             .foregroundStyle(.white)
-                        Text("Group clinical concepts — 4 mistakes allowed")
+                        Text("Case Connections & more ways to play")
                             .font(.caption)
                             .foregroundStyle(.white.opacity(0.9))
                     }

@@ -51,13 +51,21 @@ final class ConnectionsGame {
     private(set) var mistakes = 0
     private(set) var isOver = false
     private(set) var didWin = false
+    private(set) var isRevealed = false
 
     var remainingMistakes: Int { maxMistakes - mistakes }
     var canSubmit: Bool { selected.count == 4 && !isOver }
 
     /// Tiles still on the board (belonging to unsolved groups).
     var boardTiles: [Tile] {
-        tiles.filter { !solvedGroupIndices.contains($0.groupIndex) }
+        if isRevealed { return [] }
+        return tiles.filter { !solvedGroupIndices.contains($0.groupIndex) }
+    }
+
+    /// Group indices to display as colored bands: solved groups, plus every
+    /// group once the puzzle is lost (answers revealed).
+    var revealedGroupIndices: [Int] {
+        isRevealed ? Array(0..<groups.count) : solvedGroupIndices
     }
 
     // MARK: - Init
@@ -75,6 +83,7 @@ final class ConnectionsGame {
         mistakes = 0
         isOver = false
         didWin = false
+        isRevealed = false
 
         let pool = ConnectionsData.groups(for: specialty)
         guard pool.count >= 4 else {
@@ -163,8 +172,7 @@ final class ConnectionsGame {
         if mistakes >= maxMistakes {
             isOver = true
             didWin = false
-            // Reveal everything: mark all groups solved so the board shows answers.
-            solvedGroupIndices = Array(0..<groups.count)
+            isRevealed = true // reveal all answers as bands
             selected.removeAll()
             return .loss
         }

@@ -22,9 +22,12 @@ struct StatsView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     if let stats = stats {
+                        // Streak hero card
+                        streakCard(stats: stats)
+
                         // Training Level Card (New!)
                         trainingLevelCard(stats: stats)
-                        
+
                         // Overall Statistics
                         statisticsGrid(stats: stats)
                         
@@ -48,6 +51,39 @@ struct StatsView: View {
         }
     }
     
+    // MARK: - Streak Card
+    private func streakCard(stats: PlayerStats) -> some View {
+        HStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(LinearGradient(colors: [.orange, .red],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .frame(width: 64, height: 64)
+                    .shadow(color: .orange.opacity(0.35), radius: 8, y: 3)
+                Text("🔥")
+                    .font(.system(size: 30))
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(stats.currentStreak == 1 ? "1 day streak" : "\(stats.currentStreak) day streak")
+                    .font(.system(.title3, design: .rounded).weight(.bold))
+                Text("Longest: \(stats.maxStreak) \(stats.maxStreak == 1 ? "day" : "days")")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                if stats.streakFreezesAvailable > 0 {
+                    Label("\(stats.streakFreezesAvailable) streak freeze available",
+                          systemImage: "snowflake")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                }
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
+    }
+
     // MARK: - Training Level Card
     private func trainingLevelCard(stats: PlayerStats) -> some View {
         let currentLevel = stats.trainingLevel
