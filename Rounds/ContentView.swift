@@ -28,6 +28,7 @@ struct ContentView: View {
     @State private var showingCategoryAnalytics = false
     @State private var showingLeaderboard = false
     @State private var showingGameModes = false
+    @State private var showingCalculators = false
     @State private var showingInviteRedeem = false
     @State private var inviteCodeToRedeem: String?
     @State private var selectedTab: HomeTab = .play
@@ -145,6 +146,10 @@ struct ContentView: View {
                         playTabContent
                             .tag(HomeTab.play)
 
+                        // PRACTICE TAB
+                        practiceTabContent
+                            .tag(HomeTab.practice)
+
                         // PROGRESS TAB
                         progressTabContent
                             .tag(HomeTab.progress)
@@ -191,6 +196,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingGameModes) {
                 GameModesView()
+            }
+            .sheet(isPresented: $showingCalculators) {
+                ClinicalCalculatorsView()
             }
             .sheet(isPresented: $showingAbout) {
                 AboutView()
@@ -422,6 +430,62 @@ struct ContentView: View {
         }
     }
 
+    // MARK: - Practice Tab Content
+    private var practiceTabContent: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                VStack(spacing: 6) {
+                    Text("Practice Tools")
+                        .font(.system(.title3, design: .rounded).weight(.bold))
+                    Text("Master-clinician tools to use before anyone teaches you.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.top, 8)
+
+                PracticeToolCard(
+                    icon: "function",
+                    title: "Clinical Calculators",
+                    subtitle: "PHQ-9, FIB-4, CHA₂DS₂-VASc, HAS-BLED & more — searchable, with when-to-use guidance",
+                    colors: [.blue, .purple],
+                    available: true
+                ) { showingCalculators = true }
+
+                PracticeToolCard(
+                    icon: "list.bullet.rectangle.portrait.fill",
+                    title: "Differential Diagnosis Builder",
+                    subtitle: "Build and pressure-test a differential from a chief complaint",
+                    colors: [.teal, .green],
+                    available: false
+                )
+
+                PracticeToolCard(
+                    icon: "checklist",
+                    title: "Screening Questionnaires",
+                    subtitle: "Validated screens with scoring and interpretation",
+                    colors: [.orange, .pink],
+                    available: false
+                )
+
+                PracticeToolCard(
+                    icon: "cross.case.fill",
+                    title: "High-Yield Playbooks",
+                    subtitle: "Step-by-step workups for common presentations",
+                    colors: [.indigo, .blue],
+                    available: false
+                )
+
+                Text("More tools coming soon.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 4)
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 16)
+        }
+    }
+
     // MARK: - Progress Tab Content
     private var progressTabContent: some View {
         VStack(spacing: 16) {
@@ -581,14 +645,74 @@ struct ContentView: View {
 }
 
 // MARK: - Home Tab Enum
+// MARK: - Practice Tool Card
+
+struct PracticeToolCard: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let colors: [Color]
+    let available: Bool
+    var action: (() -> Void)? = nil
+
+    var body: some View {
+        Button {
+            if available { UIImpactFeedbackGenerator(style: .light).impactOccurred(); action?() }
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .frame(width: 52, height: 52)
+                    Image(systemName: icon)
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .font(.system(.headline, design: .rounded))
+                        .foregroundStyle(.primary)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+
+                Spacer()
+
+                if available {
+                    Image(systemName: "chevron.right")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("SOON")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Capsule().fill(Color.secondary.opacity(0.15)))
+                }
+            }
+            .padding(16)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.primary.opacity(0.06), lineWidth: 1))
+            .opacity(available ? 1 : 0.6)
+        }
+        .buttonStyle(.plain)
+        .disabled(!available)
+    }
+}
+
 enum HomeTab: String, CaseIterable {
     case play = "Play"
+    case practice = "Practice"
     case progress = "Progress"
     case more = "More"
 
     var icon: String {
         switch self {
         case .play: return "play.circle.fill"
+        case .practice: return "stethoscope"
         case .progress: return "chart.line.uptrend.xyaxis"
         case .more: return "ellipsis.circle.fill"
         }
