@@ -54,9 +54,10 @@ struct AboutView: View {
                 let components = Calendar.current.dateComponents([.hour, .minute], from: newDate)
                 reminderHour = components.hour ?? 19
                 reminderMinute = components.minute ?? 0
-                // Use smart notifications with context
-                let ctx = playerStats.first.map { SmartNotificationManager.buildContext(from: $0, achievements: achievementProgress.first) }
-                SmartNotificationManager.shared.scheduleSmartReminder(hour: reminderHour, minute: reminderMinute, context: ctx)
+                // Refresh the rolling window of personalized reminders at the new time
+                if let stats = playerStats.first {
+                    SmartNotificationManager.shared.refreshReminders(stats: stats, achievements: achievementProgress.first)
+                }
             }
         )
     }
@@ -641,12 +642,8 @@ struct AboutView: View {
     }
 
     private func rescheduleSmartNotification() {
-        let context = buildNotificationContext()
-        SmartNotificationManager.shared.scheduleSmartReminder(
-            hour: reminderHour,
-            minute: reminderMinute,
-            context: context
-        )
+        guard let stats = playerStats.first else { return }
+        SmartNotificationManager.shared.refreshReminders(stats: stats, achievements: achievementProgress.first)
     }
 
     private func buildNotificationContext() -> NotificationContext? {

@@ -112,38 +112,87 @@ class SmartNotificationManager {
         }
     }
 
-    /// Schedule smart daily notification with context-aware messaging
-    func scheduleSmartReminder(
-        hour: Int = 19,
-        minute: Int = 0,
-        context: NotificationContext? = nil
-    ) {
-        // Remove existing
-        center.removePendingNotificationRequests(withIdentifiers: [dailyIdentifier])
+    // Rolling window of individualized daily reminders. iOS can't change the
+    // text of a *repeating* notification, so instead we schedule the next N days
+    // as separate dated notifications and refresh them on every launch and after
+    // each play — that keeps the copy correct, personalized, and varied, and
+    // provides a natural win-back ladder for lapsed users.
 
-        let content = UNMutableNotificationContent()
-        let message = generateMessage(context: context, intensity: currentIntensity)
+    private let reminderPrefix = "rounds.reminder.day."
+    private let windowDays = 14
 
-        content.title = message.title
-        content.body = message.body
-        content.sound = .default
-        content.badge = 1
+    /// Preferred reminder time (falls back to 7:00 PM if never set).
+    var reminderHour: Int { UserDefaults.standard.object(forKey: "dailyReminderHour") as? Int ?? 19 }
+    var reminderMinute: Int { UserDefaults.standard.object(forKey: "dailyReminderMinute") as? Int ?? 0 }
 
-        // Add category for potential future actions
-        content.categoryIdentifier = "DAILY_REMINDER"
+    /// Rebuild all scheduled reminders from the latest player state. Call at app
+    /// launch, after each game, and when notification settings change.
+    func refreshReminders(stats: PlayerStats, achievements: AchievementProgress? = nil) {
+        let context = Self.buildContext(from: stats, achievements: achievements)
+        refreshScheduledReminders(context: context, hour: reminderHour, minute: reminderMinute)
+    }
 
-        var dateComponents = DateComponents()
-        dateComponents.hour = hour
-        dateComponents.minute = minute
+    func refreshScheduledReminders(context: NotificationContext, hour: Int, minute: Int) {
+        center.getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized else { return }
 
-        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-        let request = UNNotificationRequest(identifier: dailyIdentifier, content: content, trigger: trigger)
+            self.center.getPendingNotificationRequests { requests in
+                // Clear our managed reminders + any legacy identifiers.
+                let legacy = [self.dailyIdentifier, "rounds.daily.reminder", "rounds.streak.warning"]
+                let stale = requests.map(\.identifier).filter {
+                    $0.hasPrefix(self.reminderPrefix) || legacy.contains($0)
+                }
+                self.center.removePendingNotificationRequests(withIdentifiers: stale)
 
-        center.add(request) { error in
-            if let error = error {
-                print("SmartNotificationManager: Failed to schedule - \(error)")
-            } else {
-                print("SmartNotificationManager: Scheduled smart reminder for \(hour):\(String(format: "%02d", minute))")
+                let calendar = Calendar.current
+                let now = Date()
+                let intensity = self.currentIntensity
+
+                for dayOffset in 0..<self.windowDays {
+                    guard let day = calendar.date(byAdding: .day, value: dayOffset, to: now) else { continue }
+                    var comps = calendar.dateComponents([.year, .month, .day], from: day)
+                    comps.hour = hour
+                    comps.minute = minute
+                    guard let fireDate = calendar.date(from: comps) else { continue }
+
+                    // Skip today if the time already passed or they already played.
+                    if dayOffset == 0 && (fireDate <= now || context.hasPlayedToday) { continue }
+
+                    // Project how far away they'll be by that date (worst case:
+                    // they don't play in between) so the copy escalates naturally.
+                    let projectedDaysAway = context.hasPlayedToday ? dayOffset : (context.daysSinceLastPlay + dayOffset)
+                    let projected = NotificationContext(
+                        currentStreak: context.currentStreak,
+                        maxStreak: context.maxStreak,
+                        gamesPlayed: context.gamesPlayed,
+                        gamesWon: context.gamesWon,
+                        daysSinceLastPlay: projectedDaysAway,
+                        hasPlayedToday: false,
+                        unlockedAchievements: context.unlockedAchievements,
+                        totalAchievements: context.totalAchievements
+                    )
+                    let message = self.generateMessage(context: projected, intensity: intensity)
+
+                    let content = UNMutableNotificationContent()
+                    content.title = message.title
+                    content.body = message.body
+                    content.sound = .default
+                    content.categoryIdentifier = "DAILY_REMINDER"
+
+                    let triggerComps = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: fireDate)
+                    let trigger = UNCalendarNotificationTrigger(dateMatching: triggerComps, repeats: false)
+                    let request = UNNotificationRequest(
+                        identifier: "\(self.reminderPrefix)\(dayOffset)",
+                        content: content,
+                        trigger: trigger
+                    )
+                    self.center.add(request)
+                }
+
+                // Evening "streak expires tonight" nudge if a streak is alive and unplayed today.
+                if context.currentStreak > 0 && !context.hasPlayedToday {
+                    self.scheduleStreakWarning(currentStreak: context.currentStreak, hour: max(hour, 21))
+                }
             }
         }
     }
@@ -212,7 +261,7 @@ class SmartNotificationManager {
         }
 
         // Choose message based on context
-        if ctx.daysSinceLastPlay >= 3 {
+        if ctx.daysSinceLastPlay >= 3 && ctx.gamesPlayed > 0 {
             return getWinBackMessage(context: ctx, intensity: intensity)
         } else if ctx.hasPlayedToday {
             return getAlreadyPlayedMessage(context: ctx)

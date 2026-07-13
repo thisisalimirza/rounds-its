@@ -279,6 +279,9 @@ struct ContentView: View {
                     }
                 }
 
+                // Refresh personalized reminders from the latest state each launch
+                SmartNotificationManager.shared.refreshReminders(stats: stats, achievements: achievementProgressList.first)
+
                 // Check for deep linked case
                 checkForDeepLinkedCase()
             }

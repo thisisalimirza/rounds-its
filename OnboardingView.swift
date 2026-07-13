@@ -107,11 +107,10 @@ struct OnboardingView: View {
     private func completeOnboarding() {
         hasCompletedOnboarding = true
 
-        // Request notification permission and schedule smart reminders
+        // Request notification permission and schedule reminders for a new user
         SmartNotificationManager.shared.requestAuthorization { granted in
             if granted {
-                // Schedule with default time (7 PM) - context will be nil for new users
-                SmartNotificationManager.shared.scheduleSmartReminder()
+                SmartNotificationManager.shared.refreshReminders(stats: PlayerStats())
             }
         }
 

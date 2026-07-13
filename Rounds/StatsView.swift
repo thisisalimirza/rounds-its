@@ -12,9 +12,15 @@ struct StatsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query private var playerStats: [PlayerStats]
-    
+    @Query private var caseHistory: [CaseHistoryEntry]
+
     private var stats: PlayerStats? {
         playerStats.first
+    }
+
+    /// Start-of-day dates the user played at least one case.
+    private var playedDays: Set<Date> {
+        Set(caseHistory.map { Calendar.current.startOfDay(for: $0.playedAt) })
     }
     
     var body: some View {
@@ -24,6 +30,9 @@ struct StatsView: View {
                     if let stats = stats {
                         // Streak hero card
                         streakCard(stats: stats)
+
+                        // Streak calendar
+                        StreakCalendarCard(playedDays: playedDays, currentStreak: stats.currentStreak)
 
                         // Training Level Card (New!)
                         trainingLevelCard(stats: stats)

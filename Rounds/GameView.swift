@@ -696,7 +696,10 @@ struct GameView: View {
             let oldLevel = stats.trainingLevel
             
             stats.recordGame(won: won, guessCount: gameSession.guesses.count, score: gameSession.score, isPro: isPro)
-            
+
+            // Refresh personalized reminders now that streak/last-played changed
+            SmartNotificationManager.shared.refreshReminders(stats: stats)
+
             // Check if level changed
             let newLevelData = stats.trainingLevel
             if newLevelData.rank != oldLevel.rank || newLevelData.level != oldLevel.level {
@@ -723,7 +726,8 @@ struct GameView: View {
         } else {
             let newStats = PlayerStats()
             newStats.recordGame(won: won, guessCount: gameSession.guesses.count, score: gameSession.score, isPro: isPro)
-            
+            SmartNotificationManager.shared.refreshReminders(stats: newStats)
+
             // Mark daily case as completed
             if isDailyCase {
                 newStats.markDailyCaseCompleted()
