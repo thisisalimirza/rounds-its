@@ -346,27 +346,85 @@ struct LeaderboardView: View {
         }
     }
 
-    // MARK: - No Profile View
+    // MARK: - No Profile View (preview + join CTA)
 
     private var noProfileView: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 20) {
+                joinCTACard
 
+                // Live preview of the global leaderboard to show real activity
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Label("Global · Top Students", systemImage: "globe")
+                            .font(.headline)
+                        Spacer()
+                        if !manager.globalLeaderboard.isEmpty {
+                            let count = manager.globalLeaderboard.count
+                            Text("\(count) \(count == 1 ? "student" : "students") competing")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.horizontal)
+
+                    if manager.isLoading && manager.globalLeaderboard.isEmpty {
+                        loadingView
+                    } else if manager.globalLeaderboard.isEmpty {
+                        Text("Be the first to climb the global leaderboard!")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 40)
+                    } else {
+                        VStack(spacing: 8) {
+                            ForEach(manager.globalLeaderboard.prefix(25)) { entry in
+                                LeaderboardRow(entry: entry, showSchool: true, currentScope: .global)
+                            }
+                        }
+                        .padding(.horizontal)
+
+                        Button {
+                            showingProfileSetup = true
+                        } label: {
+                            Text("Join to see where you rank →")
+                                .font(.subheadline.weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 4)
+                    }
+                }
+            }
+            .padding(.vertical)
+        }
+        .refreshable {
+            try? await manager.fetchGlobalLeaderboard(currentPlayerID: "", visibilityLevel: .global)
+        }
+        .task {
+            if manager.globalLeaderboard.isEmpty {
+                try? await manager.fetchGlobalLeaderboard(currentPlayerID: "", visibilityLevel: .global)
+            }
+        }
+    }
+
+    private var joinCTACard: some View {
+        VStack(spacing: 12) {
             Image(systemName: "trophy.fill")
-                .font(.system(size: 70))
+                .font(.system(size: 48))
                 .foregroundStyle(.yellow)
 
-            VStack(spacing: 8) {
-                Text("Join the Leaderboard")
-                    .font(.title2)
-                    .fontWeight(.bold)
+            Text("Join the Leaderboard")
+                .font(.title3)
+                .fontWeight(.bold)
 
-                Text("Compete with classmates and students nationwide to see who has the best diagnostic skills!")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-            }
+            Text("Compete with classmates and students nationwide. See who's climbing right now — then claim your spot.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 8)
 
             Button {
                 showingProfileSetup = true
@@ -376,13 +434,15 @@ struct LeaderboardView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(
+                        LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
+                    )
                     .cornerRadius(12)
             }
-            .padding(.horizontal, 40)
-
-            Spacer()
         }
+        .padding()
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal)
     }
 
     // MARK: - Helpers
