@@ -10,6 +10,7 @@ import SwiftUI
 struct GameModesView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingConnections = false
+    @State private var showingDDxChallenge = false
 
     var body: some View {
         NavigationStack {
@@ -31,6 +32,14 @@ struct GameModesView: View {
                         ) { showingConnections = true }
 
                         GameModeCard(
+                            icon: "list.bullet.rectangle.portrait.fill",
+                            title: "Differential Challenge",
+                            subtitle: "Read a case, pick your differential, don't miss the dangerous causes",
+                            colors: [.teal, .green],
+                            status: .available
+                        ) { showingDDxChallenge = true }
+
+                        GameModeCard(
                             icon: "bolt.fill",
                             title: "Rapid Fire",
                             subtitle: "Beat the clock on quick-fire diagnoses",
@@ -42,7 +51,7 @@ struct GameModesView: View {
                             icon: "testtube.2",
                             title: "Lab Values",
                             subtitle: "Match findings to the right lab panel",
-                            colors: [.teal, .green],
+                            colors: [.mint, .cyan],
                             status: .comingSoon
                         )
 
@@ -73,6 +82,9 @@ struct GameModesView: View {
             }
             .sheet(isPresented: $showingConnections) {
                 ConnectionsGameView()
+            }
+            .sheet(isPresented: $showingDDxChallenge) {
+                DDxChallengeView()
             }
         }
     }
