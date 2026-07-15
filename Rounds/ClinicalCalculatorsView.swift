@@ -60,10 +60,10 @@ struct ClinicalCalculatorsView: View {
                         .background(Capsule().fill(Color.secondary.opacity(0.15)))
                 }
             }
-            Text(calc.whenToUse)
+            Text(calc.tagline)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .lineLimit(2)
+                .lineLimit(1)
         }
         .padding(.vertical, 2)
     }
@@ -76,6 +76,7 @@ struct CalculatorDetailView: View {
 
     @State private var values: [String: Double]
     @State private var numberText: [String: String]
+    @State private var showTeaching: Bool
 
     init(calculator: ClinicalCalculator) {
         self.calculator = calculator
@@ -89,6 +90,9 @@ struct CalculatorDetailView: View {
         }
         _values = State(initialValue: initial)
         _numberText = State(initialValue: [:])
+        // Coming-soon calcs are all teaching, so expand; functional calcs start collapsed
+        // to keep the screen focused on the calculator.
+        _showTeaching = State(initialValue: calculator.comingSoon)
     }
 
     private var result: CalcResult? {
@@ -104,7 +108,7 @@ struct CalculatorDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                whenToUseCard
+                teachingCard
 
                 if calculator.comingSoon {
                     comingSoonCard
@@ -112,6 +116,12 @@ struct CalculatorDetailView: View {
                     inputsCard
                     resultCard
                 }
+
+                Text(CalculatorLibrary.disclaimer)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 4)
             }
             .padding()
         }
@@ -124,26 +134,51 @@ struct CalculatorDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    // MARK: When to use (the teaching)
+    // MARK: When to use (progressive disclosure — tagline always, depth on tap)
 
-    private var whenToUseCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label("When to use it", systemImage: "lightbulb.fill")
-                .font(.system(.subheadline, design: .rounded).weight(.bold))
-                .foregroundStyle(.blue)
-            Text(calculator.whenToUse)
-                .font(.callout)
-                .foregroundStyle(.primary)
-            if let pearl = calculator.pearl {
-                Divider()
-                Label {
-                    Text(pearl).font(.footnote).foregroundStyle(.secondary)
-                } icon: {
-                    Image(systemName: "star.fill").font(.footnote).foregroundStyle(.yellow)
+    private var teachingCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { showTeaching.toggle() }
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "lightbulb.fill")
+                        .foregroundStyle(.blue)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(calculator.tagline)
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .foregroundStyle(.primary)
+                        Text(showTeaching ? "Hide details" : "Why & when to use it")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(showTeaching ? 180 : 0))
                 }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if showTeaching {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(calculator.whenToUse)
+                        .font(.callout)
+                        .foregroundStyle(.primary)
+                    if let pearl = calculator.pearl {
+                        Label {
+                            Text(pearl).font(.footnote).foregroundStyle(.secondary)
+                        } icon: {
+                            Image(systemName: "star.fill").font(.footnote).foregroundStyle(.yellow)
+                        }
+                    }
+                }
+                .padding(.top, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
     }
