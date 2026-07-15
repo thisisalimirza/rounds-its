@@ -25,7 +25,11 @@ struct ClinicalCalculatorsView: View {
                     Section {
                         ForEach(group.items) { calc in
                             NavigationLink {
-                                CalculatorDetailView(calculator: calc)
+                                if calc.externalURL != nil {
+                                    ExternalCalculatorView(calculator: calc)
+                                } else {
+                                    CalculatorDetailView(calculator: calc)
+                                }
                             } label: {
                                 calcRow(calc)
                             }

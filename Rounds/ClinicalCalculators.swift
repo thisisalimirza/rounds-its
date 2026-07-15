@@ -93,6 +93,8 @@ struct ClinicalCalculator: Identifiable {
     let whenToUse: String
     var pearl: String? = nil
     var comingSoon: Bool = false
+    /// If set, tapping this calculator opens the official tool in an in-app browser.
+    var externalURL: URL? = nil
     var fields: [CalcField] = []
     var compute: (([String: Double]) -> CalcResult)? = nil
 
@@ -244,8 +246,8 @@ enum CalculatorLibrary {
             tagline: "10 & 30-year cardiovascular risk",
             category: .cardiology,
             keywords: ["cardiovascular", "kidney", "metabolic", "prevention", "statin", "risk"],
-            whenToUse: "The newer AHA equations (adding kidney and metabolic factors, no race term), increasingly preferred over the older Pooled Cohort Equations.",
-            comingSoon: true
+            whenToUse: "The newer AHA equations (adding kidney and metabolic factors, no race term), increasingly preferred over the older Pooled Cohort Equations. Opens the official AHA calculator inside the app.",
+            externalURL: URL(string: "https://professional.heart.org/en/guidelines-and-statements/prevent-calculator")
         ),
         ClinicalCalculator(
             id: "map", name: "Mean Arterial Pressure", abbreviation: "MAP",

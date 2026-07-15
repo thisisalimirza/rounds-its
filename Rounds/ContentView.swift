@@ -29,6 +29,7 @@ struct ContentView: View {
     @State private var showingLeaderboard = false
     @State private var showingGameModes = false
     @State private var showingCalculators = false
+    @State private var showingDifferential = false
     @State private var showingInviteRedeem = false
     @State private var inviteCodeToRedeem: String?
     @State private var selectedTab: HomeTab = .play
@@ -199,6 +200,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingCalculators) {
                 ClinicalCalculatorsView()
+            }
+            .sheet(isPresented: $showingDifferential) {
+                DifferentialDiagnosisView()
             }
             .sheet(isPresented: $showingAbout) {
                 AboutView()
@@ -455,18 +459,10 @@ struct ContentView: View {
                 PracticeToolCard(
                     icon: "list.bullet.rectangle.portrait.fill",
                     title: "Differential Diagnosis Builder",
-                    subtitle: "Build and pressure-test a differential from a chief complaint",
+                    subtitle: "Build your own, then reveal the can't-miss framework",
                     colors: [.teal, .green],
-                    available: false
-                )
-
-                PracticeToolCard(
-                    icon: "checklist",
-                    title: "Screening Questionnaires",
-                    subtitle: "Validated screens with scoring and interpretation",
-                    colors: [.orange, .pink],
-                    available: false
-                )
+                    available: true
+                ) { showingDifferential = true }
 
                 PracticeToolCard(
                     icon: "cross.case.fill",
