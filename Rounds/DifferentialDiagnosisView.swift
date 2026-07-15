@@ -2,8 +2,8 @@
 //  DifferentialDiagnosisView.swift
 //  Rounds
 //
-//  Browse common chief complaints, try building your own differential, then
-//  reveal an expert "can't-miss first" framework.
+//  Pick a complaint, toggle the patient's findings, and watch the differential
+//  re-rank — each diagnosis showing what argues for and against it.
 //
 
 import SwiftUI
@@ -16,9 +16,7 @@ struct DifferentialDiagnosisView: View {
         NavigationStack {
             List {
                 let items = DifferentialLibrary.filtered(query)
-                if items.isEmpty {
-                    ContentUnavailableView.search(text: query)
-                }
+                if items.isEmpty { ContentUnavailableView.search(text: query) }
                 Section {
                     ForEach(items) { presentation in
                         NavigationLink {
@@ -26,22 +24,18 @@ struct DifferentialDiagnosisView: View {
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: presentation.icon)
-                                    .font(.title3)
-                                    .foregroundStyle(.blue)
-                                    .frame(width: 28)
+                                    .font(.title3).foregroundStyle(.blue).frame(width: 28)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(presentation.complaint)
                                         .font(.system(.body, design: .rounded).weight(.semibold))
-                                    Text(presentation.system)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                    Text(presentation.system).font(.caption).foregroundStyle(.secondary)
                                 }
                             }
                             .padding(.vertical, 2)
                         }
                     }
                 } footer: {
-                    Text("Pick a chief complaint, jot your own differential, then reveal the framework.")
+                    Text("Pick a complaint, toggle the patient's findings, and the differential re-ranks.")
                 }
             }
             .listStyle(.insetGrouped)
@@ -49,9 +43,7 @@ struct DifferentialDiagnosisView: View {
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $query, prompt: "Search a chief complaint")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { dismiss() }
-                }
+                ToolbarItem(placement: .navigationBarTrailing) { Button("Done") { dismiss() } }
             }
         }
     }
@@ -62,41 +54,18 @@ struct DifferentialDiagnosisView: View {
 struct DifferentialDetailView: View {
     let presentation: DDxPresentation
 
+    @State private var selected: Set<String> = []
     @State private var showApproach = false
-    @State private var newEntry = ""
-    @State private var myList: [String] = []
-    @State private var revealed = false
-    @FocusState private var entryFocused: Bool
 
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
                 approachCard
-                myDifferentialCard
-
-                if revealed {
-                    expertCard
-                } else {
-                    Button {
-                        withAnimation { revealed = true }
-                        entryFocused = false
-                    } label: {
-                        Label("Reveal expert differential", systemImage: "sparkles")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing),
-                                        in: Capsule())
-                    }
-                    .buttonStyle(.plain)
-                }
-
+                findingsCard
+                differentialSection
                 Text(DifferentialLibrary.disclaimer)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 4)
+                    .font(.caption2).foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center).padding(.top, 4)
             }
             .padding()
         }
@@ -108,7 +77,7 @@ struct DifferentialDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    // Approach (collapsible)
+    // Approach + key questions (collapsible)
     private var approachCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button {
@@ -121,8 +90,7 @@ struct DifferentialDetailView: View {
                         .foregroundStyle(.primary)
                     Spacer()
                     Image(systemName: "chevron.down")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                         .rotationEffect(.degrees(showApproach ? 180 : 0))
                 }
                 .contentShape(Rectangle())
@@ -130,105 +98,114 @@ struct DifferentialDetailView: View {
             .buttonStyle(.plain)
 
             if showApproach {
-                Text(presentation.approach)
-                    .font(.callout)
-                    .padding(.top, 10)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(presentation.approach).font(.callout)
+                    ForEach(presentation.keyQuestions, id: \.self) { q in
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "arrow.right").font(.caption2).foregroundStyle(.secondary).padding(.top, 3)
+                            Text(q).font(.subheadline)
+                        }
+                    }
+                }
+                .padding(.top, 10)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding()
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
     }
 
-    // Interactive scratchpad
-    private var myDifferentialCard: some View {
+    // Toggle the patient's findings
+    private var findingsCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Your differential")
-                .font(.system(.subheadline, design: .rounded).weight(.bold))
-
             HStack {
-                TextField("Add a diagnosis…", text: $newEntry)
-                    .focused($entryFocused)
-                    .onSubmit(addEntry)
-                Button(action: addEntry) {
-                    Image(systemName: "plus.circle.fill").font(.title3)
-                }
-                .disabled(newEntry.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-
-            if myList.isEmpty {
-                Text("Jot down what you'd consider before revealing the framework.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(Array(myList.enumerated()), id: \.offset) { index, item in
-                    HStack {
-                        Image(systemName: "circle.fill").font(.system(size: 5)).foregroundStyle(.blue)
-                        Text(item).font(.subheadline)
-                        Spacer()
-                        Button {
-                            myList.remove(at: index)
-                        } label: {
-                            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
-    }
-
-    private func addEntry() {
-        let trimmed = newEntry.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return }
-        myList.append(trimmed)
-        newEntry = ""
-    }
-
-    // Expert framework
-    private var expertCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            section(title: "Can't-miss (rule out first)", tint: .red, items: presentation.cantMiss)
-            section(title: "Common causes", tint: .blue, items: presentation.common)
-
-            VStack(alignment: .leading, spacing: 8) {
-                Label("Key questions", systemImage: "questionmark.circle.fill")
+                Text("Patient findings")
                     .font(.system(.subheadline, design: .rounded).weight(.bold))
-                    .foregroundStyle(.purple)
-                ForEach(presentation.keyQuestions, id: \.self) { q in
-                    HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "arrow.right").font(.caption2).foregroundStyle(.secondary).padding(.top, 3)
-                        Text(q).font(.subheadline)
-                    }
+                Spacer()
+                if !selected.isEmpty {
+                    Button("Clear") { withAnimation { selected.removeAll() } }
+                        .font(.caption)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
-            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
-        }
-        .transition(.opacity)
-    }
+            Text("Toggle what's present — the differential updates below.")
+                .font(.caption).foregroundStyle(.secondary)
 
-    private func section(title: String, tint: Color, items: [DDxItem]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(title)
-                .font(.system(.subheadline, design: .rounded).weight(.bold))
-                .foregroundStyle(tint)
-            ForEach(items) { item in
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name).font(.subheadline.weight(.semibold))
-                    Text(item.clue).font(.caption).foregroundStyle(.secondary)
+            ForEach(presentation.findings) { finding in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        if selected.contains(finding.id) { selected.remove(finding.id) } else { selected.insert(finding.id) }
+                    }
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: selected.contains(finding.id) ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(selected.contains(finding.id) ? .blue : .secondary)
+                        Text(finding.label).font(.subheadline).foregroundStyle(.primary)
+                        Spacer()
+                    }
+                    .contentShape(Rectangle())
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(10)
-                .background(tint.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                .buttonStyle(.plain)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    // Live-ranked differential
+    private var differentialSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Differential")
+                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                .padding(.horizontal, 4)
+
+            ForEach(presentation.ranked(selected: selected)) { dx in
+                diagnosisCard(dx)
+            }
+        }
+    }
+
+    private func diagnosisCard(_ dx: DDxDiagnosis) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text(dx.name).font(.subheadline.weight(.bold))
+                if dx.isCantMiss {
+                    Text("CAN'T MISS")
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(Capsule().fill(Color.red))
+                }
+                Spacer()
+            }
+
+            featureList(title: "Supports", ids: dx.supports, tint: .green, icon: "plus.circle.fill")
+            featureList(title: "Against", ids: dx.against, tint: .red, icon: "minus.circle.fill")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(dx.isCantMiss ? Color.red.opacity(0.25) : Color.clear, lineWidth: 1)
+        )
+    }
+
+    @ViewBuilder
+    private func featureList(title: String, ids: [String], tint: Color, icon: String) -> some View {
+        if !ids.isEmpty {
+            VStack(alignment: .leading, spacing: 3) {
+                Label(title, systemImage: icon)
+                    .font(.caption.weight(.semibold)).foregroundStyle(tint)
+                ForEach(ids, id: \.self) { id in
+                    let present = selected.contains(id)
+                    Text("• \(presentation.label(for: id))")
+                        .font(.caption)
+                        .fontWeight(present ? .semibold : .regular)
+                        .foregroundStyle(present ? .primary : .secondary)
+                }
+            }
+        }
     }
 }
 
