@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct DDxChallengeView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @State private var game = DDxChallengeGame()
     @State private var showConfetti = false
 
@@ -179,6 +181,12 @@ struct DDxChallengeView: View {
     private func submit() {
         let r = game.submit()
         if let r {
+            // Log the diagnoses the player left off the differential.
+            let complaint = game.round.presentation.complaint
+            for dx in game.round.options where r.missed.contains(dx.id) {
+                MistakeLog.record(modelContext, source: .ddxChallenge, topic: complaint,
+                                  item: dx.name, detail: r.missedCantMiss.contains(dx.id) ? "missed can't-miss" : "")
+            }
             if r.safe {
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 if r.over.isEmpty && r.missed.isEmpty {

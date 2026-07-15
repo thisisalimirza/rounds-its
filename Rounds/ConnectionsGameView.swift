@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ConnectionsGameView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
 
     private var subscription: SubscriptionManager { SubscriptionManager.shared }
 
@@ -359,6 +361,11 @@ struct ConnectionsGameView: View {
         case .loss:
             UINotificationFeedbackGenerator().notificationOccurred(.error)
             withAnimation { message = "" }
+            // Log the concepts the player failed to group.
+            for (idx, group) in game.groups.enumerated() where !game.solvedGroupIndices.contains(idx) {
+                MistakeLog.record(modelContext, source: .connections,
+                                  topic: game.specialty.capitalized, item: group.concept)
+            }
         case .ignored:
             break
         }

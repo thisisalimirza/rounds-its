@@ -753,7 +753,15 @@ struct GameView: View {
             wasDailyCase: isDailyCase
         )
         modelContext.insert(historyEntry)
-        
+
+        // Universal miss log — feeds Weak Spots / future study plans.
+        if !won {
+            MistakeLog.record(modelContext,
+                              source: isDailyCase ? .dailyCase : .randomCase,
+                              topic: currentCase.category,
+                              item: currentCase.diagnosis)
+        }
+
         try? modelContext.save()
         
         // Track completion analytics - use actual hints used

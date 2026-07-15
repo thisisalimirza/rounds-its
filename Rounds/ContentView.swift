@@ -30,6 +30,7 @@ struct ContentView: View {
     @State private var showingGameModes = false
     @State private var showingCalculators = false
     @State private var showingDifferential = false
+    @State private var showingWeakSpots = false
     @State private var showingInviteRedeem = false
     @State private var inviteCodeToRedeem: String?
     @State private var selectedTab: HomeTab = .play
@@ -203,6 +204,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingDifferential) {
                 DifferentialDiagnosisView()
+            }
+            .sheet(isPresented: $showingWeakSpots) {
+                WeakSpotsView()
             }
             .sheet(isPresented: $showingAbout) {
                 AboutView()
@@ -517,6 +521,33 @@ struct ContentView: View {
                     }
                 }
             }
+            .padding(.horizontal, 20)
+
+            // Weak Spots — universal review of everything missed
+            Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                showingWeakSpots = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "brain.head.profile")
+                        .font(.title2).foregroundStyle(.white)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Weak Spots")
+                            .font(.system(.headline, design: .rounded)).foregroundStyle(.white)
+                        Text("Review what you've missed across all modes")
+                            .font(.caption).foregroundStyle(.white.opacity(0.9))
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.white.opacity(0.9))
+                }
+                .padding()
+                .background(
+                    LinearGradient(colors: [.orange, .pink], startPoint: .leading, endPoint: .trailing),
+                    in: RoundedRectangle(cornerRadius: 16)
+                )
+                .shadow(color: .orange.opacity(0.25), radius: 6, y: 3)
+            }
+            .buttonStyle(.plain)
             .padding(.horizontal, 20)
 
             Spacer()
