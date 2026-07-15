@@ -195,7 +195,7 @@ struct ContentView: View {
             .sheet(isPresented: $showingLeaderboard) {
                 LeaderboardView()
             }
-            .sheet(isPresented: $showingGameModes) {
+            .fullScreenCover(isPresented: $showingGameModes) {
                 GameModesView()
             }
             .sheet(isPresented: $showingCalculators) {

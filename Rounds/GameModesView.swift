@@ -80,10 +80,10 @@ struct GameModesView: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .sheet(isPresented: $showingConnections) {
+            .fullScreenCover(isPresented: $showingConnections) {
                 ConnectionsGameView()
             }
-            .sheet(isPresented: $showingDDxChallenge) {
+            .fullScreenCover(isPresented: $showingDDxChallenge) {
                 DDxChallengeView()
             }
         }
