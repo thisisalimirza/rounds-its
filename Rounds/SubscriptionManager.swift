@@ -26,7 +26,18 @@ final class SubscriptionManager {
     private(set) var isProSubscriber: Bool = false
     private(set) var currentOffering: Offering?
     private(set) var subscriptionStatus: SubscriptionStatus = .free
-    
+
+    #if DEBUG
+    /// DEBUG-ONLY manual Pro toggle, surfaced in Settings → Developer. Persisted
+    /// so it survives relaunch. Defaults to `true` to preserve the old
+    /// "DEBUG build = Pro" behavior. This whole block is compiled out of
+    /// release/TestFlight/App Store builds — it cannot be seen or used there.
+    static let debugForceProKey = "debugForceProEnabled"
+    var debugForcePro: Bool = (UserDefaults.standard.object(forKey: debugForceProKey) as? Bool ?? true) {
+        didSet { UserDefaults.standard.set(debugForcePro, forKey: Self.debugForceProKey) }
+    }
+    #endif
+
     /// Computed property that includes TestFlight check
     var isProUser: Bool {
         return hasProAccess()
@@ -177,6 +188,11 @@ final class SubscriptionManager {
     /// Check if user has active Pro subscription
     /// Note: This is @MainActor isolated - call from SwiftUI views or main thread only
     func hasProAccess() -> Bool {
+        #if DEBUG
+        // In Xcode/debug builds, Pro is controlled by the manual Developer toggle
+        // (defaults to on). Lets us test both the Pro and free experiences.
+        return debugForcePro
+        #else
         // Auto-grant Pro access for TestFlight users
         if isTestFlightBuild() {
             print("✅ TestFlight detected - granting Pro access")
@@ -192,10 +208,11 @@ final class SubscriptionManager {
         // Track production usage
         AnalyticsManager.shared.setUserProperty(key: "is_testflight", value: false)
         AnalyticsManager.shared.setUserProperty(key: "subscription_status", value: subscriptionStatus.rawValue)
-        
+
         return isProSubscriber
+        #endif
     }
-    
+
     // MARK: - TestFlight Detection
     
     /// Detects if app is running via TestFlight

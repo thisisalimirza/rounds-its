@@ -2,7 +2,10 @@
 //  WhatsNewManager.swift
 //  Rounds
 //
-//  Manages fetching and displaying "What's New" content from GitHub
+//  Drives the "What's New" splash. Fully local + version-keyed so it's
+//  self-maintaining: to ship a What's New for a release, add ONE entry to
+//  `AppChangelog.releases` with a higher version string. It auto-shows once,
+//  the next time the user opens the app, and never nags again.
 //
 
 import Foundation
@@ -27,179 +30,136 @@ struct WhatsNewFeature: Codable, Identifiable {
     let description: String
 }
 
+// MARK: - App Changelog (the single source of truth)
+//
+// ▶︎ TO ADD A "WHAT'S NEW" FOR A RELEASE:
+//   1. Bump the app version in Xcode (nice to keep in sync, but not required).
+//   2. Add ONE `AppRelease` to the top of `releases` with a version string
+//      higher than the previous entry.
+// That's it — it shows automatically on next launch for existing users, and is
+// skipped for brand-new installs (they get onboarding instead).
+
+struct AppRelease {
+    let version: String
+    let title: String
+    let features: [WhatsNewFeature]
+    var footer: String? = "Thanks for using Rounds!"
+
+    func asWhatsNewData() -> WhatsNewData {
+        WhatsNewData(
+            version: version,
+            lastUpdated: "",
+            showToVersionsBelow: version,
+            title: title,
+            features: features,
+            footer: footer,
+            dismissButtonText: "Let's Go!"
+        )
+    }
+}
+
+enum AppChangelog {
+    /// Newest release first.
+    static let releases: [AppRelease] = [
+        AppRelease(
+            version: "1.4.0",
+            title: "What's New in Rounds",
+            features: [
+                WhatsNewFeature(
+                    icon: "stethoscope",
+                    title: "Differential Builder",
+                    description: "Type what you found on a patient and get a structured differential — the findings that support each diagnosis and the next steps to confirm it. Five free builds, then Pro."
+                ),
+                WhatsNewFeature(
+                    icon: "brain.head.profile",
+                    title: "Smarter Weak Spots",
+                    description: "Every miss and every presentation you work through is tracked, so you know exactly what to review — and can reopen past differentials anytime."
+                ),
+                WhatsNewFeature(
+                    icon: "icloud.and.arrow.up.fill",
+                    title: "Cross-Device Sync",
+                    description: "Sign in with Apple or email so your Pro access and progress follow you to any device."
+                )
+            ]
+        )
+    ]
+
+    static var latest: AppRelease? {
+        releases.max(by: { WhatsNewManager.compareVersions($0.version, isLessThan: $1.version) })
+    }
+}
+
 // MARK: - What's New Manager
 
 @MainActor
-class WhatsNewManager: ObservableObject {
+final class WhatsNewManager: ObservableObject {
     static let shared = WhatsNewManager()
 
-    // IMPORTANT: Update this URL to your GitHub repo's raw file URL
-    // Format: https://raw.githubusercontent.com/{username}/{repo}/{branch}/whats-new.json
-    // Note: This only works for PUBLIC repos. For private repos, use bundled fallback.
-    private let remoteURL = URL(string: "https://raw.githubusercontent.com/thisisalimirza/rounds-its/main/whats-new.json")!
-
-    // UserDefaults keys
     private let lastSeenVersionKey = "whatsNew_lastSeenVersion"
-    private let cachedDataKey = "whatsNew_cachedData"
-    private let lastFetchKey = "whatsNew_lastFetch"
 
     @Published var whatsNewData: WhatsNewData?
     @Published var shouldShowWhatsNew = false
-    @Published var isLoading = false
-
-    // Bundled fallback data - always available even without network
-    private static let bundledData = WhatsNewData(
-        version: "1.3.0",
-        lastUpdated: "2025-02-12",
-        showToVersionsBelow: "1.3.0",
-        title: "What's New in Rounds",
-        features: [
-            WhatsNewFeature(
-                icon: "trophy.fill",
-                title: "Global Leaderboard",
-                description: "Compete with medical students worldwide! See rankings by school and climb to the top."
-            ),
-            WhatsNewFeature(
-                icon: "square.and.arrow.up",
-                title: "Challenge Friends",
-                description: "Share cases directly with friends via deep links. They can play the exact same case!"
-            ),
-            WhatsNewFeature(
-                icon: "flame.fill",
-                title: "Streak Freezes",
-                description: "Pro users get weekly streak freezes to protect their progress when life gets busy."
-            ),
-            WhatsNewFeature(
-                icon: "sparkles",
-                title: "Redesigned Home",
-                description: "Fresh new look with easier navigation. Swipe between Play, Progress, and More tabs."
-            )
-        ],
-        footer: "Thanks for playing Rounds! Your feedback helps us improve.",
-        dismissButtonText: "Let's Go!"
-    )
 
     private init() {}
 
-    // MARK: - Public Methods
+    // MARK: - Public API
 
-    /// Call this on app launch to check for and potentially show What's New
-    func checkForWhatsNew() async {
-        isLoading = true
-        defer { isLoading = false }
+    /// Call on app launch. Decides whether the newest release should be shown.
+    func checkForWhatsNew() {
+        guard let latest = AppChangelog.latest else { return }
+        whatsNewData = latest.asWhatsNewData()
 
-        // Try sources in order: remote -> cached -> bundled
-        let data: WhatsNewData
-        if let remoteData = await fetchRemoteData() {
-            data = remoteData
-            cacheData(remoteData)
-            print("WhatsNewManager: Using remote data")
-        } else if let cachedData = getCachedData() {
-            data = cachedData
-            print("WhatsNewManager: Using cached data")
-        } else {
-            data = Self.bundledData
-            print("WhatsNewManager: Using bundled fallback data")
+        let lastSeen = UserDefaults.standard.string(forKey: lastSeenVersionKey)
+
+        // Brand-new install: don't interrupt onboarding — silently record the
+        // newest version so What's New only appears after a real update.
+        guard let lastSeen else {
+            UserDefaults.standard.set(latest.version, forKey: lastSeenVersionKey)
+            return
         }
 
-        whatsNewData = data
-
-        // Check if we should show this to the user
-        if shouldShowToUser(data: data) {
+        if Self.compareVersions(lastSeen, isLessThan: latest.version) {
             shouldShowWhatsNew = true
         }
     }
 
-    /// Mark the current version as seen (call when user dismisses the sheet)
+    /// Mark the current release as seen (call when the sheet is dismissed).
     func markAsSeen() {
-        guard let data = whatsNewData else { return }
-        UserDefaults.standard.set(data.version, forKey: lastSeenVersionKey)
+        let version = whatsNewData?.version ?? AppChangelog.latest?.version
+        if let version {
+            UserDefaults.standard.set(version, forKey: lastSeenVersionKey)
+        }
         shouldShowWhatsNew = false
     }
 
-    /// Force show What's New (for testing or settings menu)
+    /// Force show (Settings → "What's New").
     func forceShow() {
-        // If no data loaded yet, use bundled fallback
         if whatsNewData == nil {
-            whatsNewData = Self.bundledData
+            whatsNewData = AppChangelog.latest?.asWhatsNewData()
         }
-        shouldShowWhatsNew = true
+        if whatsNewData != nil {
+            shouldShowWhatsNew = true
+        }
     }
 
-    /// Reset seen status (for testing)
+    /// Reset seen status (debug).
     func resetSeenStatus() {
         UserDefaults.standard.removeObject(forKey: lastSeenVersionKey)
     }
 
-    // MARK: - Private Methods
+    // MARK: - Version compare
 
-    private func fetchRemoteData() async -> WhatsNewData? {
-        do {
-            // Add cache-busting query parameter to avoid CDN caching
-            var components = URLComponents(url: remoteURL, resolvingAgainstBaseURL: false)!
-            components.queryItems = [URLQueryItem(name: "t", value: String(Date().timeIntervalSince1970))]
-
-            guard let url = components.url else { return nil }
-
-            let (data, response) = try await URLSession.shared.data(from: url)
-
-            guard let httpResponse = response as? HTTPURLResponse,
-                  httpResponse.statusCode == 200 else {
-                print("WhatsNewManager: Invalid response")
-                return nil
-            }
-
-            let decoder = JSONDecoder()
-            let whatsNew = try decoder.decode(WhatsNewData.self, from: data)
-
-            // Update last fetch time
-            UserDefaults.standard.set(Date(), forKey: lastFetchKey)
-
-            return whatsNew
-        } catch {
-            print("WhatsNewManager: Failed to fetch - \(error.localizedDescription)")
-            return nil
+    /// True when `v1` is strictly older than `v2` (dot-separated numeric).
+    static func compareVersions(_ v1: String, isLessThan v2: String) -> Bool {
+        let a = v1.split(separator: ".").compactMap { Int($0) }
+        let b = v2.split(separator: ".").compactMap { Int($0) }
+        let n = max(a.count, b.count)
+        for i in 0..<n {
+            let x = i < a.count ? a[i] : 0
+            let y = i < b.count ? b[i] : 0
+            if x < y { return true }
+            if x > y { return false }
         }
-    }
-
-    private func shouldShowToUser(data: WhatsNewData) -> Bool {
-        let lastSeenVersion = UserDefaults.standard.string(forKey: lastSeenVersionKey) ?? "0.0.0"
-
-        // Compare versions - show if user hasn't seen this version yet
-        // and if their last seen version is below the threshold
-        return compareVersions(lastSeenVersion, isLessThan: data.showToVersionsBelow)
-    }
-
-    private func compareVersions(_ v1: String, isLessThan v2: String) -> Bool {
-        let v1Parts = v1.split(separator: ".").compactMap { Int($0) }
-        let v2Parts = v2.split(separator: ".").compactMap { Int($0) }
-
-        // Pad arrays to same length
-        let maxLength = max(v1Parts.count, v2Parts.count)
-        var v1Padded = v1Parts
-        var v2Padded = v2Parts
-
-        while v1Padded.count < maxLength { v1Padded.append(0) }
-        while v2Padded.count < maxLength { v2Padded.append(0) }
-
-        for i in 0..<maxLength {
-            if v1Padded[i] < v2Padded[i] { return true }
-            if v1Padded[i] > v2Padded[i] { return false }
-        }
-
-        return false // Equal versions
-    }
-
-    // MARK: - Caching
-
-    private func cacheData(_ data: WhatsNewData) {
-        if let encoded = try? JSONEncoder().encode(data) {
-            UserDefaults.standard.set(encoded, forKey: cachedDataKey)
-        }
-    }
-
-    private func getCachedData() -> WhatsNewData? {
-        guard let data = UserDefaults.standard.data(forKey: cachedDataKey) else { return nil }
-        return try? JSONDecoder().decode(WhatsNewData.self, from: data)
+        return false
     }
 }

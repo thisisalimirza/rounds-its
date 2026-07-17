@@ -12,7 +12,7 @@ import SwiftData
 
 /// Where a miss happened.
 enum MissSource: String, CaseIterable, Codable {
-    case dailyCase, randomCase, browseCase, connections, ddxChallenge
+    case dailyCase, randomCase, browseCase, connections, ddxChallenge, ddxBuilder
 
     var displayName: String {
         switch self {
@@ -21,6 +21,7 @@ enum MissSource: String, CaseIterable, Codable {
         case .browseCase: return "Browse Cases"
         case .connections: return "Case Connections"
         case .ddxChallenge: return "Differential Challenge"
+        case .ddxBuilder: return "Differential Builder"
         }
     }
 
@@ -29,8 +30,13 @@ enum MissSource: String, CaseIterable, Codable {
         case .dailyCase, .randomCase, .browseCase: return "cross.case.fill"
         case .connections: return "square.grid.2x2.fill"
         case .ddxChallenge: return "list.bullet.rectangle.portrait.fill"
+        case .ddxBuilder: return "stethoscope"
         }
     }
+
+    /// Whether a miss from this source is a genuine wrong answer (vs. a
+    /// self-flagged uncertainty signal like using the Differential Builder).
+    var isWrongAnswer: Bool { self != .ddxBuilder }
 }
 
 @Model

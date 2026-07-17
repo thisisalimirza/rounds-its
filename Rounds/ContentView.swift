@@ -33,6 +33,7 @@ struct ContentView: View {
     @State private var showingWeakSpots = false
     @State private var showingInviteRedeem = false
     @State private var inviteCodeToRedeem: String?
+    @State private var showingSecureAccount = false
     @State private var selectedTab: HomeTab = .play
     @State private var showingFreezeSaved = false
     @State private var freezeSavedDays = 0
@@ -42,6 +43,7 @@ struct ContentView: View {
     @StateObject private var whatsNewManager = WhatsNewManager.shared
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
+    private var differentialAccess: DifferentialAccessManager { DifferentialAccessManager.shared }
 
     private var stats: PlayerStats {
         if let existingStats = playerStats.first {
@@ -212,7 +214,11 @@ struct ContentView: View {
                 AboutView()
             }
             .sheet(isPresented: $showingInviteRedeem) {
-                ReferralView(initialCode: inviteCodeToRedeem)
+                AccountView(initialCode: inviteCodeToRedeem)
+            }
+            .sheet(isPresented: $showingSecureAccount) {
+                SecureAccountPromptView()
+                    .presentationDetents([.medium, .large])
             }
             .onChange(of: DeepLinkManager.shared.pendingInviteCode) { _, newValue in
                 if let code = newValue {
@@ -231,7 +237,7 @@ struct ContentView: View {
                 CaseBrowserView()
             }
             .sheet(isPresented: $showingFeedback) {
-                FeedbackSheet()
+                FeedbackView()
             }
             .sheet(isPresented: $showingPaywall) {
                 RoundsPaywallView(
@@ -302,12 +308,18 @@ struct ContentView: View {
                 checkForDeepLinkedCase()
             }
             .task {
-                // Check for What's New content (runs async on appear)
-                await whatsNewManager.checkForWhatsNew()
+                // Decide What's New vs. a gentle "secure your account" nudge —
+                // never both in the same session.
+                whatsNewManager.checkForWhatsNew()
                 if whatsNewManager.shouldShowWhatsNew {
-                    // Small delay to let other UI settle
                     try? await Task.sleep(nanoseconds: 500_000_000)
                     showingWhatsNew = true
+                } else if AccountManager.shared.isReady,
+                          AccountManager.shared.shouldOfferAccountSecuring,
+                          stats.currentStreak >= 3 {
+                    try? await Task.sleep(nanoseconds: 700_000_000)
+                    AccountManager.shared.markAccountSecuringPrompted()
+                    showingSecureAccount = true
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
@@ -461,12 +473,21 @@ struct ContentView: View {
                 ) { showingCalculators = true }
 
                 PracticeToolCard(
-                    icon: "list.bullet.rectangle.portrait.fill",
+                    icon: "stethoscope",
                     title: "Differential Diagnosis Builder",
-                    subtitle: "Build your own, then reveal the can't-miss framework",
+                    subtitle: "Type your findings, get an instant differential with supporting evidence & next steps",
                     colors: [.teal, .green],
-                    available: true
-                ) { showingDifferential = true }
+                    available: true,
+                    locked: !subscriptionManager.isProUser && differentialAccess.freeUsesRemaining == 0,
+                    trialText: (!subscriptionManager.isProUser && differentialAccess.freeUsesRemaining > 0)
+                        ? "\(differentialAccess.freeUsesRemaining) free left" : nil
+                ) {
+                    if differentialAccess.canUse(isPro: subscriptionManager.isProUser) {
+                        showingDifferential = true
+                    } else {
+                        showingPaywall = true
+                    }
+                }
 
                 PracticeToolCard(
                     icon: "cross.case.fill",
@@ -567,18 +588,23 @@ struct ContentView: View {
                     }
                 }
 
-                PunchyMenuItem(icon: "gearshape.fill", title: "Settings", subtitle: "Preferences & account", color: .gray) {
-                    showingAbout = true
-                }
-
-                PunchyMenuItem(icon: "envelope.fill", title: "Feedback", subtitle: "Send us your thoughts", color: .green) {
-                    showingFeedback = true
-                }
-
                 if !subscriptionManager.isProUser {
                     PunchyMenuItem(icon: "crown.fill", title: "Upgrade to Pro", subtitle: "Unlock all features", color: .orange) {
                         showingPaywall = true
                     }
+                }
+
+                PunchyMenuItem(icon: "sparkles", title: "What's New", subtitle: "See the latest updates", color: .purple) {
+                    whatsNewManager.forceShow()
+                    showingWhatsNew = true
+                }
+
+                PunchyMenuItem(icon: "envelope.fill", title: "Feedback & Ideas", subtitle: "Share thoughts & vote on what's next", color: .green) {
+                    showingFeedback = true
+                }
+
+                PunchyMenuItem(icon: "gearshape.fill", title: "Settings", subtitle: "Preferences & account", color: .gray) {
+                    showingAbout = true
                 }
 
                 // Show a subtle "signed up" indicator after signup
@@ -680,6 +706,8 @@ struct PracticeToolCard: View {
     let subtitle: String
     let colors: [Color]
     let available: Bool
+    var locked: Bool = false
+    var trialText: String? = nil
     var action: (() -> Void)? = nil
 
     var body: some View {
@@ -708,16 +736,28 @@ struct PracticeToolCard: View {
 
                 Spacer()
 
-                if available {
-                    Image(systemName: "chevron.right")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                } else {
+                if !available {
                     Text("SOON")
                         .font(.system(size: 10, weight: .bold, design: .rounded))
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 8).padding(.vertical, 4)
                         .background(Capsule().fill(Color.secondary.opacity(0.15)))
+                } else if locked {
+                    Label("PRO", systemImage: "crown.fill")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Capsule().fill(LinearGradient(colors: [.orange, .pink], startPoint: .leading, endPoint: .trailing)))
+                } else if let trialText {
+                    Text(trialText)
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Capsule().fill(Color.secondary.opacity(0.15)))
+                } else {
+                    Image(systemName: "chevron.right")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(16)
@@ -1339,52 +1379,6 @@ struct StreakFreezeIndicator: View {
 
 import MessageUI
 
-struct FeedbackSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @State private var message = ""
-
-    private var mailtoURL: URL? {
-        let to = "support@braskgroup.com"
-        let subject = "Rounds Feedback"
-        let body = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let urlString = "mailto:\(to)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body)"
-        return URL(string: urlString)
-    }
-
-    var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Tell us what you think")
-                    .font(.headline)
-
-                TextEditor(text: $message)
-                    .frame(height: 180)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.systemGray4)))
-
-                Button {
-                    if let url = mailtoURL {
-                        UIApplication.shared.open(url)
-                    }
-                    dismiss()
-                } label: {
-                    Label("Send via Mail", systemImage: "paperplane.fill")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundStyle(.white)
-                        .cornerRadius(10)
-                }
-
-                Spacer()
-            }
-            .padding()
-            .navigationTitle("Feedback")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { dismiss() }
-                }
-            }
-        }
-    }
-}
+// FeedbackSheet was replaced by FeedbackView (Supabase-backed feedback + a
+// community feature-request board). See FeedbackView.swift.
 

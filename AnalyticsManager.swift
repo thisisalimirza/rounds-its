@@ -261,6 +261,9 @@ class AppStoreReviewManager {
     @UserDefaultsWrapper(key: "perfectScoresCount", defaultValue: 0)
     private var perfectScores: Int
 
+    @UserDefaultsWrapper(key: "differentialsBuiltCount", defaultValue: 0)
+    private var differentialsBuilt: Int
+
     @UserDefaultsWrapper(key: "hasRequestedReview", defaultValue: false)
     private var hasRequestedReview: Bool
 
@@ -340,23 +343,36 @@ class AppStoreReviewManager {
         }
     }
 
+    /// Call after a successful Differential Builder generation — a "just did
+    /// something useful" satisfaction moment. Prompts on the 2nd build (so it's
+    /// not a one-off try), still respecting the global non-intrusive limits.
+    /// Using the tool is itself engagement, so this path doesn't require games.
+    @MainActor
+    func differentialBuilt() {
+        differentialsBuilt += 1
+        if differentialsBuilt >= 2 && withinReviewLimits() {
+            requestReview(reason: "differential_built")
+        }
+    }
+
+    /// Global non-intrusive guardrails shared by every trigger: Apple's 3/year
+    /// cap plus our own 60-day cooldown.
+    private func withinReviewLimits() -> Bool {
+        guard reviewPromptsThisYear < 3 else { return false }
+        if let lastRequest = lastReviewRequestDate {
+            let daysSince = Calendar.current.dateComponents([.day], from: lastRequest, to: Date()).day ?? 0
+            guard daysSince >= 60 else { return false }
+        }
+        return true
+    }
+
     private func shouldRequestReview(reason: String) -> Bool {
-        // Apple limits to 3 prompts per 365-day period
-        guard reviewPromptsThisYear < 3 else {
-            print("📊 Review: Skipping (\(reason)) - hit yearly limit")
+        guard withinReviewLimits() else {
+            print("📊 Review: Skipping (\(reason)) - within cooldown / yearly limit")
             return false
         }
 
-        // Don't request if already requested in last 60 days
-        if let lastRequest = lastReviewRequestDate {
-            let daysSince = Calendar.current.dateComponents([.day], from: lastRequest, to: Date()).day ?? 0
-            guard daysSince >= 60 else {
-                print("📊 Review: Skipping (\(reason)) - too recent (\(daysSince) days)")
-                return false
-            }
-        }
-
-        // Minimum engagement: at least 3 games played
+        // Minimum engagement for gameplay-driven triggers: at least 3 games.
         guard gamesCompleted >= 3 else {
             print("📊 Review: Skipping (\(reason)) - not enough games (\(gamesCompleted))")
             return false

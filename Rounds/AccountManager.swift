@@ -31,7 +31,10 @@ final class AccountManager {
     // The publishable (anon) key is designed to be shipped in the client; it is
     // NOT a secret. All privileged actions happen server-side in edge functions.
 
-    private let supabase = SupabaseClient(
+    // Internal (not private) so other backend-facing services — e.g. the
+    // feedback / feature-request board — can reuse the same authenticated
+    // anonymous session instead of spinning up a second client.
+    let supabase = SupabaseClient(
         supabaseURL: URL(string: "https://gvbycponexvxsbrlaejw.supabase.co")!,
         supabaseKey: "sb_publishable_uzzk3B8lDJfrx51_Ab9iLA_7qjkJZr-"
     )
@@ -48,6 +51,21 @@ final class AccountManager {
 
     /// Whether this account is still anonymous (no email/Apple linked yet).
     var isAnonymousAccount: Bool { accountEmail == nil }
+
+    // MARK: - "Secure your account" nudge (one-time)
+
+    private static let securePromptedKey = "hasPromptedSecureAccount"
+
+    /// True when we should gently nudge the user to link email/Apple: they're
+    /// still anonymous and we haven't nudged them before.
+    var shouldOfferAccountSecuring: Bool {
+        isAnonymousAccount && !UserDefaults.standard.bool(forKey: Self.securePromptedKey)
+    }
+
+    /// Records that we've shown the secure-account nudge (so it never nags again).
+    func markAccountSecuringPrompted() {
+        UserDefaults.standard.set(true, forKey: Self.securePromptedKey)
+    }
 
     private init() {}
 
@@ -155,6 +173,84 @@ final class AccountManager {
         }
     }
 
+    // MARK: - Differential diagnosis (Claude, via the `ddx` edge function)
+
+    /// Sends free-text clinical findings to the `ddx` edge function, which calls
+    /// Claude server-side (the API key lives as a Supabase secret, never in the
+    /// app) and returns a structured differential. The authenticated client
+    /// attaches the user's JWT automatically, so the function can gate on a
+    /// signed-in user.
+    func requestDifferential(findings: String, context: String? = nil) async throws -> DifferentialResult {
+        let ctx = context?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return try await supabase.functions.invoke(
+            "ddx",
+            options: .init(body: DifferentialRequest(
+                findings: findings.trimmingCharacters(in: .whitespacesAndNewlines),
+                context: (ctx?.isEmpty ?? true) ? nil : ctx
+            ))
+        )
+    }
+
+    // MARK: - Feedback & feature requests (Supabase)
+
+    private static var appVersionString: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+    }
+
+    /// Submit private feedback / a bug report. Insert-only; you read these in the
+    /// Supabase dashboard.
+    func submitFeedback(category: String, message: String) async throws {
+        struct Row: Encodable { let category: String; let message: String; let app_version: String }
+        try await supabase.from("feedback")
+            .insert(Row(category: category,
+                        message: message.trimmingCharacters(in: .whitespacesAndNewlines),
+                        app_version: Self.appVersionString))
+            .execute()
+    }
+
+    /// Load the public feature-request board plus this user's own votes.
+    func fetchFeatureRequests() async throws -> (requests: [FeatureRequest], myVotes: [String: Int]) {
+        let requests: [FeatureRequest] = try await supabase
+            .from("feature_requests")
+            .select("id,title,detail,status,upvotes,downvotes,score")
+            .order("score", ascending: false)
+            .order("created_at", ascending: false)
+            .execute()
+            .value
+        let voteRows: [FeatureVoteRow] = try await supabase
+            .from("feature_votes")
+            .select("request_id,value")
+            .execute()
+            .value
+        var votes: [String: Int] = [:]
+        for row in voteRows { votes[row.request_id] = row.value }
+        return (requests, votes)
+    }
+
+    /// Submit a new idea to the public board.
+    func submitFeatureRequest(title: String, detail: String) async throws {
+        struct Row: Encodable { let title: String; let detail: String? }
+        let d = detail.trimmingCharacters(in: .whitespacesAndNewlines)
+        try await supabase.from("feature_requests")
+            .insert(Row(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                        detail: d.isEmpty ? nil : d))
+            .execute()
+    }
+
+    /// Cast (or toggle off) a vote. Pass the user's current vote for this
+    /// request so tapping the same direction again clears it.
+    func voteFeatureRequest(id: String, value: Int, current: Int?) async throws {
+        if current == value {
+            try await supabase.from("feature_votes").delete().eq("request_id", value: id).execute()
+        } else {
+            guard let uid = userID else { return }
+            struct Row: Encodable { let request_id: String; let user_id: String; let value: Int }
+            try await supabase.from("feature_votes")
+                .upsert(Row(request_id: id, user_id: uid, value: value), onConflict: "request_id,user_id")
+                .execute()
+        }
+    }
+
     // MARK: - Convert anonymous account -> real account (email magic link)
 
     /// Attaches an email to the current (possibly anonymous) account. Supabase
@@ -214,13 +310,18 @@ final class AccountManager {
 
     // MARK: - Sharing
 
-    /// Text to share when inviting friends. Uses the custom deep-link scheme;
-    /// swap in a universal https link once the web app exists.
+    /// Text to share when inviting friends. Leads with the App Store link so a
+    /// friend who doesn't have Rounds yet can install it first, then redeem the
+    /// code — the old deep link did nothing without the app installed.
     var inviteShareText: String? {
         guard let code = referralCode else { return nil }
         return """
-        Join me on Rounds — the daily medical case game. \
-        Use my invite code \(code) to unlock Rounds Pro free: rounds://invite/\(code)
+        Join me on Rounds — the daily medical case game for med students.
+
+        1. Download the app: \(AppLinks.appStoreURL)
+        2. Open Rounds → Account → Redeem, and enter my code: \(code)
+
+        That unlocks Rounds Pro for you, free. 🎉
         """
     }
 
@@ -264,4 +365,31 @@ nonisolated private struct AccountStatusResponse: Decodable {
 nonisolated private struct RedeemCodeResponse: Decodable {
     let status: String?
     let source: String?
+}
+
+// MARK: - Differential diagnosis types
+
+nonisolated struct DifferentialRequest: Encodable {
+    let findings: String
+    let context: String?
+}
+
+/// The structured differential returned by the `ddx` edge function. Keys match
+/// the JSON Schema the function constrains Claude to (camelCase, no key mapping).
+nonisolated struct DifferentialResult: Codable, Sendable {
+    let summary: String
+    let chiefComplaint: String
+    let system: String
+    let differential: [DifferentialDx]
+    let redFlags: [String]
+}
+
+nonisolated struct DifferentialDx: Codable, Sendable, Identifiable {
+    var id: String { diagnosis }
+    let diagnosis: String
+    let likelihood: String            // "high" | "moderate" | "low"
+    let cantMiss: Bool
+    let supporting: [String]          // findings the student mentioned that support this dx
+    let toConfirm: [String]           // next steps to raise suspicion / confirm this dx
+    let rationale: String
 }

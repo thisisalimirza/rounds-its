@@ -12,22 +12,49 @@ import SwiftData
 struct WeakSpotsView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \MissedItem.timestamp, order: .reverse) private var misses: [MissedItem]
+    @Query(sort: \DDxSession.timestamp, order: .reverse) private var sessions: [DDxSession]
+
+    @State private var selectedSnapshot: DDxSnapshot?
+
+    // Genuine wrong answers vs. self-flagged uncertainty (Differential Builder use).
+    private var wrongMisses: [MissedItem] { misses.filter { $0.sourceKind?.isWrongAnswer ?? true } }
 
     private var topics: [MissAggregate.Bucket] { MissAggregate.byTopic(misses) }
-    private var items: [MissAggregate.Bucket] { MissAggregate.byItem(misses) }
+    private var wrongItems: [MissAggregate.Bucket] { MissAggregate.byItem(wrongMisses) }
     private var sources: [MissAggregate.Bucket] { MissAggregate.bySource(misses) }
+
+    // Saved builder sessions grouped by complaint (latest first), so repeated
+    // visits collapse into one tappable row with a count.
+    private struct WorkedGroup: Identifiable {
+        let id: String
+        let complaint: String
+        let system: String
+        let count: Int
+        let latest: DDxSession
+    }
+
+    private var workedGroups: [WorkedGroup] {
+        Dictionary(grouping: sessions) { $0.chiefComplaint.lowercased() }
+            .compactMap { key, items -> WorkedGroup? in
+                guard let latest = items.max(by: { $0.timestamp < $1.timestamp }) else { return nil }
+                return WorkedGroup(id: key, complaint: latest.chiefComplaint,
+                                   system: latest.system, count: items.count, latest: latest)
+            }
+            .sorted { $0.latest.timestamp > $1.latest.timestamp }
+    }
 
     var body: some View {
         NavigationStack {
             Group {
-                if misses.isEmpty {
+                if misses.isEmpty && sessions.isEmpty {
                     emptyState
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 20) {
                             summaryHeader
                             topicsSection
-                            mostMissedSection
+                            if !wrongItems.isEmpty { mostMissedSection }
+                            if !workedGroups.isEmpty { workedThroughSection }
                             bySourceSection
                             futureNote
                         }
@@ -35,6 +62,9 @@ struct WeakSpotsView: View {
                         .padding(.bottom, 24)
                     }
                 }
+            }
+            .sheet(item: $selectedSnapshot) { snapshot in
+                DifferentialDiagnosisView(restore: snapshot)
             }
             .background(
                 LinearGradient(colors: [Color.blue.opacity(0.06), Color.purple.opacity(0.06)],
@@ -64,7 +94,7 @@ struct WeakSpotsView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("\(misses.count) to review")
                 .font(.system(.title2, design: .rounded).weight(.bold))
-            Text("Everything you've missed across cases and games — your personal review list.")
+            Text("Topics you've missed or needed help working through — your personal review list.")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -104,7 +134,8 @@ struct WeakSpotsView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("MOST-MISSED").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
             VStack(spacing: 0) {
-                ForEach(Array(items.prefix(10).enumerated()), id: \.element.id) { i, bucket in
+                let shown = Array(wrongItems.prefix(10))
+                ForEach(Array(shown.enumerated()), id: \.element.id) { i, bucket in
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(bucket.key).font(.subheadline.weight(.semibold))
@@ -119,11 +150,64 @@ struct WeakSpotsView: View {
                             .background(Capsule().fill(Color.orange.opacity(0.12)))
                     }
                     .padding(.vertical, 10).padding(.horizontal, 12)
-                    if i < min(items.count, 10) - 1 { Divider().padding(.leading, 12) }
+                    if i < shown.count - 1 { Divider().padding(.leading, 12) }
                 }
             }
             .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
         }
+    }
+
+    // Presentations the student built a differential for — a distinct signal
+    // from wrong answers: "I needed help reasoning through this." Each row
+    // reopens the saved differential for targeted review of the approach.
+    private var workedThroughSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("PRESENTATIONS YOU WORKED THROUGH").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
+                Text("Tap to reopen your saved differential and revisit the approach.")
+                    .font(.caption2).foregroundStyle(.tertiary)
+            }
+            VStack(spacing: 0) {
+                let shown = Array(workedGroups.prefix(12))
+                ForEach(Array(shown.enumerated()), id: \.element.id) { i, group in
+                    Button {
+                        open(group.latest)
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "stethoscope")
+                                .font(.caption).foregroundStyle(.blue)
+                                .frame(width: 22)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(group.complaint.isEmpty ? "Presentation" : group.complaint.capitalized)
+                                    .font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
+                                if !group.system.isEmpty {
+                                    Text(group.system.capitalized).font(.caption2).foregroundStyle(.secondary)
+                                }
+                            }
+                            Spacer()
+                            if group.count > 1 {
+                                Text("×\(group.count)")
+                                    .font(.caption.weight(.bold)).foregroundStyle(.blue)
+                                    .padding(.horizontal, 8).padding(.vertical, 3)
+                                    .background(Capsule().fill(Color.blue.opacity(0.12)))
+                            }
+                            Image(systemName: "chevron.right").font(.caption2.weight(.bold)).foregroundStyle(.tertiary)
+                        }
+                        .contentShape(Rectangle())
+                        .padding(.vertical, 10).padding(.horizontal, 12)
+                    }
+                    .buttonStyle(.plain)
+                    if i < shown.count - 1 { Divider().padding(.leading, 44) }
+                }
+            }
+            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
+        }
+    }
+
+    private func open(_ session: DDxSession) {
+        guard let result = session.result else { return }
+        selectedSnapshot = DDxSnapshot(id: session.id, findings: session.findings,
+                                       context: session.context, result: result)
     }
 
     private var bySourceSection: some View {

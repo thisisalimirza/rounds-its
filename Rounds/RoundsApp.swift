@@ -71,7 +71,8 @@ struct RoundsApp: App {
             CaseHistoryEntry.self,
             AchievementProgress.self,
             LeaderboardProfile.self,
-            MissedItem.self
+            MissedItem.self,
+            DDxSession.self
         ])
 
         // Use a stable URL so we can remove incompatible stores and retry

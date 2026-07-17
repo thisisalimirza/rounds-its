@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import UserNotifications
+import UIKit
 
 struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
@@ -17,7 +18,7 @@ struct AboutView: View {
     @Query private var achievementProgress: [AchievementProgress]
     @State private var showingFeedback = false
     @State private var showingSubscription = false
-    @State private var showingReferral = false
+    @State private var showingAccount = false
     @State private var showingLeaderboardSetup = false
     @State private var showingLeaveLeaderboardAlert = false
     @State private var showingEditDisplayName = false
@@ -40,6 +41,7 @@ struct AboutView: View {
     }
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
+    private var account: AccountManager { AccountManager.shared }
 
     // Computed property for the reminder time binding
     private var reminderTime: Binding<Date> {
@@ -68,7 +70,7 @@ struct AboutView: View {
                 // MARK: - Account Section
                 Section {
                     subscriptionRow
-                    inviteAndRedeemRow
+                    manageAccountRow
                 } header: {
                     Label("Account", systemImage: "person.crop.circle")
                 }
@@ -119,6 +121,17 @@ struct AboutView: View {
                     Label("About", systemImage: "info.circle")
                 }
 
+                #if DEBUG
+                // MARK: - Developer Section (DEBUG builds only — never in production)
+                Section {
+                    developerRows
+                } header: {
+                    Label("Developer", systemImage: "hammer.fill")
+                } footer: {
+                    Text("Debug builds only. Toggle simulated Pro access to test both experiences. Not present in release builds.")
+                }
+                #endif
+
                 // MARK: - Legal Section
                 Section {
                     legalRows
@@ -147,7 +160,7 @@ struct AboutView: View {
             }
         }
         .sheet(isPresented: $showingFeedback) {
-            FeedbackSheet()
+            FeedbackView()
         }
         .sheet(isPresented: $showingSubscription) {
             if subscriptionManager.isProUser {
@@ -156,8 +169,8 @@ struct AboutView: View {
                 RoundsPaywallView()
             }
         }
-        .sheet(isPresented: $showingReferral) {
-            ReferralView()
+        .sheet(isPresented: $showingAccount) {
+            AccountView()
         }
         .sheet(isPresented: $showingLeaderboardSetup) {
             LeaderboardProfileSetupView()
@@ -237,27 +250,30 @@ struct AboutView: View {
         )
     }
 
-    // MARK: - Invite & Redeem Row
+    // MARK: - Manage Account Row (opens the unified Account hub)
 
-    private var inviteAndRedeemRow: some View {
+    private var manageAccountRow: some View {
         Button {
-            showingReferral = true
+            showingAccount = true
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: "gift.fill")
+                Image(systemName: account.isAnonymousAccount ? "icloud.and.arrow.up.fill" : "person.crop.circle.badge.checkmark")
                     .font(.title2)
-                    .foregroundStyle(.pink)
+                    .foregroundStyle(account.isAnonymousAccount ? .blue : .green)
                     .frame(width: 32)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Invite Friends & Redeem Code")
+                    Text(account.isAnonymousAccount ? "Account & Sync" : "Account")
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundStyle(.primary)
 
-                    Text("Share Pro with 3 friends, or enter a code")
+                    Text(account.isAnonymousAccount
+                         ? "Sign in for cross-device sync · invite · redeem"
+                         : (account.accountEmail ?? "Invite friends · redeem a code"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
 
                 Spacer()
@@ -268,6 +284,34 @@ struct AboutView: View {
             }
         }
     }
+
+    // MARK: - Developer Rows (DEBUG only)
+
+    #if DEBUG
+    @ViewBuilder
+    private var developerRows: some View {
+        Toggle(isOn: Binding(
+            get: { subscriptionManager.debugForcePro },
+            set: { subscriptionManager.debugForcePro = $0 }
+        )) {
+            HStack(spacing: 12) {
+                Image(systemName: "crown.fill")
+                    .font(.title2)
+                    .foregroundStyle(.yellow)
+                    .frame(width: 32)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Force Pro Access")
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+                    Text(subscriptionManager.debugForcePro ? "Simulating Pro" : "Simulating Free")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+    #endif
 
     // MARK: - Leaderboard Profile Rows
 
@@ -490,11 +534,8 @@ struct AboutView: View {
 
     private var whatsNewRow: some View {
         Button {
-            Task {
-                await whatsNewManager.checkForWhatsNew()
-                whatsNewManager.forceShow()
-                showingWhatsNew = true
-            }
+            whatsNewManager.forceShow()
+            showingWhatsNew = true
         } label: {
             HStack {
                 Label("What's New", systemImage: "sparkles")
@@ -514,7 +555,7 @@ struct AboutView: View {
             showingFeedback = true
         } label: {
             HStack {
-                Label("Send Feedback", systemImage: "paperplane.fill")
+                Label("Feedback & Ideas", systemImage: "paperplane.fill")
                     .foregroundStyle(.primary)
                 Spacer()
                 Image(systemName: "chevron.right")

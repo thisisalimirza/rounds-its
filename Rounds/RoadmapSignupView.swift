@@ -28,37 +28,45 @@ struct RoadmapSignupView: View {
     @State private var hasSubmitted = false
     @State private var showError = false
     @State private var animateFeatures = false
+    @State private var showingIdeas = false
 
     @FocusState private var emailFieldFocused: Bool
 
     private let roadmapFeatures: [RoadmapFeature] = [
         RoadmapFeature(
-            icon: "2.circle.fill",
-            title: "Step 2 Cases",
-            subtitle: "Clinical knowledge & diagnosis",
+            icon: "list.clipboard.fill",
+            title: "Shelf Exam Mode",
+            subtitle: "Clerkship-specific cases: IM, Surgery, Peds, OB/GYN, Psych & FM",
             timeline: "Coming Soon",
             color: .blue
         ),
         RoadmapFeature(
-            icon: "3.circle.fill",
-            title: "Step 3 Cases",
-            subtitle: "Patient management scenarios",
-            timeline: "In Development",
-            color: .purple
+            icon: "2.circle.fill",
+            title: "Step 2 CK Cases",
+            subtitle: "Clinical knowledge & management scenarios",
+            timeline: "Q4 2026",
+            color: .indigo
         ),
         RoadmapFeature(
             icon: "globe",
-            title: "Web App",
-            subtitle: "Study anywhere, any device",
-            timeline: "2025",
+            title: "Clinic Companion (Web)",
+            subtitle: "Jot notes & build differentials bedside, on any device",
+            timeline: "Q4 2026",
             color: .green
+        ),
+        RoadmapFeature(
+            icon: "arrow.triangle.2.circlepath",
+            title: "Smart Review",
+            subtitle: "Spaced repetition built from your Weak Spots",
+            timeline: "Early 2027",
+            color: .orange
         ),
         RoadmapFeature(
             icon: "person.2.fill",
             title: "Study Groups",
-            subtitle: "Compete with your study partners",
-            timeline: "Planned",
-            color: .orange
+            subtitle: "Compete and review with your class",
+            timeline: "Early 2027",
+            color: .pink
         )
     ]
 
@@ -81,6 +89,20 @@ struct RoadmapSignupView: View {
                                     value: animateFeatures
                                 )
                         }
+                    }
+                    .padding(.horizontal, 20)
+
+                    // Community board link — vote on what ships next
+                    Button {
+                        showingIdeas = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "hand.thumbsup.fill")
+                            Text("Have an idea? Suggest & vote on features")
+                            Image(systemName: "arrow.right")
+                        }
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.blue)
                     }
                     .padding(.horizontal, 20)
 
@@ -121,6 +143,9 @@ struct RoadmapSignupView: View {
                     animateFeatures = true
                 }
                 AnalyticsManager.shared.track("roadmap_viewed")
+            }
+            .sheet(isPresented: $showingIdeas) {
+                FeedbackView(initialTab: .ideas)
             }
         }
     }
@@ -432,7 +457,7 @@ struct RoadmapCard: View {
                             .cornerRadius(4)
                     }
 
-                    Text("Step 2, Step 3, Web App & more")
+                    Text("Shelf exams, Step 2, web companion & more")
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
