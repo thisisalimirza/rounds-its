@@ -45,8 +45,6 @@ struct ContentView: View {
     @State private var streakRecoveryChecked = false
     @State private var showingWhatsNew = false
     @State private var showingRoadmap = false
-    @State private var showingStreakDetail = false
-    @State private var showingStatsAnalytics = false
     @StateObject private var whatsNewManager = WhatsNewManager.shared
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
@@ -142,14 +140,16 @@ struct ContentView: View {
                             }
                             .buttonStyle(.plain)
 
-                            // Streak Pill — tap to open streak detail modal
+                            // Streak Pill — tap to open our stats screen (streak
+                            // calendar + highlights, integrated with analytics)
                             Button {
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                showingStreakDetail = true
+                                showingStats = true
                             } label: {
                                 AnimatedStreakPill(streak: stats.currentStreak, freezes: stats.streakFreezesAvailable, isPro: subscriptionManager.isProUser)
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("Current streak: \(stats.currentStreak). Tap for stats.")
                         }
                     }
                     .padding(.horizontal, 20)
@@ -196,11 +196,11 @@ struct ContentView: View {
                     )
                 }
             }
-            .sheet(isPresented: $showingStreakDetail) {
-                StreakDetailView()
+            .sheet(isPresented: $showingStats) {
+                StatsView()
             }
-            .sheet(isPresented: $showingStatsAnalytics) {
-                StatsAnalyticsView(isPro: subscriptionManager.isProUser, onShowPaywall: { showingPaywall = true })
+            .sheet(isPresented: $showingCategoryAnalytics) {
+                CategoryAnalyticsView()
             }
             .sheet(isPresented: $showingCaseHistory) {
                 CaseHistoryView()
