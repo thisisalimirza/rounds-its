@@ -23,12 +23,14 @@ struct SubscriptionSettingsView: View {
 /// Alternative custom subscription management view
 struct CustomSubscriptionSettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    
+    @Environment(\.scenePhase) private var scenePhase
+
     @State private var isLoading = false
     @State private var showingError = false
     @State private var errorMessage: String?
     @State private var showingPaywall = false
-    
+    @State private var didPresentCodeSheet = false
+
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     
     var body: some View {
@@ -36,12 +38,12 @@ struct CustomSubscriptionSettingsView: View {
             List {
                 currentPlanSection
                 
-                if !subscriptionManager.isProSubscriber {
+                if !subscriptionManager.isProUser {
                     upgradeSection
                 }
-                
+
                 managementSection
-                
+
                 if subscriptionManager.isProSubscriber {
                     subscriptionDetailsSection
                 }
@@ -69,6 +71,14 @@ struct CustomSubscriptionSettingsView: View {
             }
             .refreshable {
                 await subscriptionManager.refreshCustomerInfo()
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                // After the Apple code redemption sheet dismisses the app returns to .active.
+                // Call syncPurchases() so the receipt is uploaded immediately.
+                if newPhase == .active && didPresentCodeSheet {
+                    didPresentCodeSheet = false
+                    Task { try? await subscriptionManager.syncPurchases() }
+                }
             }
         }
     }
@@ -148,7 +158,7 @@ struct CustomSubscriptionSettingsView: View {
     }
     
     // MARK: - Management Section
-    
+
     private var managementSection: some View {
         Section {
             Button {
@@ -167,7 +177,21 @@ struct CustomSubscriptionSettingsView: View {
                 }
             }
             .disabled(isLoading)
-            
+
+            if !subscriptionManager.isProUser {
+                Button {
+                    didPresentCodeSheet = true
+                    Purchases.shared.presentCodeRedemptionSheet()
+                } label: {
+                    HStack {
+                        Image(systemName: "ticket.fill")
+                            .foregroundStyle(.blue)
+                        Text("Redeem Promo Code")
+                        Spacer()
+                    }
+                }
+            }
+
             if subscriptionManager.isProSubscriber && subscriptionManager.willRenew() {
                 Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
                     HStack {
@@ -184,7 +208,7 @@ struct CustomSubscriptionSettingsView: View {
         } header: {
             Text("Management")
         } footer: {
-            Text("Restore purchases you've made on other devices.")
+            Text("Have a promo code? Tap \"Redeem Promo Code\" to apply it. Already purchased on another device? Use \"Restore Purchases\".")
         }
     }
     
@@ -233,10 +257,20 @@ struct CustomSubscriptionSettingsView: View {
                     .foregroundStyle(.secondary)
             }
             .padding(.vertical, 4)
+
+            #if DEBUG
+            Text("Debug controls → triple-tap \"Rounds\" on the home screen")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            #endif
         } header: {
             Text("Debug Info")
         } footer: {
+            #if DEBUG
+            Text("'Simulate Free User' forces free tier so you can screenshot paywalls. Stripped from App Store builds.")
+            #else
             Text("Use this to verify TestFlight detection and subscription status.")
+            #endif
         }
     }
     
@@ -275,11 +309,18 @@ struct CustomSubscriptionSettingsView: View {
     private func restorePurchases() async {
         isLoading = true
         defer { isLoading = false }
-        
+
         do {
             _ = try await subscriptionManager.restorePurchases()
+
+            // If still no access, fall back to syncPurchases — this picks up Apple promo/offer
+            // code redemptions that restorePurchases() misses (different StoreKit code path).
             if !subscriptionManager.hasProAccess() {
-                errorMessage = "No previous purchases found"
+                _ = try await subscriptionManager.syncPurchases()
+            }
+
+            if !subscriptionManager.hasProAccess() {
+                errorMessage = "No previous purchases found. If you redeemed a promo code, make sure it was applied in the App Store and try again."
                 showingError = true
             }
         } catch {

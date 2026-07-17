@@ -11,13 +11,20 @@ import RevenueCatUI
 
 // MARK: - Rounds Paywall View
 
-/// Main paywall view using RevenueCat's built-in PaywallView
+/// Main paywall view using RevenueCat's built-in PaywallView.
+/// Automatically shows the one-time retention offer when dismissed without purchasing.
 struct RoundsPaywallView: View {
     @Environment(\.dismiss) private var dismiss
-    
+
+    // Tracks whether this session ended in a purchase/restore — gates retention offer
+    @State private var completedPurchase = false
+    // Persists across app launches — retention offer is shown at most once ever
+    @AppStorage("hasSeenRetentionOffer") private var hasSeenRetentionOffer: Bool = false
+    @State private var showingRetentionOffer = false
+
     var onPurchaseCompleted: ((CustomerInfo) -> Void)?
     var onRestoreCompleted: ((CustomerInfo) -> Void)?
-    
+
     init(
         onPurchaseCompleted: ((CustomerInfo) -> Void)? = nil,
         onRestoreCompleted: ((CustomerInfo) -> Void)? = nil
@@ -25,16 +32,16 @@ struct RoundsPaywallView: View {
         self.onPurchaseCompleted = onPurchaseCompleted
         self.onRestoreCompleted = onRestoreCompleted
     }
-    
+
     var body: some View {
         NavigationStack {
             RevenueCatUI.PaywallView()
                 .onAppear {
-                    // Track paywall viewed - determine source from context
                     AnalyticsManager.shared.trackPaywallViewed(source: "app")
                 }
                 .onPurchaseCompleted { customerInfo in
                     print("✅ Purchase completed")
+                    completedPurchase = true
                     onPurchaseCompleted?(customerInfo)
                     dismiss()
                 }
@@ -42,7 +49,18 @@ struct RoundsPaywallView: View {
                     print("✅ Restore completed")
                     onRestoreCompleted?(customerInfo)
                     if SubscriptionManager.shared.hasProAccess() {
+                        completedPurchase = true
                         dismiss()
+                    } else {
+                        // RevenueCat's internal restore misses Apple promo/offer code redemptions.
+                        // syncPurchases uploads the current receipt fresh, which catches them.
+                        Task {
+                            try? await SubscriptionManager.shared.syncPurchases()
+                            if SubscriptionManager.shared.hasProAccess() {
+                                completedPurchase = true
+                                dismiss()
+                            }
+                        }
                     }
                 }
                 .onPurchaseFailure { error in
@@ -54,7 +72,7 @@ struct RoundsPaywallView: View {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button {
-                            dismiss()
+                            handleDismiss()
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundStyle(.secondary)
@@ -62,6 +80,26 @@ struct RoundsPaywallView: View {
                         }
                     }
                 }
+        }
+        .sheet(isPresented: $showingRetentionOffer) {
+            RetentionOfferView()
+        }
+    }
+
+    // MARK: - Dismiss handling
+
+    /// Intercepts the X button. If the user never purchased and hasn't seen
+    /// the retention offer yet, show it instead of dismissing immediately.
+    private func handleDismiss() {
+        let shouldShowRetention = !completedPurchase
+            && !hasSeenRetentionOffer
+            && !SubscriptionManager.shared.isProUser
+
+        if shouldShowRetention {
+            hasSeenRetentionOffer = true   // mark immediately so it never shows again
+            showingRetentionOffer = true
+        } else {
+            dismiss()
         }
     }
 }
@@ -305,13 +343,19 @@ struct CustomRoundsPaywallView: View {
     private func restorePurchases() async {
         isLoading = true
         defer { isLoading = false }
-        
+
         do {
             _ = try await subscriptionManager.restorePurchases()
+
+            // Fall back to syncPurchases for Apple promo/offer code redemptions.
+            if !subscriptionManager.hasProAccess() {
+                _ = try await subscriptionManager.syncPurchases()
+            }
+
             if subscriptionManager.hasProAccess() {
                 showingSuccess = true
             } else {
-                errorMessage = "No previous purchases found"
+                errorMessage = "No previous purchases found. If you redeemed a promo code, make sure it was applied in the App Store and try again."
                 showingError = true
             }
         } catch {

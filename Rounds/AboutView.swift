@@ -121,17 +121,6 @@ struct AboutView: View {
                     Label("About", systemImage: "info.circle")
                 }
 
-                #if DEBUG
-                // MARK: - Developer Section (DEBUG builds only — never in production)
-                Section {
-                    developerRows
-                } header: {
-                    Label("Developer", systemImage: "hammer.fill")
-                } footer: {
-                    Text("Debug builds only. Toggle simulated Pro access to test both experiences. Not present in release builds.")
-                }
-                #endif
-
                 // MARK: - Legal Section
                 Section {
                     legalRows
@@ -284,34 +273,6 @@ struct AboutView: View {
             }
         }
     }
-
-    // MARK: - Developer Rows (DEBUG only)
-
-    #if DEBUG
-    @ViewBuilder
-    private var developerRows: some View {
-        Toggle(isOn: Binding(
-            get: { subscriptionManager.debugForcePro },
-            set: { subscriptionManager.debugForcePro = $0 }
-        )) {
-            HStack(spacing: 12) {
-                Image(systemName: "crown.fill")
-                    .font(.title2)
-                    .foregroundStyle(.yellow)
-                    .frame(width: 32)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Force Pro Access")
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.primary)
-                    Text(subscriptionManager.debugForcePro ? "Simulating Pro" : "Simulating Free")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
-    }
-    #endif
 
     // MARK: - Leaderboard Profile Rows
 

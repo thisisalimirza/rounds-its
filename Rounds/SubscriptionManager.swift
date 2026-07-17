@@ -27,17 +27,6 @@ final class SubscriptionManager {
     private(set) var currentOffering: Offering?
     private(set) var subscriptionStatus: SubscriptionStatus = .free
 
-    #if DEBUG
-    /// DEBUG-ONLY manual Pro toggle, surfaced in Settings → Developer. Persisted
-    /// so it survives relaunch. Defaults to `true` to preserve the old
-    /// "DEBUG build = Pro" behavior. This whole block is compiled out of
-    /// release/TestFlight/App Store builds — it cannot be seen or used there.
-    static let debugForceProKey = "debugForceProEnabled"
-    var debugForcePro: Bool = (UserDefaults.standard.object(forKey: debugForceProKey) as? Bool ?? true) {
-        didSet { UserDefaults.standard.set(debugForcePro, forKey: Self.debugForceProKey) }
-    }
-    #endif
-
     /// Computed property that includes TestFlight check
     var isProUser: Bool {
         return hasProAccess()
@@ -123,13 +112,24 @@ final class SubscriptionManager {
         self.isProSubscriber = proEntitlement?.isActive == true
         
         // Determine subscription status
+        // Supports both friendly identifiers (monthly/yearly/lifetime) and
+        // the short numeric App Store product IDs (01=monthly, 02=annual, 03=lifetime).
         if let entitlement = proEntitlement, entitlement.isActive {
             let productId = entitlement.productIdentifier
-            if productId.contains("lifetime") || (entitlement.expirationDate == nil && !entitlement.willRenew) {
+            let isLifetime = productId == "03"
+                || productId.contains("lifetime")
+                || (entitlement.expirationDate == nil && !entitlement.willRenew)
+            let isAnnual = productId == "02"
+                || productId.contains("yearly")
+                || productId.contains("annual")
+            let isMonthly = productId == "01"
+                || productId.contains("monthly")
+
+            if isLifetime {
                 self.subscriptionStatus = .lifetime
-            } else if productId.contains("yearly") {
+            } else if isAnnual {
                 self.subscriptionStatus = .yearly
-            } else if productId.contains("monthly") {
+            } else if isMonthly {
                 self.subscriptionStatus = .monthly
             } else {
                 self.subscriptionStatus = .monthly
@@ -177,8 +177,18 @@ final class SubscriptionManager {
     /// Restore previous purchases
     func restorePurchases() async throws -> CustomerInfo {
         AnalyticsManager.shared.trackPurchaseRestored()
-        
+
         let info = try await Purchases.shared.restorePurchases()
+        updateCustomerInfo(info)
+        return info
+    }
+
+    /// Sync purchases by uploading the current receipt to RevenueCat.
+    /// Use this after an Apple promo/offer code is redeemed — restorePurchases() won't
+    /// surface offer code transactions, but syncPurchases() will because it sends the
+    /// fresh device receipt directly to RevenueCat's backend.
+    func syncPurchases() async throws -> CustomerInfo {
+        let info = try await Purchases.shared.syncPurchases()
         updateCustomerInfo(info)
         return info
     }
@@ -188,29 +198,32 @@ final class SubscriptionManager {
     /// Check if user has active Pro subscription
     /// Note: This is @MainActor isolated - call from SwiftUI views or main thread only
     func hasProAccess() -> Bool {
+        // DEBUG-only: allow simulating a free user for screenshots / UI testing
+        // (toggled from the triple-tap debug menu). Never compiled into App Store builds.
         #if DEBUG
-        // In Xcode/debug builds, Pro is controlled by the manual Developer toggle
-        // (defaults to on). Lets us test both the Pro and free experiences.
-        return debugForcePro
-        #else
+        if UserDefaults.standard.bool(forKey: "debug_simulate_free_user") {
+            print("🧪 Simulating free user (debug override active)")
+            return false
+        }
+        #endif
+
         // Auto-grant Pro access for TestFlight users
         if isTestFlightBuild() {
             print("✅ TestFlight detected - granting Pro access")
-            
+
             // Track TestFlight usage in analytics
             AnalyticsManager.shared.setUserProperty(key: "is_testflight", value: true)
-            
+
             return true
         }
-        
+
         print("ℹ️ Not TestFlight - checking subscription: \(isProSubscriber)")
-        
+
         // Track production usage
         AnalyticsManager.shared.setUserProperty(key: "is_testflight", value: false)
         AnalyticsManager.shared.setUserProperty(key: "subscription_status", value: subscriptionStatus.rawValue)
 
         return isProSubscriber
-        #endif
     }
 
     // MARK: - TestFlight Detection
