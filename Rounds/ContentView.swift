@@ -200,7 +200,9 @@ struct ContentView: View {
                 StatsView()
             }
             .sheet(isPresented: $showingCategoryAnalytics) {
-                CategoryAnalyticsView()
+                // "Analytics" now surfaces the personalized study plan built from
+                // the user's weak spots (Pro). StudyPlanView handles its own gate.
+                StudyPlanView()
             }
             .sheet(isPresented: $showingCaseHistory) {
                 CaseHistoryView()
@@ -564,8 +566,8 @@ struct ContentView: View {
                     }
 
                     EnhancedFeatureCard(
-                        icon: "chart.pie.fill",
-                        title: "Analytics",
+                        icon: "sparkles",
+                        title: "Study Plan",
                         color: .indigo,
                         isLocked: !subscriptionManager.isProUser
                     ) {

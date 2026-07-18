@@ -191,6 +191,17 @@ final class AccountManager {
         )
     }
 
+    // MARK: - Study plan (Claude, via the `study-plan` edge function)
+
+    /// Sends the user's aggregated weak spots to the `study-plan` edge function,
+    /// which calls Claude server-side and returns a targeted, teaching-rich plan.
+    func requestStudyPlan(weakSpots: [StudyWeakSpot], practiced: [StudyPracticed]) async throws -> StudyPlanResult {
+        return try await supabase.functions.invoke(
+            "study-plan",
+            options: .init(body: StudyPlanRequest(weakSpots: weakSpots, practiced: practiced))
+        )
+    }
+
     // MARK: - Feedback & feature requests (Supabase)
 
     private static var appVersionString: String {
@@ -392,4 +403,39 @@ nonisolated struct DifferentialDx: Codable, Sendable, Identifiable {
     let supporting: [String]          // findings the student mentioned that support this dx
     let toConfirm: [String]           // next steps to raise suspicion / confirm this dx
     let rationale: String
+}
+
+// MARK: - Study plan types
+
+nonisolated struct StudyWeakSpot: Encodable, Sendable {
+    let topic: String
+    let item: String
+    let count: Int
+    let sources: [String]
+}
+
+nonisolated struct StudyPracticed: Encodable, Sendable {
+    let complaint: String
+    let system: String
+    let count: Int
+}
+
+nonisolated struct StudyPlanRequest: Encodable {
+    let weakSpots: [StudyWeakSpot]
+    let practiced: [StudyPracticed]
+}
+
+nonisolated struct StudyPlanResult: Decodable, Sendable {
+    let overview: String
+    let focusAreas: [StudyFocusArea]
+    let nextSteps: [String]
+}
+
+nonisolated struct StudyFocusArea: Decodable, Sendable, Identifiable {
+    var id: String { area }
+    let area: String
+    let priority: String          // high | medium | low
+    let why: String
+    let studyPoints: [String]
+    let teaching: String
 }
