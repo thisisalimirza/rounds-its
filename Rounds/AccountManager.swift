@@ -425,17 +425,17 @@ nonisolated struct StudyPlanRequest: Encodable {
     let practiced: [StudyPracticed]
 }
 
-nonisolated struct StudyPlanResult: Decodable, Sendable {
-    let overview: String
+nonisolated struct StudyPlanResult: Codable, Sendable {
+    let headline: String
     let focusAreas: [StudyFocusArea]
-    let nextSteps: [String]
 }
 
-nonisolated struct StudyFocusArea: Decodable, Sendable, Identifiable {
+nonisolated struct StudyFocusArea: Codable, Sendable, Identifiable {
     var id: String { area }
     let area: String
     let priority: String          // high | medium | low
-    let why: String
-    let studyPoints: [String]
-    let teaching: String
+    let summary: String
+    let keyFacts: [String]
+    let cantMiss: [String]
+    let review: [String]
 }

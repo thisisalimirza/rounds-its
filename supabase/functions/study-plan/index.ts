@@ -25,56 +25,60 @@ function json(body: unknown, status = 200) {
   });
 }
 
+// Tight, componentized schema — every field maps to a small UI element, so the
+// app never renders a wall of text. Each bullet is a SHORT phrase / one line.
 const PLAN_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
-    overview: {
+    headline: {
       type: "string",
-      description: "Two or three sentences summarizing the student's biggest gaps and the through-line across them.",
+      description: "One short, punchy sentence (max ~18 words) summarizing the student's single biggest focus right now.",
     },
     focusAreas: {
       type: "array",
-      description: "Prioritized focus areas, most important first. 3-6 areas.",
+      description: "Prioritized focus areas, most important first. 2-5 areas.",
       items: {
         type: "object",
         additionalProperties: false,
         properties: {
-          area: { type: "string", description: "The topic / system / theme (e.g. 'Acute abdominal pain', 'Cardiology')." },
+          area: { type: "string", description: "Short title of the area (e.g. 'Acute low back pain', 'Cardiology'). Max ~6 words." },
           priority: { type: "string", enum: ["high", "medium", "low"] },
-          why: { type: "string", description: "One or two sentences on why this is a gap for THIS student, referencing what they missed." },
-          studyPoints: {
+          summary: { type: "string", description: "ONE short sentence (max ~20 words) on why this is a gap for this student." },
+          keyFacts: {
             type: "array",
-            description: "3-6 specific, high-yield things to study or review for this area.",
+            description: "3-6 high-yield facts to KNOW. Each is a short phrase or single clause (max ~15 words) — teach the actual content, not a pointer to go read it.",
             items: { type: "string" },
           },
-          teaching: {
-            type: "string",
-            description: "A compact, high-yield teaching block that actually delivers the core knowledge for this area — the discriminating features, can't-miss diagnoses, and the reasoning a strong student should hold. A few sentences to a short paragraph.",
+          cantMiss: {
+            type: "array",
+            description: "Can't-miss diagnoses / red flags for this area. Each a short phrase (max ~12 words). Empty array if not applicable.",
+            items: { type: "string" },
+          },
+          review: {
+            type: "array",
+            description: "2-4 concrete things to study/review. Each a short phrase (max ~12 words).",
+            items: { type: "string" },
           },
         },
-        required: ["area", "priority", "why", "studyPoints", "teaching"],
+        required: ["area", "priority", "summary", "keyFacts", "cantMiss", "review"],
       },
     },
-    nextSteps: {
-      type: "array",
-      description: "A short ordered checklist of concrete next actions this week.",
-      items: { type: "string" },
-    },
   },
-  required: ["overview", "focusAreas", "nextSteps"],
+  required: ["headline", "focusAreas"],
 };
 
-const SYSTEM_PROMPT = `You are a clinical reasoning coach for a medical student using the Rounds app. You will receive a structured summary of the student's weak spots: the specific things they got wrong (with the topic, how many times, and which activity it came from) and the presentations they practiced building a differential for.
+const SYSTEM_PROMPT = `You are a clinical reasoning coach for a medical student using the Rounds app. You receive a structured summary of the student's weak spots: what they got wrong (topic, count, which activity) and the presentations they practiced.
 
-Produce a focused, genuinely useful study plan:
-- Identify the highest-leverage focus areas, prioritized. Group related misses into coherent themes rather than repeating every single item.
-- For each area, explain briefly why it's a gap for THIS student, referencing what they actually missed.
-- Give specific, high-yield study points — what to review, in concrete terms.
-- Most importantly, TEACH: include a compact, high-yield knowledge block for each area that delivers the core content a strong clerkship student should hold — discriminating features, can't-miss diagnoses, and the clinical reasoning. This should be substantive enough to actually learn from, not just a pointer to go read elsewhere.
-- End with a short, concrete checklist of next steps for the week.
+Produce a TIGHT, scannable study plan that the app renders as small UI components. Rules:
+- Group related misses into 2-5 coherent focus areas, prioritized (most important first).
+- Write in SHORT bullets, never paragraphs. Every keyFact / cantMiss / review item is a short phrase or single clause — aim for under ~15 words each. The headline and each area summary are ONE short sentence.
+- keyFacts must TEACH the actual high-yield content (discriminating features, mechanisms, numbers a strong clerkship student holds) — not "review X". Deliver the knowledge concisely.
+- cantMiss lists the dangerous diagnoses / red flags for that area.
+- review lists concrete things to study.
+- Be specific to the data provided, not generic. With little data, focus tightly on what's there.
 
-Be specific to the data provided, not generic. Calibrate depth to how much data there is: with little data, focus on what's there and note that recommendations will sharpen as they do more cases. This is an educational study aid and does not replace formal curriculum or supervision.`;
+This is an educational study aid and does not replace formal curriculum or supervision.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });

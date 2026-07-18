@@ -326,6 +326,12 @@ struct ContentView: View {
 
                 // Check for deep linked case
                 checkForDeepLinkedCase()
+
+                // Keep the Pro study plan warm in the background so it's instant
+                // when opened. No-ops for free users or when nothing has changed.
+                Task {
+                    await StudyPlanStore.shared.refreshIfNeeded(context: modelContext, isPro: subscriptionManager.isProUser)
+                }
             }
             .task {
                 // Decide What's New vs. a gentle "secure your account" nudge —

@@ -13,6 +13,7 @@ struct StatsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var playerStats: [PlayerStats]
     @Query private var caseHistory: [CaseHistoryEntry]
+    @State private var showingCategoryCharts = false
 
     private var stats: PlayerStats? {
         playerStats.first
@@ -42,6 +43,10 @@ struct StatsView: View {
                         
                         // Guess Distribution
                         guessDistribution(stats: stats)
+
+                        // Category breakdown — tucked behind a link so it doesn't
+                        // crowd the main stats screen.
+                        categoryBreakdownLink
                     } else {
                         emptyStateView
                     }
@@ -57,7 +62,32 @@ struct StatsView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showingCategoryCharts) {
+                CategoryAnalyticsView()
+            }
         }
+    }
+
+    private var categoryBreakdownLink: some View {
+        Button {
+            showingCategoryCharts = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "chart.pie.fill")
+                    .font(.title3).foregroundStyle(.indigo)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Category Breakdown")
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
+                    Text("Your accuracy by specialty")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+            }
+            .padding()
+            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
     }
     
     // MARK: - Streak Card
