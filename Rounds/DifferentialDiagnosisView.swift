@@ -366,7 +366,7 @@ struct DifferentialDiagnosisView: View {
         }
     }
 
-    private let disclaimer = "Educational study aid — automatically generated and may be incomplete or wrong. Not a diagnostic device. Always use clinical judgment and supervision."
+    private let disclaimer = "Educational study aid — may be incomplete or wrong. Not a diagnostic device. Always use clinical judgment and supervision."
 }
 
 // MARK: - Diagnosis card

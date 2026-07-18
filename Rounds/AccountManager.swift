@@ -219,7 +219,7 @@ final class AccountManager {
     func fetchIllnessLibrary(limit: Int = 300) async throws -> [IllnessScriptSummary] {
         return try await supabase
             .from("illness_scripts")
-            .select("condition, condition_key, one_liner, miss_count")
+            .select("condition, condition_key, system, one_liner, miss_count")
             .order("miss_count", ascending: false)
             .limit(limit)
             .execute()
@@ -471,8 +471,9 @@ nonisolated struct IllnessScriptRequest: Encodable {
     let reason: String
 }
 
-nonisolated struct IllnessScript: Decodable, Sendable {
+nonisolated struct IllnessScript: Codable, Sendable {
     let condition: String
+    let system: String
     let oneLiner: String
     let demographics: [String]
     let diagnostics: [String]
@@ -480,16 +481,18 @@ nonisolated struct IllnessScript: Decodable, Sendable {
     let treatment: [String]
 }
 
-nonisolated struct IllnessScriptSummary: Decodable, Sendable, Identifiable {
+nonisolated struct IllnessScriptSummary: Codable, Sendable, Identifiable {
     var id: String { conditionKey }
     let condition: String
     let conditionKey: String
+    let system: String?
     let oneLiner: String?
     let missCount: Int
 
     enum CodingKeys: String, CodingKey {
         case condition
         case conditionKey = "condition_key"
+        case system
         case oneLiner = "one_liner"
         case missCount = "miss_count"
     }

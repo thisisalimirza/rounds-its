@@ -584,7 +584,7 @@ struct ContentView: View {
                     }
 
                     EnhancedFeatureCard(
-                        icon: "sparkles",
+                        icon: "list.bullet.clipboard.fill",
                         title: "Study Plan",
                         color: .indigo,
                         isLocked: !subscriptionManager.isProUser

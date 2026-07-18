@@ -83,7 +83,7 @@ struct StudyPlanView: View {
             VStack(alignment: .leading, spacing: 14) {
                 // Headline
                 HStack(alignment: .top, spacing: 10) {
-                    Image(systemName: "sparkles").foregroundStyle(.indigo).font(.title3)
+                    Image(systemName: "list.bullet.clipboard.fill").foregroundStyle(.indigo).font(.title3)
                     Text(plan.headline)
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .fixedSize(horizontal: false, vertical: true)
@@ -102,7 +102,7 @@ struct StudyPlanView: View {
                     focusCard(area)
                 }
 
-                Text("Generated from your activity. An educational aid — always cross-check with your curriculum.")
+                Text("Built from your activity. An educational aid — always cross-check with your curriculum.")
                     .font(.caption2).foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.top, 4)
             }
@@ -196,7 +196,7 @@ struct StudyPlanView: View {
 
     private var proGate: some View {
         VStack(spacing: 16) {
-            Image(systemName: "sparkles")
+            Image(systemName: "list.bullet.clipboard.fill")
                 .font(.system(size: 52))
                 .foregroundStyle(LinearGradient(colors: [.indigo, .purple], startPoint: .top, endPoint: .bottom))
             Text("Your personal study plan")
@@ -220,7 +220,7 @@ struct StudyPlanView: View {
     private var noData: some View {
         VStack(spacing: 12) {
             Image(systemName: "chart.line.uptrend.xyaxis").font(.system(size: 48)).foregroundStyle(.secondary)
-            Text("Not enough to analyze yet").font(.system(.headline, design: .rounded))
+            Text("Not enough data yet").font(.system(.headline, design: .rounded))
             Text("Play a few cases and build some differentials. Your study plan builds itself in the background as you go.")
                 .font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center).padding(.horizontal, 32)

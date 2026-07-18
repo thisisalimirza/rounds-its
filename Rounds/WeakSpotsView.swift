@@ -119,7 +119,7 @@ struct WeakSpotsView: View {
             }
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: "sparkles")
+                Image(systemName: "list.bullet.clipboard.fill")
                     .font(.title2).foregroundStyle(.white)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Get my study plan")

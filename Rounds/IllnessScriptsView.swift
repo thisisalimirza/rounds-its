@@ -2,17 +2,73 @@
 //  IllnessScriptsView.swift
 //  Rounds
 //
-//  The Illness Scripts library: structured, high-yield scripts (Demographics /
-//  Diagnostics / Pathophysiology / Treatment) per condition. Scripts are the
-//  same for everyone, so they're generated once and cached globally server-side
-//  (see the `illness-script` edge function) — cheap to serve.
+//  The Illness Scripts library — a growing, organized reference of structured
+//  scripts (Demographics / Diagnostics / Pathophysiology / Treatment) per
+//  condition, browsable by specialty like the Case Browser. Scripts are cached
+//  globally server-side and locally on device, so opening one is instant.
 //
-//  Access: your OWN missed conditions are free; the full searchable library is
-//  a Pro feature.
+//  Access: your OWN missed conditions are free; the full library is Pro.
 //
 
 import SwiftUI
 import SwiftData
+
+// MARK: - Navigation routes
+
+enum IllnessRoute: Hashable {
+    case specialty(String)
+    case all
+    case condition(String)
+}
+
+// MARK: - Specialty styling (icon + color per system)
+
+enum IllnessSpecialty {
+    static func icon(_ system: String) -> String {
+        switch primary(system) {
+        case "cardiology": return "heart.fill"
+        case "pulmonology", "respiratory": return "lungs.fill"
+        case "gastroenterology", "gi", "hepatology": return "fork.knife"
+        case "nephrology", "renal": return "drop.fill"
+        case "neurology": return "brain.head.profile"
+        case "infectious disease", "infectious diseases", "id": return "allergens"
+        case "endocrinology": return "waveform.path.ecg"
+        case "hematology", "oncology", "hematology oncology": return "drop.triangle.fill"
+        case "rheumatology": return "figure.walk"
+        case "psychiatry": return "brain"
+        case "pediatrics": return "figure.and.child.holdinghands"
+        case "dermatology": return "hand.raised.fill"
+        case "obstetrics", "gynecology", "obstetrics gynecology", "ob gyn", "obgyn": return "figure.stand.dress"
+        case "surgery", "general surgery", "orthopedics", "urology", "vascular", "ent", "ophthalmology": return "cross.case.fill"
+        case "emergency medicine", "critical care": return "cross.circle.fill"
+        default: return "cross.case.fill"
+        }
+    }
+    static func color(_ system: String) -> Color {
+        switch primary(system) {
+        case "cardiology": return .red
+        case "pulmonology", "respiratory": return .blue
+        case "gastroenterology", "gi", "hepatology": return .orange
+        case "nephrology", "renal": return .cyan
+        case "neurology": return .purple
+        case "infectious disease", "infectious diseases", "id": return .yellow
+        case "endocrinology": return .green
+        case "hematology", "oncology", "hematology oncology": return .pink
+        case "rheumatology": return .indigo
+        case "psychiatry": return .mint
+        case "pediatrics": return Color(red: 0.4, green: 0.8, blue: 0.9)
+        case "dermatology": return .orange.opacity(0.8)
+        case "obstetrics", "gynecology", "obstetrics gynecology", "ob gyn", "obgyn": return .pink.opacity(0.8)
+        case "emergency medicine", "critical care": return .red.opacity(0.8)
+        default: return .gray
+        }
+    }
+    private static func primary(_ s: String) -> String {
+        s.lowercased().replacingOccurrences(of: "/", with: " ")
+            .replacingOccurrences(of: "-", with: " ")
+            .split(separator: " ").joined(separator: " ").trimmingCharacters(in: .whitespaces)
+    }
+}
 
 // MARK: - Library
 
@@ -20,150 +76,345 @@ struct IllnessScriptsView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \MissedItem.timestamp, order: .reverse) private var misses: [MissedItem]
 
-    @State private var library: [IllnessScriptSummary] = []
-    @State private var isLoadingLibrary = false
+    @State private var store = IllnessLibraryStore.shared
     @State private var searchText = ""
     @State private var showingPaywall = false
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
+    private var isPro: Bool { subscriptionManager.isProUser }
 
-    /// Distinct conditions the user has gotten wrong (their personal set — free).
+    /// Conditions the user has gotten wrong (their personal set — free).
     private var myConditions: [String] {
-        var seen = Set<String>()
-        var result: [String] = []
+        var seen = Set<String>(); var out: [String] = []
         for m in misses where (m.sourceKind?.isWrongAnswer ?? true) {
             let name = m.item.trimmingCharacters(in: .whitespacesAndNewlines)
-            let key = name.lowercased()
-            if !name.isEmpty && !seen.contains(key) { seen.insert(key); result.append(name) }
+            let k = name.lowercased()
+            if !name.isEmpty && !seen.contains(k) { seen.insert(k); out.append(name) }
         }
-        return result
+        return out
     }
 
-    private var filteredMine: [String] {
-        searchText.isEmpty ? myConditions
-            : myConditions.filter { $0.localizedCaseInsensitiveContains(searchText) }
+    /// Catalog grouped by specialty, largest first.
+    private var specialties: [(name: String, items: [IllnessScriptSummary])] {
+        Dictionary(grouping: store.catalog) { ($0.system ?? "Other").isEmpty ? "Other" : ($0.system ?? "Other") }
+            .map { (name: $0.key, items: $0.value) }
+            .sorted { $0.items.count > $1.items.count }
     }
-    private var filteredLibrary: [IllnessScriptSummary] {
-        searchText.isEmpty ? library
-            : library.filter { $0.condition.localizedCaseInsensitiveContains(searchText) }
+
+    private var searchResults: [IllnessScriptSummary] {
+        guard !searchText.isEmpty else { return [] }
+        return store.catalog.filter { $0.condition.localizedCaseInsensitiveContains(searchText) }
+    }
+    private var myMatches: [String] {
+        searchText.isEmpty ? [] : myConditions.filter { $0.localizedCaseInsensitiveContains(searchText) }
     }
 
     var body: some View {
         NavigationStack {
-            List {
-                if !filteredMine.isEmpty {
-                    Section {
-                        ForEach(filteredMine, id: \.self) { condition in
-                            NavigationLink {
-                                IllnessScriptDetailView(condition: condition, reason: "review")
-                            } label: {
-                                conditionRow(condition, subtitle: "From your missed cases")
-                            }
-                        }
-                    } header: {
-                        Label("Your conditions", systemImage: "target")
-                    } footer: {
-                        Text("Illness scripts for what you've missed — always free.")
-                    }
+            ScrollView {
+                if searchText.isEmpty {
+                    browseContent
+                } else {
+                    searchContent
                 }
-
-                librarySection
             }
-            .listStyle(.insetGrouped)
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Illness Scripts")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $searchText, prompt: "Search conditions")
+            .searchable(text: $searchText, prompt: "Search any condition")
             .toolbar { ToolbarItem(placement: .navigationBarTrailing) { Button("Done") { dismiss() } } }
+            .navigationDestination(for: IllnessRoute.self) { route in
+                switch route {
+                case .condition(let c): IllnessScriptDetailView(condition: c)
+                case .specialty(let s): IllnessSpecialtyListView(specialty: s, items: specialties.first { $0.name == s }?.items ?? [])
+                case .all: IllnessAllListView(items: store.catalog)
+                }
+            }
             .sheet(isPresented: $showingPaywall) { RoundsPaywallView() }
-            .task {
-                if subscriptionManager.isProUser { await loadLibrary() }
+            .task { await store.refreshCatalog() }
+        }
+    }
+
+    // MARK: Browse
+
+    private var browseContent: some View {
+        VStack(spacing: 20) {
+            hero
+
+            if !myConditions.isEmpty {
+                section(title: "Your conditions", systemImage: "target",
+                        footer: "Scripts for what you've missed — always free.") {
+                    VStack(spacing: 8) {
+                        ForEach(myConditions.prefix(12), id: \.self) { c in
+                            NavigationLink(value: IllnessRoute.condition(c)) {
+                                IllnessScriptRow(condition: c, subtitle: "From your missed cases")
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+
+            if isPro {
+                specialtyGridSection
+                allButton
+            } else {
+                lockedLibraryCard
+            }
+        }
+        .padding(.vertical, 16)
+    }
+
+    private var hero: some View {
+        VStack(spacing: 6) {
+            Text("\(max(store.count, 0))")
+                .font(.system(size: 44, weight: .bold, design: .rounded))
+                .foregroundStyle(LinearGradient(colors: [.blue, .indigo], startPoint: .top, endPoint: .bottom))
+                .contentTransition(.numericText())
+            Text(store.count == 1 ? "illness script" : "illness scripts")
+                .font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+            Text("A growing reference library — search any condition to add one.")
+                .font(.caption).foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center).padding(.horizontal, 40)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+    }
+
+    private var specialtyGridSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Browse by specialty").font(.headline).foregroundStyle(.secondary).padding(.horizontal, 20)
+            if specialties.isEmpty {
+                Text("The library fills in as conditions get added. Search any condition to start.")
+                    .font(.caption).foregroundStyle(.secondary).padding(.horizontal, 20)
+            } else {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                    ForEach(specialties, id: \.name) { group in
+                        NavigationLink(value: IllnessRoute.specialty(group.name)) {
+                            IllnessSpecialtyCard(name: group.name, count: group.items.count)
+                        }
+                        .buttonStyle(CategoryCardButtonStyle(color: IllnessSpecialty.color(group.name)))
+                    }
+                }
+                .padding(.horizontal, 16)
             }
         }
     }
 
-    @ViewBuilder
-    private var librarySection: some View {
-        if subscriptionManager.isProUser {
-            Section {
-                // Offer to generate an exact-typed condition not already listed.
-                let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !q.isEmpty && !library.contains(where: { $0.condition.localizedCaseInsensitiveCompare(q) == .orderedSame }) {
-                    NavigationLink {
-                        IllnessScriptDetailView(condition: q, reason: "browse")
-                    } label: {
-                        Label("Get script for “\(q)”", systemImage: "sparkles")
-                            .foregroundStyle(.indigo)
-                    }
+    private var allButton: some View {
+        NavigationLink(value: IllnessRoute.all) {
+            HStack {
+                Image(systemName: "list.bullet.rectangle.fill").font(.title3).foregroundStyle(.blue)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("All scripts").font(.headline).foregroundStyle(.primary)
+                    Text("\(store.count) total").font(.caption).foregroundStyle(.secondary)
                 }
-
-                if isLoadingLibrary && library.isEmpty {
-                    HStack { ProgressView(); Text("Loading library…").foregroundStyle(.secondary) }
-                } else if filteredLibrary.isEmpty && searchText.isEmpty {
-                    Text("The library fills in as conditions get generated. Search any condition to add one.")
-                        .font(.caption).foregroundStyle(.secondary)
-                } else {
-                    ForEach(filteredLibrary) { item in
-                        NavigationLink {
-                            IllnessScriptDetailView(condition: item.condition, reason: "browse")
-                        } label: {
-                            conditionRow(item.condition, subtitle: item.oneLiner, badge: item.missCount)
-                        }
-                    }
-                }
-            } header: {
-                Label("Library", systemImage: "books.vertical.fill")
+                Spacer()
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
             }
-        } else {
-            Section {
-                Button {
-                    showingPaywall = true
-                } label: {
+            .padding(16)
+            .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 12))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 16)
+    }
+
+    private var lockedLibraryCard: some View {
+        Button { showingPaywall = true } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "lock.fill").font(.title3).foregroundStyle(.orange)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Browse the full library").font(.headline).foregroundStyle(.primary)
+                    Text("Every condition, organized by specialty — with Rounds Pro").font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Text("PRO").font(.system(size: 10, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                    .padding(.horizontal, 7).padding(.vertical, 3)
+                    .background(Capsule().fill(LinearGradient(colors: [.orange, .pink], startPoint: .leading, endPoint: .trailing)))
+            }
+            .padding(16)
+            .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 12))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 16)
+    }
+
+    // MARK: Search
+
+    private var searchContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            // Offer to add an exact-typed condition not already in the library.
+            if !q.isEmpty && !store.catalog.contains(where: { $0.condition.localizedCaseInsensitiveCompare(q) == .orderedSame }) {
+                NavigationLink(value: IllnessRoute.condition(q)) {
                     HStack(spacing: 12) {
-                        Image(systemName: "lock.fill").font(.title3).foregroundStyle(.orange)
+                        Image(systemName: "doc.badge.plus").font(.title3).foregroundStyle(.indigo)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Unlock the full library").font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
-                            Text("Search every condition with Rounds Pro").font(.caption).foregroundStyle(.secondary)
+                            Text("Open “\(q)”").font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
+                            Text(isPro ? "Add it to the library" : "Free if it's one of your missed conditions").font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Text("PRO").font(.system(size: 10, weight: .bold, design: .rounded)).foregroundStyle(.white)
-                            .padding(.horizontal, 7).padding(.vertical, 3)
-                            .background(Capsule().fill(LinearGradient(colors: [.orange, .pink], startPoint: .leading, endPoint: .trailing)))
+                        Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
                     }
+                    .padding(14)
+                    .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 12))
                 }
-            } header: {
-                Label("Library", systemImage: "books.vertical.fill")
+                .buttonStyle(.plain)
+                .padding(.horizontal, 16)
             }
+
+            if !myMatches.isEmpty {
+                resultList("From your conditions", myMatches.map { IllnessScriptSummary(condition: $0, conditionKey: $0.lowercased(), system: nil, oneLiner: nil, missCount: 0) })
+            }
+            if isPro && !searchResults.isEmpty {
+                resultList("Library", searchResults)
+            }
+        }
+        .padding(.vertical, 16)
+    }
+
+    private func resultList(_ title: String, _ items: [IllnessScriptSummary]) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary).padding(.horizontal, 20)
+            VStack(spacing: 8) {
+                ForEach(items) { item in
+                    NavigationLink(value: IllnessRoute.condition(item.condition)) {
+                        IllnessScriptRow(condition: item.condition, subtitle: item.oneLiner, missCount: item.missCount)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16)
         }
     }
 
-    private func conditionRow(_ condition: String, subtitle: String?, badge: Int? = nil) -> some View {
-        HStack(spacing: 10) {
+    // MARK: Section helper
+
+    private func section<Content: View>(title: String, systemImage: String, footer: String?, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label(title, systemImage: systemImage).font(.headline).foregroundStyle(.secondary).padding(.horizontal, 20)
+            content().padding(.horizontal, 16)
+            if let footer {
+                Text(footer).font(.caption).foregroundStyle(.tertiary).padding(.horizontal, 20)
+            }
+        }
+    }
+}
+
+// MARK: - Specialty card (Case-Browser style)
+
+struct IllnessSpecialtyCard: View {
+    let name: String
+    let count: Int
+
+    var body: some View {
+        let color = IllnessSpecialty.color(name)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                ZStack {
+                    Circle().fill(color.opacity(0.15)).frame(width: 44, height: 44)
+                    Image(systemName: IllnessSpecialty.icon(name)).font(.system(size: 20)).foregroundStyle(color)
+                }
+                Spacer()
+                Text("\(count)").font(.system(size: 24, weight: .bold, design: .rounded)).foregroundStyle(.primary)
+            }
+            Text(name).font(.system(size: 14, weight: .semibold)).foregroundStyle(.primary).lineLimit(2)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14))
+        .shadow(color: color.opacity(0.1), radius: 8, y: 2)
+    }
+}
+
+// MARK: - Compact script row
+
+struct IllnessScriptRow: View {
+    let condition: String
+    var subtitle: String?
+    var missCount: Int = 0
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle().fill(Color.blue.opacity(0.12)).frame(width: 34, height: 34)
+                Image(systemName: "book.closed.fill").font(.system(size: 13, weight: .semibold)).foregroundStyle(.blue)
+            }
             VStack(alignment: .leading, spacing: 2) {
-                Text(condition).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
+                Text(condition).font(.subheadline.weight(.semibold)).foregroundStyle(.primary).lineLimit(1)
                 if let subtitle, !subtitle.isEmpty {
                     Text(subtitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
             Spacer()
-            if let badge, badge > 1 {
-                Text("\(badge)").font(.caption2.weight(.bold)).foregroundStyle(.orange)
+            if missCount > 1 {
+                Text("\(missCount)").font(.caption2.weight(.bold)).foregroundStyle(.orange)
                     .padding(.horizontal, 6).padding(.vertical, 2)
                     .background(Capsule().fill(Color.orange.opacity(0.12)))
             }
+            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
         }
+        .padding(12)
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+// MARK: - Drill-down lists
+
+struct IllnessSpecialtyListView: View {
+    let specialty: String
+    let items: [IllnessScriptSummary]
+
+    var body: some View {
+        List {
+            ForEach(items) { item in
+                NavigationLink(value: IllnessRoute.condition(item.condition)) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.condition).font(.subheadline.weight(.semibold))
+                        if let ol = item.oneLiner, !ol.isEmpty {
+                            Text(ol).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                        }
+                    }
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle(specialty)
+        .navigationBarTitleDisplayMode(.large)
+    }
+}
+
+struct IllnessAllListView: View {
+    let items: [IllnessScriptSummary]
+    @State private var searchText = ""
+
+    private var filtered: [IllnessScriptSummary] {
+        searchText.isEmpty ? items : items.filter { $0.condition.localizedCaseInsensitiveContains(searchText) }
     }
 
-    private func loadLibrary() async {
-        isLoadingLibrary = true
-        defer { isLoadingLibrary = false }
-        do { library = try await AccountManager.shared.fetchIllnessLibrary() }
-        catch { print("⚠️ fetchIllnessLibrary: \(error.localizedDescription)") }
+    var body: some View {
+        List {
+            ForEach(filtered) { item in
+                NavigationLink(value: IllnessRoute.condition(item.condition)) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.condition).font(.subheadline.weight(.semibold))
+                        if let ol = item.oneLiner, !ol.isEmpty {
+                            Text(ol).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                        }
+                    }
+                }
+            }
+        }
+        .listStyle(.plain)
+        .navigationTitle("All Scripts")
+        .navigationBarTitleDisplayMode(.large)
+        .searchable(text: $searchText, prompt: "Search conditions")
     }
 }
 
 // MARK: - Detail
 
-/// Loads (from the global cache, or generates once) and renders a single script.
 struct IllnessScriptDetailView: View {
     let condition: String
     var reason: String = "review"
@@ -190,6 +441,7 @@ struct IllnessScriptDetailView: View {
             case .failed(let m): errorView(m)
             }
         }
+        .background(Color(.systemGroupedBackground))
         .navigationTitle(displayTitle)
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
@@ -201,8 +453,12 @@ struct IllnessScriptDetailView: View {
     }
 
     private func load() async {
+        // Instant if already cached locally.
+        if let cached = IllnessLibraryStore.shared.cachedScript(for: condition) {
+            phase = .ready(cached); return
+        }
         do {
-            let s = try await AccountManager.shared.illnessScript(condition: condition, reason: reason)
+            let s = try await IllnessLibraryStore.shared.script(for: condition, reason: reason)
             await MainActor.run { withAnimation { phase = .ready(s) } }
         } catch {
             await MainActor.run { withAnimation { phase = .failed(error.localizedDescription) } }
@@ -212,11 +468,14 @@ struct IllnessScriptDetailView: View {
     private func scriptView(_ s: IllnessScript) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
+                if !s.system.isEmpty {
+                    Label(s.system, systemImage: IllnessSpecialty.icon(s.system))
+                        .font(.caption.weight(.semibold)).foregroundStyle(IllnessSpecialty.color(s.system))
+                }
                 if !s.oneLiner.isEmpty {
                     Text(s.oneLiner)
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
                 }
                 section("Demographics", icon: "person.2.fill", tint: .blue, items: s.demographics)
@@ -228,13 +487,8 @@ struct IllnessScriptDetailView: View {
                     .font(.caption2).foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.top, 4)
             }
-            .padding()
-            .padding(.bottom, 24)
+            .padding().padding(.bottom, 24)
         }
-        .background(
-            LinearGradient(colors: [Color.blue.opacity(0.05), Color.purple.opacity(0.05)],
-                           startPoint: .topLeading, endPoint: .bottomTrailing).ignoresSafeArea()
-        )
     }
 
     @ViewBuilder
@@ -250,8 +504,7 @@ struct IllnessScriptDetailView: View {
                     }
                 }
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14).frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
         }
     }

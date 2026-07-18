@@ -282,7 +282,7 @@ struct AccountLinkingControls: View {
                 Task { await linkEmail() }
             } label: {
                 HStack {
-                    Text("Email me a magic link")
+                    Text("Email me a sign-in link")
                     Spacer()
                     if isLinkingEmail { ProgressView() }
                 }
