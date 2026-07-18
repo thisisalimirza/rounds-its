@@ -68,6 +68,26 @@ enum IllnessSpecialty {
             .replacingOccurrences(of: "-", with: " ")
             .split(separator: " ").joined(separator: " ").trimmingCharacters(in: .whitespaces)
     }
+
+    /// Display-only fallback: guess a specialty from the condition name when the
+    /// stored `system` is missing (e.g. older scripts), so the grid buckets them
+    /// sensibly until they're re-opened and re-categorized server-side.
+    static func guess(_ condition: String) -> String {
+        let c = condition.lowercased()
+        func has(_ ws: [String]) -> Bool { ws.contains { c.contains($0) } }
+        if has(["ovarian","preeclampsia","eclampsia","placenta","cervic","endometri","pregnan","gestational","ectopic","obstetric","vaginal","uterine","fibroid","menstru","ovary","hellp","postpartum","fetal","amenorrhea","pcos","adnex","vulv","cervix","chorio"]) { return "Obstetrics & Gynecology" }
+        if has(["myocardial","angina","heart failure","atrial","ventricular","aortic","pericard","endocard","cardiomyopathy","arrhythm","valv","coronary","tamponade"]) { return "Cardiology" }
+        if has(["pneumon","asthma","copd","pulmonary","pleura","bronch","tuberculosis","ards","pneumothorax","embolism"]) { return "Pulmonology" }
+        if has(["stroke","seizure","migraine","meningitis","parkinson","multiple sclerosis","neuropath","epilep","encephal","myasthenia","guillain","spinal epidural","cauda equina"]) { return "Neurology" }
+        if has(["pancreatit","hepatit","cirrhosis","cholecyst","cholangit","appendicit","colitis","crohn","peptic","gastr","bowel","biliary","diverticul","esophag","ulcerative"]) { return "Gastroenterology" }
+        if has(["renal","nephritic","nephrotic","kidney","glomerul","pyelonephrit","urinary","cystitis"]) { return "Nephrology" }
+        if has(["diabet","thyroid","adrenal","cushing","addison","pituitary","parathyroid","hypoglycemia","ketoacidosis"]) { return "Endocrinology" }
+        if has(["leukemia","lymphoma","anemia","thrombocytopenia","sickle","myeloma","coagulopath"," dic","neutropen"]) { return "Hematology & Oncology" }
+        if has(["lupus","arthritis","vasculitis","gout","scleroderma","sjogren","spondyl","polymyalgia","giant cell"]) { return "Rheumatology" }
+        if has(["depress","schizophren","bipolar","anxiety","psychosis","mania","serotonin"]) { return "Psychiatry" }
+        if has(["sepsis","abscess","cellulitis","osteomyelit","hiv","malaria","infect","fasciit"]) { return "Infectious Disease" }
+        return "Other"
+    }
 }
 
 // MARK: - Library
@@ -94,9 +114,14 @@ struct IllnessScriptsView: View {
         return out
     }
 
+    private func specialtyName(_ s: IllnessScriptSummary) -> String {
+        let sys = (s.system ?? "").trimmingCharacters(in: .whitespaces)
+        return sys.isEmpty ? IllnessSpecialty.guess(s.condition) : sys
+    }
+
     /// Catalog grouped by specialty, largest first.
     private var specialties: [(name: String, items: [IllnessScriptSummary])] {
-        Dictionary(grouping: store.catalog) { ($0.system ?? "Other").isEmpty ? "Other" : ($0.system ?? "Other") }
+        Dictionary(grouping: store.catalog) { specialtyName($0) }
             .map { (name: $0.key, items: $0.value) }
             .sorted { $0.items.count > $1.items.count }
     }
@@ -142,12 +167,12 @@ struct IllnessScriptsView: View {
             hero
 
             if !myConditions.isEmpty {
-                section(title: "Your conditions", systemImage: "target",
-                        footer: "Scripts for what you've missed — always free.") {
+                section(title: "Conditions you've missed", systemImage: "target",
+                        footer: "Illnesses you got wrong or needed help recognizing in cases and challenges — free to review.") {
                     VStack(spacing: 8) {
                         ForEach(myConditions.prefix(12), id: \.self) { c in
                             NavigationLink(value: IllnessRoute.condition(c)) {
-                                IllnessScriptRow(condition: c, subtitle: "From your missed cases")
+                                IllnessScriptRow(condition: c, subtitle: "You missed this")
                             }
                             .buttonStyle(.plain)
                         }
@@ -472,22 +497,54 @@ struct IllnessScriptDetailView: View {
                     Label(s.system, systemImage: IllnessSpecialty.icon(s.system))
                         .font(.caption.weight(.semibold)).foregroundStyle(IllnessSpecialty.color(s.system))
                 }
-                if !s.oneLiner.isEmpty {
-                    Text(s.oneLiner)
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
+
+                // Snapshot — labeled like every other section.
+                if !s.definition.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label("Snapshot", systemImage: "text.alignleft").font(.subheadline.weight(.bold)).foregroundStyle(.indigo)
+                        Text(s.definition).font(.system(.subheadline, design: .rounded))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(14).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
                 }
-                section("Demographics", icon: "person.2.fill", tint: .blue, items: s.demographics)
-                section("Diagnostics", icon: "stethoscope", tint: .teal, items: s.diagnostics)
+
+                section("Predisposing Factors", icon: "person.2.fill", tint: .blue, items: s.predisposing)
                 section("Pathophysiology", icon: "waveform.path.ecg", tint: .purple, items: s.pathophysiology)
-                section("Treatment", icon: "pills.fill", tint: .green, items: s.treatment)
+                section("Clinical Presentation", icon: "stethoscope", tint: .teal, items: s.presentation)
+                section("Diagnostics", icon: "magnifyingglass", tint: .orange, items: s.diagnostics)
+                section("Management", icon: "pills.fill", tint: .green, items: s.management)
+                pivotsSection(s.pivots)
 
                 Text("Educational reference — cross-check with your curriculum and clinical judgment.")
                     .font(.caption2).foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.top, 4)
             }
             .padding().padding(.bottom, 24)
+        }
+    }
+
+    @ViewBuilder
+    private func pivotsSection(_ pivots: [IllnessPivot]) -> some View {
+        if !pivots.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Label("Differential Pivot Points", systemImage: "arrow.triangle.branch")
+                    .font(.subheadline.weight(.bold)).foregroundStyle(.pink)
+                Text("How to tell it apart from its closest lookalikes:")
+                    .font(.caption2).foregroundStyle(.secondary)
+                ForEach(pivots) { p in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("vs. \(p.condition)").font(.caption.weight(.bold)).foregroundStyle(.pink)
+                        Text(p.distinguisher).font(.caption).foregroundStyle(.primary.opacity(0.9))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10)
+                    .background(Color.pink.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+                }
+            }
+            .padding(14).frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
         }
     }
 

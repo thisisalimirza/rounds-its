@@ -474,11 +474,19 @@ nonisolated struct IllnessScriptRequest: Encodable {
 nonisolated struct IllnessScript: Codable, Sendable {
     let condition: String
     let system: String
-    let oneLiner: String
-    let demographics: [String]
-    let diagnostics: [String]
+    let definition: String
+    let predisposing: [String]
     let pathophysiology: [String]
-    let treatment: [String]
+    let presentation: [String]
+    let diagnostics: [String]
+    let management: [String]
+    let pivots: [IllnessPivot]
+}
+
+nonisolated struct IllnessPivot: Codable, Sendable, Identifiable {
+    var id: String { condition }
+    let condition: String
+    let distinguisher: String
 }
 
 nonisolated struct IllnessScriptSummary: Codable, Sendable, Identifiable {

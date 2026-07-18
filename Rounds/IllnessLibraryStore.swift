@@ -89,7 +89,7 @@ final class IllnessLibraryStore {
         // Reflect newly-generated conditions in the catalog immediately.
         if !catalog.contains(where: { $0.conditionKey == canonicalKey }) {
             catalog.insert(IllnessScriptSummary(condition: fetched.condition, conditionKey: canonicalKey,
-                                                system: fetched.system, oneLiner: fetched.oneLiner, missCount: 0),
+                                                system: fetched.system, oneLiner: fetched.definition, missCount: 0),
                            at: 0)
             persistCatalog()
         }

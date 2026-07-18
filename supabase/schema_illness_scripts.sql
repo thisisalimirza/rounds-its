@@ -28,8 +28,16 @@ create table if not exists public.illness_scripts (
   updated_at      timestamptz not null default now()
 );
 
--- Safe to re-run on an already-created table (adds the system column if missing).
+-- Safe to re-run on an already-created table (adds columns if missing).
 alter table public.illness_scripts add column if not exists system text;
+
+-- Richer, shelf-ready script framework (v1). Existing rows have schema_version 0
+-- and auto-regenerate into the new shape the next time they're opened.
+alter table public.illness_scripts add column if not exists predisposing    text[] not null default '{}';
+alter table public.illness_scripts add column if not exists presentation    text[] not null default '{}';
+alter table public.illness_scripts add column if not exists management       text[] not null default '{}';
+alter table public.illness_scripts add column if not exists pivots          jsonb  not null default '[]';
+alter table public.illness_scripts add column if not exists schema_version   int    not null default 0;
 
 create index if not exists illness_scripts_miss_idx on public.illness_scripts (miss_count desc);
 

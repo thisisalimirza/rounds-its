@@ -1,18 +1,13 @@
 // Rounds — illness-script edge function
 //
-// Returns a structured illness script (Demographics / Diagnostics /
-// Pathophysiology / Treatment) for a condition. Illness scripts are the same
-// for every user, so they're cached GLOBALLY in the illness_scripts table.
+// Returns a rich, shelf-ready ILLNESS SCRIPT for a condition, cached globally.
 //
 // Resolution ladder (cheap → expensive) so typos & synonyms cost no API call:
 //   1. Exact normalized key hit                → serve stored script.
 //   2. Known alias hit                         → resolve → serve stored script.
 //   3. Fuzzy (pg_trgm) match above threshold   → learn alias → serve stored.
-//   4. Miss → ONE Claude call that returns the CANONICAL name + script:
-//        a. canonical already stored → learn alias, discard dup, serve stored.
-//        b. new → store under canonical key, learn alias, serve.
-//
-// The Anthropic API key lives ONLY here as a Supabase secret (ANTHROPIC_API_KEY).
+//   4. Miss → ONE Claude call returning the CANONICAL name + script.
+// Stored scripts below the current schema version auto-regenerate on open.
 //
 // Deploy:  supabase functions deploy illness-script
 
@@ -31,84 +26,99 @@ function json(body: unknown, status = 200) {
   });
 }
 
-const FUZZY_MIN_SIMILARITY = 0.6; // conservative: only very-close typos auto-resolve
+const SCHEMA_VERSION = 1;               // bump to force auto-regeneration
+const FUZZY_MIN_SIMILARITY = 0.6;
 
-/** Deterministic cache key so the same condition maps to one stored script. */
 function normalizeKey(s: string): string {
   return s
-    .normalize("NFKD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9 ]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+    .normalize("NFKD").replace(/\p{Diacritic}/gu, "")
+    .toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 const SCRIPT_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
-    condition: { type: "string", description: "The CANONICAL condition name, well-formatted (e.g. 'Myocardial infarction'). Resolve typos/abbreviations/synonyms to the standard name." },
-    system: { type: "string", description: "The single primary specialty/system, Title Case (e.g. 'Gastroenterology', 'Cardiology', 'Neurology', 'Infectious Disease'). Used to organize the library." },
-    oneLiner: { type: "string", description: "One short sentence: the classic presentation / illness-script summary (max ~25 words)." },
-    demographics: {
+    condition: { type: "string", description: "The CANONICAL condition name. Resolve typos/abbreviations/synonyms to the standard name (e.g. 'Ovarian torsion')." },
+    system: { type: "string", description: "Primary specialty/system, Title Case (e.g. 'Obstetrics & Gynecology', 'Cardiology', 'Neurology', 'Gastroenterology', 'Infectious Disease')." },
+    definition: { type: "string", description: "One-line definition / classic snapshot of the condition (max ~28 words)." },
+    predisposing: {
       type: "array",
-      description: "Who gets it most (age, sex, risk factors, settings). 3-5 short bullets, each a phrase (max ~15 words).",
-      items: { type: "string" },
-    },
-    diagnostics: {
-      type: "array",
-      description: "How it's diagnosed: key history/exam findings, first-line labs/imaging, gold standard. 3-6 short bullets.",
+      description: "Epidemiology & predisposing factors — who gets it (age, sex, risk factors, exposures). 3-6 short bullets.",
       items: { type: "string" },
     },
     pathophysiology: {
       type: "array",
-      description: "What's going on mechanistically, at a level a strong clerkship student should hold. 3-5 short bullets.",
+      description: "The core mechanism — why it happens. 2-4 short bullets.",
       items: { type: "string" },
     },
-    treatment: {
+    presentation: {
       type: "array",
-      description: "How it's treated / what to order: first-line management, key drugs/doses when high-yield, disposition. 3-6 short bullets.",
+      description: "Clinical presentation — classic triad, timeline/onset, pathognomonic signs, key exam findings. 3-6 short bullets.",
       items: { type: "string" },
+    },
+    diagnostics: {
+      type: "array",
+      description: "Work-up — first-line test, gold standard, and key pearls/pitfalls. 3-5 short bullets.",
+      items: { type: "string" },
+    },
+    management: {
+      type: "array",
+      description: "Management — first-line treatment, definitive treatment, and key contraindications/disposition. 3-5 short bullets.",
+      items: { type: "string" },
+    },
+    pivots: {
+      type: "array",
+      description: "Differential PIVOT POINTS — the closest lookalikes and the single sharpest feature that distinguishes THIS condition from each. 2-4 items.",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          condition: { type: "string", description: "The competing/lookalike diagnosis." },
+          distinguisher: { type: "string", description: "The sharp discriminating feature (one short sentence)." },
+        },
+        required: ["condition", "distinguisher"],
+      },
     },
   },
-  required: ["condition", "system", "oneLiner", "demographics", "diagnostics", "pathophysiology", "treatment"],
+  required: ["condition", "system", "definition", "predisposing", "pathophysiology", "presentation", "diagnostics", "management", "pivots"],
 };
 
-const SYSTEM_PROMPT = `You are writing a concise, high-yield ILLNESS SCRIPT for a medical student, for a single condition.
+const SYSTEM_PROMPT = `You are writing a concise, high-yield, shelf-exam-ready ILLNESS SCRIPT for a medical student, for a single condition.
 
-The user's input may be misspelled, abbreviated, or a synonym (e.g. "heart attack", "MI", "myocardial infraction"). Always resolve it to the correct CANONICAL condition and put the standard name in \`condition\`. If the input is genuinely ambiguous or not a real entity, choose the single most likely intended real condition.
+The user's input may be misspelled, abbreviated, or a synonym (e.g. "heart attack", "MI", "ovarian torsion"). Always resolve it to the correct CANONICAL condition and put the standard name in \`condition\`.
 
-Output tight, scannable bullets — never paragraphs. Each bullet is a short phrase or single clause (aim under ~15 words) that teaches the actual content a strong clerkship student should hold.
-
-Cover exactly these sections:
-- demographics: who gets it most (age, sex, risk factors, classic setting/geography).
-- diagnostics: how it's diagnosed — key history/exam findings, first-line tests, and the gold standard.
-- pathophysiology: the core mechanism.
-- treatment: first-line management and what to order/give, plus disposition when relevant.
-Also give a one-line classic presentation and the primary specialty/system.
+Output tight, scannable bullets — never paragraphs. Each bullet is a short phrase or single clause (aim under ~18 words) teaching the actual content a strong clerkship student holds. Lock down these dimensions:
+- definition: one-line snapshot of what the condition is.
+- predisposing: epidemiology + predisposing/risk factors (who gets it).
+- pathophysiology: the core mechanism (why it happens).
+- presentation: classic triad, timeline/onset, pathognomonic signs, key exam findings.
+- diagnostics: first-line test, gold standard, and a clinical pearl/pitfall.
+- management: first-line and definitive treatment, plus key contraindications/disposition.
+- pivots: the closest lookalike diagnoses and the SINGLE sharpest feature that distinguishes this condition from each (this is the highest-yield part — think like a vignette).
 
 Be accurate and board-relevant. This is an educational reference, not individualized medical advice.`;
 
-function scriptResponse(row: {
-  condition: string;
-  system?: string | null;
-  one_liner?: string | null;
-  demographics?: string[] | null;
-  diagnostics?: string[] | null;
-  pathophysiology?: string[] | null;
-  treatment?: string[] | null;
-}, cached: boolean) {
-  return json({
-    condition: row.condition,
-    system: row.system ?? "",
-    oneLiner: row.one_liner ?? "",
-    demographics: row.demographics ?? [],
-    diagnostics: row.diagnostics ?? [],
-    pathophysiology: row.pathophysiology ?? [],
-    treatment: row.treatment ?? [],
-    cached,
-  });
+// A response payload from either a stored row or a freshly generated script.
+type ScriptShape = {
+  condition: string; system: string; definition: string;
+  predisposing: string[]; pathophysiology: string[]; presentation: string[];
+  diagnostics: string[]; management: string[];
+  pivots: { condition: string; distinguisher: string }[];
+};
+
+function rowToShape(row: Record<string, unknown>): ScriptShape {
+  return {
+    condition: (row.condition as string) ?? "",
+    system: (row.system as string) ?? "",
+    definition: (row.one_liner as string) ?? "",
+    predisposing: (row.predisposing as string[]) ?? [],
+    pathophysiology: (row.pathophysiology as string[]) ?? [],
+    presentation: (row.presentation as string[]) ?? [],
+    diagnostics: (row.diagnostics as string[]) ?? [],
+    management: (row.management as string[]) ?? [],
+    pivots: (row.pivots as { condition: string; distinguisher: string }[]) ?? [],
+  };
 }
 
 Deno.serve(async (req) => {
@@ -116,8 +126,7 @@ Deno.serve(async (req) => {
 
   const authHeader = req.headers.get("Authorization") ?? "";
   const anon = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
+    Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!,
     { global: { headers: { Authorization: authHeader } } },
   );
   const { data: { user }, error: userErr } = await anon.auth.getUser();
@@ -136,100 +145,97 @@ Deno.serve(async (req) => {
   if (!inputKey) return json({ error: "missing_condition" }, 400);
 
   const admin = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
   const isMiss = reason === "miss";
+  const SELECT = "condition, system, one_liner, predisposing, pathophysiology, presentation, diagnostics, management, pivots, schema_version";
 
-  const SELECT = "condition, system, one_liner, demographics, diagnostics, pathophysiology, treatment";
-
-  const serveByKey = async (key: string, learnAliasFrom?: string) => {
-    const { data: row } = await admin.from("illness_scripts").select(SELECT).eq("condition_key", key).maybeSingle();
-    if (!row) return null;
-    await admin.rpc("bump_illness_counters", { p_key: key, p_miss: isMiss });
-    if (learnAliasFrom && learnAliasFrom !== key) {
-      await admin.from("illness_aliases").upsert({ alias_key: learnAliasFrom, condition_key: key }, { onConflict: "alias_key" });
-    }
-    return scriptResponse(row, true);
+  const getRow = async (key: string) => {
+    const { data } = await admin.from("illness_scripts").select(SELECT).eq("condition_key", key).maybeSingle();
+    return data as Record<string, unknown> | null;
   };
+  const bump = (key: string) => admin.rpc("bump_illness_counters", { p_key: key, p_miss: isMiss });
+  const learnAlias = (from: string, to: string) =>
+    from === to ? Promise.resolve() : admin.from("illness_aliases").upsert({ alias_key: from, condition_key: to }, { onConflict: "alias_key" });
 
-  // 1. Exact hit.
-  const exact = await serveByKey(inputKey);
-  if (exact) return exact;
+  const client = () => new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY")! });
 
-  // 2. Known alias hit.
-  const { data: alias } = await admin.from("illness_aliases").select("condition_key").eq("alias_key", inputKey).maybeSingle();
-  if (alias?.condition_key) {
-    const viaAlias = await serveByKey(alias.condition_key);
-    if (viaAlias) return viaAlias;
-  }
-
-  // 3. Fuzzy match (typo tolerance) — learn the alias if resolved.
-  const { data: fuzzyKey } = await admin.rpc("resolve_illness_fuzzy", { q: inputKey, min_sim: FUZZY_MIN_SIMILARITY });
-  if (typeof fuzzyKey === "string" && fuzzyKey) {
-    const viaFuzzy = await serveByKey(fuzzyKey, inputKey);
-    if (viaFuzzy) return viaFuzzy;
-  }
-
-  // 4. Generate once with Claude (also canonicalizes typos/synonyms).
-  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-  if (!apiKey) return json({ error: "server_misconfigured", detail: "ANTHROPIC_API_KEY not set" }, 500);
-  const client = new Anthropic({ apiKey });
-
-  try {
-    const stream = client.messages.stream({
+  const generate = async (text: string): Promise<ScriptShape & { key: string }> => {
+    const stream = client().messages.stream({
       model: "claude-opus-4-8",
       max_tokens: 6000,
       thinking: { type: "adaptive" },
       system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
       output_config: { format: { type: "json_schema", schema: SCRIPT_SCHEMA } },
-      messages: [{ role: "user", content: `Write the illness script for: ${condition}` }],
+      messages: [{ role: "user", content: `Write the illness script for: ${text}` }],
     } as Anthropic.MessageStreamParams);
-
     const message = await stream.finalMessage();
-    if (message.stop_reason === "refusal") return json({ error: "refused" }, 422);
-    const textBlock = message.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") return json({ error: "no_output" }, 502);
+    const block = message.content.find((b) => b.type === "text");
+    if (!block || block.type !== "text") throw new Error("no_output");
+    const s = JSON.parse(block.text) as ScriptShape;
+    return { ...s, key: normalizeKey(s.condition || text) || inputKey };
+  };
 
-    const script = JSON.parse(textBlock.text);
-    const canonicalKey = normalizeKey(script.condition ?? condition) || inputKey;
+  // Regenerate an existing (stale) row IN PLACE, preserving its counters.
+  const upgrade = async (existingKey: string, conditionText: string) => {
+    const s = await generate(conditionText);
+    await admin.from("illness_scripts").update({
+      condition: s.condition, system: s.system, one_liner: s.definition,
+      predisposing: s.predisposing, pathophysiology: s.pathophysiology, presentation: s.presentation,
+      diagnostics: s.diagnostics, management: s.management, pivots: s.pivots,
+      schema_version: SCHEMA_VERSION, model: "claude-opus-4-8", updated_at: new Date().toISOString(),
+    }).eq("condition_key", existingKey);
+    await bump(existingKey);
+    return json({ ...s, cached: false });
+  };
 
-    // 4a. Claude canonicalized to something we already have → dedupe + learn alias.
-    if (canonicalKey !== inputKey) {
-      const dedup = await serveByKey(canonicalKey, inputKey);
-      if (dedup) return dedup;
+  const serveRow = async (key: string, row: Record<string, unknown>, aliasFrom?: string) => {
+    if (aliasFrom) await learnAlias(aliasFrom, key);
+    if ((row.schema_version as number ?? 0) >= SCHEMA_VERSION) {
+      await bump(key);
+      return json({ ...rowToShape(row), cached: true });
+    }
+    return await upgrade(key, (row.condition as string) ?? key);
+  };
+
+  try {
+    // 1. exact
+    const exact = await getRow(inputKey);
+    if (exact) return await serveRow(inputKey, exact);
+
+    // 2. alias
+    const { data: alias } = await admin.from("illness_aliases").select("condition_key").eq("alias_key", inputKey).maybeSingle();
+    if (alias?.condition_key) {
+      const row = await getRow(alias.condition_key as string);
+      if (row) return await serveRow(alias.condition_key as string, row);
     }
 
-    // 4b. New condition → store under canonical key, learn the input alias.
+    // 3. fuzzy
+    const { data: fkey } = await admin.rpc("resolve_illness_fuzzy", { q: inputKey, min_sim: FUZZY_MIN_SIMILARITY });
+    if (typeof fkey === "string" && fkey) {
+      const row = await getRow(fkey);
+      if (row) return await serveRow(fkey, row, inputKey);
+    }
+
+    // 4. generate new
+    if (!Deno.env.get("ANTHROPIC_API_KEY")) return json({ error: "server_misconfigured" }, 500);
+    const s = await generate(condition);
+
+    if (s.key !== inputKey) {
+      const canon = await getRow(s.key);
+      if (canon) { await learnAlias(inputKey, s.key); return await serveRow(s.key, canon); }
+    }
+
     await admin.from("illness_scripts").upsert({
-      condition_key: canonicalKey,
-      condition: script.condition ?? condition,
-      system: script.system ?? null,
-      one_liner: script.oneLiner ?? "",
-      demographics: script.demographics ?? [],
-      diagnostics: script.diagnostics ?? [],
-      pathophysiology: script.pathophysiology ?? [],
-      treatment: script.treatment ?? [],
-      miss_count: isMiss ? 1 : 0,
-      review_count: 1,
-      model: "claude-opus-4-8",
-      updated_at: new Date().toISOString(),
+      condition_key: s.key, condition: s.condition, system: s.system, one_liner: s.definition,
+      predisposing: s.predisposing, pathophysiology: s.pathophysiology, presentation: s.presentation,
+      diagnostics: s.diagnostics, management: s.management, pivots: s.pivots,
+      miss_count: isMiss ? 1 : 0, review_count: 1, schema_version: SCHEMA_VERSION,
+      model: "claude-opus-4-8", updated_at: new Date().toISOString(),
     }, { onConflict: "condition_key" });
+    await learnAlias(inputKey, s.key);
 
-    if (canonicalKey !== inputKey) {
-      await admin.from("illness_aliases").upsert({ alias_key: inputKey, condition_key: canonicalKey }, { onConflict: "alias_key" });
-    }
-
-    return json({
-      condition: script.condition ?? condition,
-      system: script.system ?? "",
-      oneLiner: script.oneLiner ?? "",
-      demographics: script.demographics ?? [],
-      diagnostics: script.diagnostics ?? [],
-      pathophysiology: script.pathophysiology ?? [],
-      treatment: script.treatment ?? [],
-      cached: false,
-    });
+    return json({ ...s, cached: false });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     return json({ error: "claude_failed", detail }, 502);
