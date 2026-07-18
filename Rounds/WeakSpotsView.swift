@@ -30,6 +30,7 @@ struct WeakSpotsView: View {
     @State private var expandedTopics: Set<String> = []
     @State private var selectedSnapshot: DDxSnapshot?
     @State private var showingStudyPlan = false
+    @State private var selectedCondition: ConditionRef?
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
 
@@ -83,6 +84,9 @@ struct WeakSpotsView: View {
             .toolbar { ToolbarItem(placement: .navigationBarTrailing) { Button("Done") { dismiss() } } }
             .sheet(item: $selectedSnapshot) { DifferentialDiagnosisView(restore: $0) }
             .sheet(isPresented: $showingStudyPlan) { StudyPlanView() }
+            .sheet(item: $selectedCondition) { ref in
+                IllnessScriptSheet(condition: ref.name, reason: "review")
+            }
         }
     }
 
@@ -205,32 +209,40 @@ struct WeakSpotsView: View {
     }
 
     private func itemRowView(_ row: ItemRow) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text(row.name).font(.subheadline).foregroundStyle(.primary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if row.count > 1 {
-                        Text("×\(row.count)").font(.caption2.weight(.bold)).foregroundStyle(.orange)
+        Button {
+            selectedCondition = ConditionRef(name: row.name)
+        } label: {
+            HStack(alignment: .top, spacing: 10) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text(row.name).font(.subheadline).foregroundStyle(.primary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if row.count > 1 {
+                            Text("×\(row.count)").font(.caption2.weight(.bold)).foregroundStyle(.orange)
+                        }
+                    }
+                    // Source badges — exactly where this miss came from.
+                    FlowLayout(spacing: 6) {
+                        ForEach(row.sources, id: \.self) { src in
+                            Label(src.displayName, systemImage: src.icon)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 7).padding(.vertical, 3)
+                                .background(Capsule().fill(Color.secondary.opacity(0.12)))
+                        }
+                    }
+                    if !row.detail.isEmpty {
+                        Text(row.detail).font(.caption2).foregroundStyle(.red)
                     }
                 }
-                // Source badges — exactly where this miss came from.
-                FlowLayout(spacing: 6) {
-                    ForEach(row.sources, id: \.self) { src in
-                        Label(src.displayName, systemImage: src.icon)
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 7).padding(.vertical, 3)
-                            .background(Capsule().fill(Color.secondary.opacity(0.12)))
-                    }
-                }
-                if !row.detail.isEmpty {
-                    Text(row.detail).font(.caption2).foregroundStyle(.red)
-                }
+                Spacer(minLength: 0)
+                Image(systemName: "book.closed.fill").font(.caption2).foregroundStyle(.blue.opacity(0.6))
+                    .padding(.top, 2)
             }
-            Spacer(minLength: 0)
+            .contentShape(Rectangle())
+            .padding(.horizontal, 12).padding(.vertical, 8)
         }
-        .padding(.horizontal, 12).padding(.vertical, 8)
+        .buttonStyle(.plain)
     }
 
     // MARK: Practiced
@@ -343,6 +355,12 @@ private struct WorkedGroup: Identifiable {
     let count: Int
     let latest: DDxSession
     var id: String { complaint.lowercased() }
+}
+
+/// Wrapper so a condition name can drive a `.sheet(item:)`.
+struct ConditionRef: Identifiable {
+    let id = UUID()
+    let name: String
 }
 
 #Preview {

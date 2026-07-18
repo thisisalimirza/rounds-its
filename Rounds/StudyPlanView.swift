@@ -20,6 +20,7 @@ struct StudyPlanView: View {
     @State private var store = StudyPlanStore.shared
     @State private var expanded: Set<String> = []
     @State private var showingPaywall = false
+    @State private var selectedCondition: ConditionRef?
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     private var hasData: Bool {
@@ -47,6 +48,9 @@ struct StudyPlanView: View {
                 }
             }
             .sheet(isPresented: $showingPaywall) { RoundsPaywallView() }
+            .sheet(item: $selectedCondition) { ref in
+                IllnessScriptSheet(condition: ref.name, reason: "review")
+            }
             .task {
                 await store.refreshIfNeeded(context: modelContext, isPro: subscriptionManager.isProUser)
                 // Expand the top focus area by default so there's immediate signal.
@@ -141,7 +145,7 @@ struct StudyPlanView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     bulletSection("Know this", icon: "lightbulb.fill", tint: .indigo, items: area.keyFacts)
                     if !area.cantMiss.isEmpty {
-                        bulletSection("Can't miss", icon: "exclamationmark.triangle.fill", tint: .red, items: area.cantMiss)
+                        bulletSection("Can't miss", icon: "exclamationmark.triangle.fill", tint: .red, items: area.cantMiss, tappable: true)
                     }
                     if !area.review.isEmpty {
                         bulletSection("Review", icon: "book.fill", tint: tint, items: area.review)
@@ -155,14 +159,30 @@ struct StudyPlanView: View {
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(tint.opacity(0.18), lineWidth: 1))
     }
 
-    private func bulletSection(_ title: String, icon: String, tint: Color, items: [String]) -> some View {
+    private func bulletSection(_ title: String, icon: String, tint: Color, items: [String], tappable: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Label(title, systemImage: icon).font(.caption2.weight(.bold)).foregroundStyle(tint)
             ForEach(items, id: \.self) { item in
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "circle.fill").font(.system(size: 4)).foregroundStyle(tint).padding(.top, 6)
-                    Text(item).font(.caption).foregroundStyle(.primary.opacity(0.9))
-                        .fixedSize(horizontal: false, vertical: true)
+                if tappable {
+                    Button {
+                        selectedCondition = ConditionRef(name: item)
+                    } label: {
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "circle.fill").font(.system(size: 4)).foregroundStyle(tint).padding(.top, 6)
+                            Text(item).font(.caption).foregroundStyle(.primary.opacity(0.9))
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 4)
+                            Image(systemName: "book.closed.fill").font(.system(size: 9)).foregroundStyle(tint.opacity(0.7))
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "circle.fill").font(.system(size: 4)).foregroundStyle(tint).padding(.top, 6)
+                        Text(item).font(.caption).foregroundStyle(.primary.opacity(0.9))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
         }

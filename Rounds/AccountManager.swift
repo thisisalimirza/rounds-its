@@ -202,6 +202,30 @@ final class AccountManager {
         )
     }
 
+    // MARK: - Illness scripts (globally cached; Claude via `illness-script`)
+
+    /// Fetch (or, on the first global request, generate) the illness script for
+    /// a condition. `reason` = "miss" attributes the request to a missed case
+    /// (feeds the global difficulty counter). Served from the shared cache when
+    /// available, so repeat requests across users cost no API call.
+    func illnessScript(condition: String, reason: String = "review") async throws -> IllnessScript {
+        return try await supabase.functions.invoke(
+            "illness-script",
+            options: .init(body: IllnessScriptRequest(condition: condition, reason: reason))
+        )
+    }
+
+    /// The comprehensive library of already-generated scripts, most-missed first.
+    func fetchIllnessLibrary(limit: Int = 300) async throws -> [IllnessScriptSummary] {
+        return try await supabase
+            .from("illness_scripts")
+            .select("condition, condition_key, one_liner, miss_count")
+            .order("miss_count", ascending: false)
+            .limit(limit)
+            .execute()
+            .value
+    }
+
     // MARK: - Feedback & feature requests (Supabase)
 
     private static var appVersionString: String {
@@ -438,4 +462,35 @@ nonisolated struct StudyFocusArea: Codable, Sendable, Identifiable {
     let keyFacts: [String]
     let cantMiss: [String]
     let review: [String]
+}
+
+// MARK: - Illness script types
+
+nonisolated struct IllnessScriptRequest: Encodable {
+    let condition: String
+    let reason: String
+}
+
+nonisolated struct IllnessScript: Decodable, Sendable {
+    let condition: String
+    let oneLiner: String
+    let demographics: [String]
+    let diagnostics: [String]
+    let pathophysiology: [String]
+    let treatment: [String]
+}
+
+nonisolated struct IllnessScriptSummary: Decodable, Sendable, Identifiable {
+    var id: String { conditionKey }
+    let condition: String
+    let conditionKey: String
+    let oneLiner: String?
+    let missCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case condition
+        case conditionKey = "condition_key"
+        case oneLiner = "one_liner"
+        case missCount = "miss_count"
+    }
 }

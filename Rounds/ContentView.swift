@@ -35,6 +35,7 @@ struct ContentView: View {
     @State private var showingGameModes = false
     @State private var showingCalculators = false
     @State private var showingDifferential = false
+    @State private var showingIllnessScripts = false
     @State private var showingWeakSpots = false
     @State private var showingInviteRedeem = false
     @State private var inviteCodeToRedeem: String?
@@ -224,6 +225,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingWeakSpots) {
                 WeakSpotsView()
+            }
+            .sheet(isPresented: $showingIllnessScripts) {
+                IllnessScriptsView()
             }
             .sheet(isPresented: $showingAbout) {
                 AboutView()
@@ -531,6 +535,14 @@ struct ContentView: View {
                         showingPaywall = true
                     }
                 }
+
+                PracticeToolCard(
+                    icon: "books.vertical.fill",
+                    title: "Illness Scripts",
+                    subtitle: "High-yield scripts for conditions you've missed — demographics, workup, pathophys & treatment",
+                    colors: [.blue, .indigo],
+                    available: true
+                ) { showingIllnessScripts = true }
 
                 PracticeToolCard(
                     icon: "cross.case.fill",
