@@ -16,10 +16,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Set Default Scheme
         run: |
-          scheme_list=$(xcodebuild -list -json | tr -d "\n")
-          default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
-          echo "DEFAULT_SCHEME=$default" >> $GITHUB_ENV
-          echo "Using default scheme: $default"
+          echo "DEFAULT_SCHEME=Rounds" >> $GITHUB_ENV
+          echo "Using scheme: Rounds"
       - name: Build
         env:
           platform: ${{ 'iOS Simulator' }}
