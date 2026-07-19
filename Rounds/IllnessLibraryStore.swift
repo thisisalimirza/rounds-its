@@ -34,9 +34,13 @@ final class IllnessLibraryStore {
     /// The global browsable library (summaries), most-missed first.
     private(set) var catalog: [IllnessScriptSummary] = []
     private(set) var isRefreshingCatalog = false
+    private(set) var isSyncing = false
 
     /// Full scripts cached by normalized key (input key and canonical key both).
     private var scripts: [String: IllnessScript] = [:]
+
+    private let cursorKey = "illnessLibrary.syncCursor"
+    private let syncAtKey = "illnessLibrary.lastSyncAt"
 
     private let dir: URL
     private let catalogURL: URL
@@ -71,6 +75,44 @@ final class IllnessLibraryStore {
     /// A locally-cached script for a condition, if we already have it (instant).
     func cachedScript(for condition: String) -> IllnessScript? {
         scripts[IllnessKey.normalize(condition)]
+    }
+
+    /// Incrementally mirror the global library onto the device so ANY script
+    /// opens instantly. Downloads only current-schema scripts updated since the
+    /// last sync (first run pulls everything, paginated). Pro only; throttled.
+    func syncFullLibrary(isPro: Bool, force: Bool = false) async {
+        guard isPro, !isSyncing else { return }
+        let lastAt = (UserDefaults.standard.object(forKey: syncAtKey) as? Date) ?? .distantPast
+        if !force && Date().timeIntervalSince(lastAt) < 1800 { return }   // ≤ every 30 min
+
+        isSyncing = true
+        defer { isSyncing = false }
+
+        var cursor = UserDefaults.standard.string(forKey: cursorKey)
+        let pageSize = 200
+        do {
+            while true {
+                let batch = try await AccountManager.shared.fetchFullIllnessScripts(since: cursor, limit: pageSize)
+                if batch.isEmpty { break }
+                for full in batch {
+                    scripts[full.conditionKey] = full.script
+                    if let i = catalog.firstIndex(where: { $0.conditionKey == full.conditionKey }) {
+                        catalog[i] = IllnessScriptSummary(condition: full.condition, conditionKey: full.conditionKey,
+                                                          system: full.system, oneLiner: full.definition,
+                                                          missCount: catalog[i].missCount)
+                    } else {
+                        catalog.append(full.summary)
+                    }
+                    cursor = full.updatedAt
+                }
+                persistScripts(); persistCatalog()
+                if let cursor { UserDefaults.standard.set(cursor, forKey: cursorKey) }
+                if batch.count < pageSize { break }
+            }
+            UserDefaults.standard.set(Date(), forKey: syncAtKey)
+        } catch {
+            print("⚠️ syncFullLibrary: \(error.localizedDescription)")
+        }
     }
 
     /// Get a script — instant from local cache, otherwise fetch (server resolves

@@ -156,7 +156,10 @@ struct IllnessScriptsView: View {
                 }
             }
             .sheet(isPresented: $showingPaywall) { RoundsPaywallView() }
-            .task { await store.refreshCatalog() }
+            .task {
+                await store.refreshCatalog()
+                await store.syncFullLibrary(isPro: isPro)
+            }
         }
     }
 

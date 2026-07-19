@@ -226,6 +226,22 @@ final class AccountManager {
             .value
     }
 
+    /// Bulk-download FULL scripts (current schema only) updated after `since`,
+    /// for incrementally mirroring the global library onto the device so any
+    /// script opens instantly.
+    func fetchFullIllnessScripts(since: String?, limit: Int = 200) async throws -> [IllnessScriptFull] {
+        let sinceStr = since ?? "1970-01-01T00:00:00Z"
+        return try await supabase
+            .from("illness_scripts")
+            .select("condition_key, condition, system, one_liner, predisposing, pathophysiology, presentation, diagnostics, management, pivots, updated_at")
+            .eq("schema_version", value: 1)
+            .gt("updated_at", value: sinceStr)
+            .order("updated_at", ascending: true)
+            .limit(limit)
+            .execute()
+            .value
+    }
+
     // MARK: - Feedback & feature requests (Supabase)
 
     private static var appVersionString: String {
@@ -487,6 +503,40 @@ nonisolated struct IllnessPivot: Codable, Sendable, Identifiable {
     var id: String { condition }
     let condition: String
     let distinguisher: String
+}
+
+/// A full script row from the table (for bulk device sync).
+nonisolated struct IllnessScriptFull: Decodable, Sendable {
+    let conditionKey: String
+    let condition: String
+    let system: String?
+    let definition: String?
+    let predisposing: [String]
+    let pathophysiology: [String]
+    let presentation: [String]
+    let diagnostics: [String]
+    let management: [String]
+    let pivots: [IllnessPivot]
+    let updatedAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case conditionKey = "condition_key"
+        case condition, system
+        case definition = "one_liner"
+        case predisposing, pathophysiology, presentation, diagnostics, management, pivots
+        case updatedAt = "updated_at"
+    }
+
+    var script: IllnessScript {
+        IllnessScript(condition: condition, system: system ?? "", definition: definition ?? "",
+                      predisposing: predisposing, pathophysiology: pathophysiology, presentation: presentation,
+                      diagnostics: diagnostics, management: management, pivots: pivots)
+    }
+
+    var summary: IllnessScriptSummary {
+        IllnessScriptSummary(condition: condition, conditionKey: conditionKey, system: system,
+                             oneLiner: definition, missCount: 0)
+    }
 }
 
 nonisolated struct IllnessScriptSummary: Codable, Sendable, Identifiable {

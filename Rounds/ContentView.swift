@@ -336,6 +336,11 @@ struct ContentView: View {
                 Task {
                     await StudyPlanStore.shared.refreshIfNeeded(context: modelContext, isPro: subscriptionManager.isProUser)
                 }
+                // Mirror the global illness-script library to the device so any
+                // script opens instantly. Incremental + throttled; Pro only.
+                Task {
+                    await IllnessLibraryStore.shared.syncFullLibrary(isPro: subscriptionManager.isProUser)
+                }
             }
             .task {
                 // Decide What's New vs. a gentle "secure your account" nudge —
