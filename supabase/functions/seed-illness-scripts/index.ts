@@ -20,7 +20,8 @@ import Anthropic from "npm:@anthropic-ai/sdk@0.68.0";
 
 const MODEL = "claude-sonnet-4-6";
 const SCHEMA_VERSION = 1;
-const BATCH = 6;   // conditions generated per invocation (keeps under time limits)
+const BATCH = 1;   // ONE generation per invocation — edge functions can't do more
+                   // without hitting WORKER_RESOURCE_LIMIT. The loop calls it repeatedly.
 
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
 
