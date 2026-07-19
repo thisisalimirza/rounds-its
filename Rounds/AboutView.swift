@@ -24,6 +24,7 @@ struct AboutView: View {
     @State private var showingEditDisplayName = false
     @State private var editedDisplayName = ""
     @State private var notificationsEnabled = false
+    @State private var showingNotifPermissionAlert = false
     @State private var selectedIntensity: NotificationIntensity = SmartNotificationManager.shared.currentIntensity
     @State private var showingNotificationPreview = false
     @State private var previewTitle = ""
@@ -75,8 +76,7 @@ struct AboutView: View {
             List {
                 // MARK: - Account Section
                 Section {
-                    subscriptionRow
-                    manageAccountRow
+                    accountRow
                 } header: {
                     Label("Account", systemImage: "person.crop.circle")
                 }
@@ -203,6 +203,16 @@ struct AboutView: View {
         } message: {
             Text(previewBody)
         }
+        .alert("Turn On Notifications", isPresented: $showingNotifPermissionAlert) {
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("Not Now", role: .cancel) { }
+        } message: {
+            Text("Notifications are turned off for Rounds. Enable them in Settings to get your daily reminder.")
+        }
         .onAppear {
             checkNotificationStatus()
         }
@@ -210,62 +220,29 @@ struct AboutView: View {
 
     // MARK: - Subscription Row
 
-    private var subscriptionRow: some View {
-        Button {
-            showingSubscription = true
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: subscriptionManager.isProUser ? "crown.fill" : "arrow.up.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(subscriptionManager.isProUser ? .yellow : .blue)
-                    .frame(width: 32)
+    // MARK: - Account Row (single entry — opens the unified Account hub)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(subscriptionManager.isProUser ? "Rounds Pro" : "Upgrade to Pro")
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.primary)
-
-                    Text(subscriptionManager.isProUser ? subscriptionManager.getSubscriptionSource() : "Unlock unlimited cases & features")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            }
-        }
-        .listRowBackground(
-            subscriptionManager.isProUser
-                ? Color.yellow.opacity(0.1)
-                : Color(.systemBackground)
-        )
-    }
-
-    // MARK: - Manage Account Row (opens the unified Account hub)
-
-    private var manageAccountRow: some View {
+    private var accountRow: some View {
         Button {
             showingAccount = true
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: account.isAnonymousAccount ? "icloud.and.arrow.up.fill" : "person.crop.circle.badge.checkmark")
-                    .font(.title2)
-                    .foregroundStyle(account.isAnonymousAccount ? .blue : .green)
-                    .frame(width: 32)
+                ZStack {
+                    Circle()
+                        .fill((subscriptionManager.isProUser ? Color.yellow : Color.blue).opacity(0.15))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: subscriptionManager.isProUser ? "crown.fill" : "person.crop.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(subscriptionManager.isProUser ? .yellow : .blue)
+                }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(account.isAnonymousAccount ? "Account & Sync" : "Account")
+                    Text("Account")
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundStyle(.primary)
 
-                    Text(account.isAnonymousAccount
-                         ? "Sign in for cross-device sync · invite · redeem"
-                         : (account.accountEmail ?? "Invite friends · redeem a code"))
+                    Text(accountSubtitle)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -277,6 +254,16 @@ struct AboutView: View {
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
+        }
+    }
+
+    private var accountSubtitle: String {
+        if subscriptionManager.isProUser {
+            return account.accountEmail ?? "Rounds Pro · sync, invite & redeem"
+        } else if account.isAnonymousAccount {
+            return "Sign in to sync · upgrade · invite · redeem"
+        } else {
+            return account.accountEmail ?? "Upgrade · invite friends · redeem"
         }
     }
 
@@ -384,7 +371,13 @@ struct AboutView: View {
 
     @ViewBuilder
     private var notificationRows: some View {
-        Toggle(isOn: $notificationsEnabled) {
+        // Custom binding so the toggle only drives handleNotificationToggle on
+        // user taps — programmatic status syncs (checkNotificationStatus) update
+        // `notificationsEnabled` directly without re-triggering the handler.
+        Toggle(isOn: Binding(
+            get: { notificationsEnabled },
+            set: { handleNotificationToggle($0) }
+        )) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Daily Reminder")
                     .font(.body)
@@ -394,9 +387,6 @@ struct AboutView: View {
             }
         }
         .tint(.blue)
-        .onChange(of: notificationsEnabled) { _, newValue in
-            handleNotificationToggle(newValue)
-        }
 
         if notificationsEnabled {
             // Intensity Picker - cleaner menu style
@@ -636,16 +626,36 @@ struct AboutView: View {
     }
 
     private func handleNotificationToggle(_ enabled: Bool) {
-        if enabled {
-            SmartNotificationManager.shared.requestAuthorization { granted in
-                if granted {
+        guard enabled else {
+            notificationsEnabled = false
+            SmartNotificationManager.shared.cancelAll()
+            return
+        }
+        // Turning on: branch on the actual system permission so a previously
+        // denied user gets sent to Settings instead of the toggle silently
+        // snapping back.
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                switch settings.authorizationStatus {
+                case .authorized, .provisional, .ephemeral:
+                    notificationsEnabled = true
                     rescheduleSmartNotification()
-                } else {
+                case .notDetermined:
+                    SmartNotificationManager.shared.requestAuthorization { granted in
+                        notificationsEnabled = granted
+                        if granted {
+                            rescheduleSmartNotification()
+                        } else {
+                            showingNotifPermissionAlert = true
+                        }
+                    }
+                case .denied:
+                    notificationsEnabled = false
+                    showingNotifPermissionAlert = true
+                @unknown default:
                     notificationsEnabled = false
                 }
             }
-        } else {
-            SmartNotificationManager.shared.cancelAll()
         }
     }
 

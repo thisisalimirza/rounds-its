@@ -186,6 +186,52 @@ struct RoundsApp: App {
             context.insert(newStats)
             try? context.save()
         }
+
+        // One-time: seed the universal miss log from historical missed cases so
+        // existing users' Weak Spots, Study Plan, and Illness Scripts pick up
+        // everything they've already gotten wrong (not just new misses).
+        backfillMissedItemsFromHistory(context: context)
+    }
+
+    /// Backfills `MissedItem` records from `CaseHistoryEntry` misses that predate
+    /// the universal miss log. Runs once, deduped by diagnosis + day so it never
+    /// double-counts misses that were already logged.
+    private static func backfillMissedItemsFromHistory(context: ModelContext) {
+        let key = "didBackfillMissedItemsFromHistory_v1"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+
+        let missed = (try? context.fetch(
+            FetchDescriptor<CaseHistoryEntry>(predicate: #Predicate { $0.wasCorrect == false })
+        )) ?? []
+
+        if missed.isEmpty {
+            UserDefaults.standard.set(true, forKey: key)
+            return
+        }
+
+        let existing = (try? context.fetch(FetchDescriptor<MissedItem>())) ?? []
+        func dayKey(_ item: String, _ date: Date) -> String {
+            "\(item.lowercased())|\(Int(Calendar.current.startOfDay(for: date).timeIntervalSince1970))"
+        }
+        var seen = Set(existing.map { dayKey($0.item, $0.timestamp) })
+
+        var inserted = 0
+        for entry in missed {
+            let diagnosis = entry.diagnosis.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !diagnosis.isEmpty else { continue }
+            let k = dayKey(diagnosis, entry.playedAt)
+            if seen.contains(k) { continue }
+            seen.insert(k)
+            let mi = MissedItem(source: .dailyCase,
+                                topic: entry.category.isEmpty ? "General" : entry.category,
+                                item: diagnosis)
+            mi.timestamp = entry.playedAt
+            context.insert(mi)
+            inserted += 1
+        }
+        try? context.save()
+        UserDefaults.standard.set(true, forKey: key)
+        print("Backfilled \(inserted) MissedItems from case history")
     }
 
     // MARK: - Schema Migration

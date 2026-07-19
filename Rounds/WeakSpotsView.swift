@@ -59,26 +59,29 @@ struct WeakSpotsView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if misses.isEmpty && sessions.isEmpty {
-                    emptyState
-                } else {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 16) {
-                            summaryHeader
-                            studyPlanCTA
-                            filterPicker
-                            if filter == .gotWrong { gotWrongContent } else { practicedContent }
+            ZStack {
+                LinearGradient(colors: [Color.blue.opacity(0.06), Color.purple.opacity(0.06)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+                    .ignoresSafeArea()
+
+                Group {
+                    if misses.isEmpty && sessions.isEmpty {
+                        emptyState
+                    } else {
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 16) {
+                                summaryHeader
+                                studyPlanCTA
+                                filterPicker
+                                if filter == .gotWrong { gotWrongContent } else { practicedContent }
+                            }
+                            .padding()
+                            .padding(.bottom, 24)
                         }
-                        .padding()
-                        .padding(.bottom, 24)
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .background(
-                LinearGradient(colors: [Color.blue.opacity(0.06), Color.purple.opacity(0.06)],
-                               startPoint: .topLeading, endPoint: .bottomTrailing).ignoresSafeArea()
-            )
             .navigationTitle("Weak Spots")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .navigationBarTrailing) { Button("Done") { dismiss() } } }
@@ -315,7 +318,7 @@ struct WeakSpotsView: View {
                 .font(.subheadline).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center).padding(.horizontal, 32)
         }
-        .frame(maxWidth: .infinity).padding(.top, 80)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

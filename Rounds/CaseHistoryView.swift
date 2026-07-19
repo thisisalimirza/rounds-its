@@ -16,6 +16,7 @@ struct CaseHistoryView: View {
     @State private var selectedFilter: HistoryFilter = .all
     @State private var selectedEntry: CaseHistoryEntry?
     @State private var showingDetail = false
+    @State private var showingStudyPlan = false
     
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     
@@ -78,6 +79,9 @@ struct CaseHistoryView: View {
                 if let entry = selectedEntry {
                     CaseHistoryDetailView(entry: entry)
                 }
+            }
+            .sheet(isPresented: $showingStudyPlan) {
+                StudyPlanView()
             }
         }
     }
@@ -235,20 +239,39 @@ struct CaseHistoryView: View {
     // MARK: - Study List Banner
 
     private var studyListBanner: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "graduationcap.fill")
-                .font(.subheadline)
-                .foregroundStyle(.orange)
-                .padding(.top, 1)
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Your personal study list")
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "graduationcap.fill")
                     .font(.subheadline)
-                    .fontWeight(.semibold)
-                Text("These are the diagnoses that stumped you. Tap any case and look it up on AMBOSS or UWorld to fill in the gap before it comes up again.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.orange)
+                    .padding(.top, 1)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Your personal study list")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                    Text("These are the diagnoses that stumped you. Get a targeted study plan built from them, or look any case up on AMBOSS or UWorld.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
+
+            Button {
+                showingStudyPlan = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "list.bullet.clipboard.fill")
+                    Text("View my study plan")
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption2)
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 12).padding(.vertical, 9)
+                .background(LinearGradient(colors: [.indigo, .purple], startPoint: .leading, endPoint: .trailing),
+                            in: RoundedRectangle(cornerRadius: 9))
+            }
+            .buttonStyle(.plain)
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)

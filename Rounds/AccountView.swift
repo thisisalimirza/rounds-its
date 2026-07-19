@@ -25,6 +25,7 @@ struct AccountView: View {
     @State private var outcome: AccountManager.RedeemOutcome?
     @State private var copiedID = false
     @State private var showingPaywall = false
+    @State private var isRestoring = false
 
     var body: some View {
         NavigationStack {
@@ -94,9 +95,16 @@ struct AccountView: View {
                     Image(systemName: "crown.fill").font(.title2).foregroundStyle(.yellow).frame(width: 32)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Rounds Pro is active").font(.body).fontWeight(.medium)
-                        Text("Enjoy unlimited cases and every feature.")
+                        Text(subscription.getSubscriptionSource())
                             .font(.caption).foregroundStyle(.secondary)
                     }
+                }
+                Button {
+                    if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                        UIApplication.shared.open(url)
+                    }
+                } label: {
+                    Label("Manage subscription", systemImage: "creditcard")
                 }
             } else {
                 Button {
@@ -114,7 +122,24 @@ struct AccountView: View {
                     }
                 }
             }
+
+            Button {
+                Task { await restore() }
+            } label: {
+                HStack {
+                    Label("Restore purchases", systemImage: "arrow.clockwise")
+                    Spacer()
+                    if isRestoring { ProgressView() }
+                }
+            }
+            .disabled(isRestoring)
         }
+    }
+
+    private func restore() async {
+        isRestoring = true
+        defer { isRestoring = false }
+        _ = try? await subscription.restorePurchases()
     }
 
     // MARK: - Invite
