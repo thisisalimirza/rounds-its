@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
 
   const generate = async (text: string): Promise<ScriptShape & { key: string }> => {
     const stream = client().messages.stream({
-      model: "claude-opus-4-8",
+      model: "claude-sonnet-4-6",
       max_tokens: 6000,
       thinking: { type: "adaptive" },
       system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
       condition: s.condition, system: s.system, one_liner: s.definition,
       predisposing: s.predisposing, pathophysiology: s.pathophysiology, presentation: s.presentation,
       diagnostics: s.diagnostics, management: s.management, pivots: s.pivots,
-      schema_version: SCHEMA_VERSION, model: "claude-opus-4-8", updated_at: new Date().toISOString(),
+      schema_version: SCHEMA_VERSION, model: "claude-sonnet-4-6", updated_at: new Date().toISOString(),
     }).eq("condition_key", existingKey);
     await bump(existingKey);
     return json({ ...s, cached: false });
@@ -231,7 +231,7 @@ Deno.serve(async (req) => {
       predisposing: s.predisposing, pathophysiology: s.pathophysiology, presentation: s.presentation,
       diagnostics: s.diagnostics, management: s.management, pivots: s.pivots,
       miss_count: isMiss ? 1 : 0, review_count: 1, schema_version: SCHEMA_VERSION,
-      model: "claude-opus-4-8", updated_at: new Date().toISOString(),
+      model: "claude-sonnet-4-6", updated_at: new Date().toISOString(),
     }, { onConflict: "condition_key" });
     await learnAlias(inputKey, s.key);
 
