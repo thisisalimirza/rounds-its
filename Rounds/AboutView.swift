@@ -43,6 +43,12 @@ struct AboutView: View {
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     private var account: AccountManager { AccountManager.shared }
 
+    private var appVersionString: String {
+        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.4"
+        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
+        return (b?.isEmpty == false) ? "\(v) (\(b!))" : v
+    }
+
     // Computed property for the reminder time binding
     private var reminderTime: Binding<Date> {
         Binding(
@@ -129,8 +135,8 @@ struct AboutView: View {
                 } footer: {
                     VStack(spacing: 8) {
                         Text("Made with ❤️ for medical students")
-                        Text("© 2025 Brask Group LLC")
-                        Text("Version 1.0")
+                        Text("© 2026 Brask Group LLC")
+                        Text("Version \(appVersionString)")
                     }
                     .font(.caption)
                     .frame(maxWidth: .infinity)

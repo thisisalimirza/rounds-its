@@ -66,19 +66,29 @@ enum AppChangelog {
             title: "What's New in Rounds",
             features: [
                 WhatsNewFeature(
+                    icon: "books.vertical.fill",
+                    title: "Illness Scripts Library",
+                    description: "A growing reference of high-yield illness scripts — who gets it, the workup, the pathophys, treatment, and the pivot points that tell lookalikes apart. Free for conditions you've missed."
+                ),
+                WhatsNewFeature(
                     icon: "stethoscope",
                     title: "Differential Builder",
                     description: "Type what you found on a patient and get a structured differential — the findings that support each diagnosis and the next steps to confirm it. Five free builds, then Pro."
                 ),
                 WhatsNewFeature(
                     icon: "brain.head.profile",
-                    title: "Smarter Weak Spots",
-                    description: "Every miss and every presentation you work through is tracked, so you know exactly what to review — and can reopen past differentials anytime."
+                    title: "Weak Spots & Study Plan",
+                    description: "Everything you miss across cases and challenges is tracked into your Weak Spots — and Pro turns it into a personalized study plan for exactly what to review."
                 ),
                 WhatsNewFeature(
                     icon: "icloud.and.arrow.up.fill",
                     title: "Cross-Device Sync",
-                    description: "Sign in with Apple or email so your Pro access and progress follow you to any device."
+                    description: "Sign in with Apple or email so your Pro access and progress follow you to a new phone, iPad, or the web."
+                ),
+                WhatsNewFeature(
+                    icon: "bubble.left.and.bubble.right.fill",
+                    title: "Feedback & Ideas Board",
+                    description: "Share feedback in-app and vote on what we build next — our roadmap is driven by what you want."
                 )
             ]
         )
