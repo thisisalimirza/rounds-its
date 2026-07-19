@@ -236,17 +236,10 @@ struct AboutView: View {
                         .foregroundStyle(subscriptionManager.isProUser ? .yellow : .blue)
                 }
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Account")
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.primary)
-
-                    Text(accountSubtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
+                Text(subscriptionManager.isProUser ? "Account · Rounds Pro" : "Account")
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.primary)
 
                 Spacer()
 
@@ -254,16 +247,6 @@ struct AboutView: View {
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
-        }
-    }
-
-    private var accountSubtitle: String {
-        if subscriptionManager.isProUser {
-            return account.accountEmail ?? "Rounds Pro · sync, invite & redeem"
-        } else if account.isAnonymousAccount {
-            return "Sign in to sync · upgrade · invite · redeem"
-        } else {
-            return account.accountEmail ?? "Upgrade · invite friends · redeem"
         }
     }
 
