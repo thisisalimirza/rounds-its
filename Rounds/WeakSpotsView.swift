@@ -43,7 +43,10 @@ struct WeakSpotsView: View {
     private var topicGroups: [TopicGroup] {
         Dictionary(grouping: wrongMisses, by: { $0.topic.isEmpty ? "General" : $0.topic })
             .map { key, items in TopicGroup(topic: key, items: items) }
-            .sorted { $0.total > $1.total }
+            // Tiebreak by topic name so equal-count topics keep a STABLE order
+            // (Dictionary is unordered + Swift sort isn't stable → cards would
+            // otherwise reshuffle on every re-render, e.g. when expanding one).
+            .sorted { $0.total != $1.total ? $0.total > $1.total : $0.topic.localizedCaseInsensitiveCompare($1.topic) == .orderedAscending }
     }
 
     /// Saved builder sessions grouped by complaint (latest first), reopenable.
@@ -54,7 +57,11 @@ struct WeakSpotsView: View {
                 return WorkedGroup(complaint: latest.chiefComplaint, system: latest.system,
                                    count: items.count, latest: latest)
             }
-            .sorted { $0.latest.timestamp > $1.latest.timestamp }
+            .sorted {
+                $0.latest.timestamp != $1.latest.timestamp
+                    ? $0.latest.timestamp > $1.latest.timestamp
+                    : $0.complaint.localizedCaseInsensitiveCompare($1.complaint) == .orderedAscending
+            }
     }
 
     var body: some View {
@@ -339,7 +346,11 @@ private struct TopicGroup: Identifiable {
                 return ItemRow(name: name, count: group.count, sources: sources,
                                lastSeen: group.map(\.timestamp).max() ?? .distantPast, detail: detail)
             }
-            .sorted { $0.count == $1.count ? $0.lastSeen > $1.lastSeen : $0.count > $1.count }
+            .sorted {
+                if $0.count != $1.count { return $0.count > $1.count }
+                if $0.lastSeen != $1.lastSeen { return $0.lastSeen > $1.lastSeen }
+                return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
     }
 }
 
