@@ -39,8 +39,14 @@ final class IllnessLibraryStore {
     /// Full scripts cached by normalized key (input key and canonical key both).
     private var scripts: [String: IllnessScript] = [:]
 
+    /// Conditions the user manually saved to "My Illness Scripts" (display names,
+    /// most recently added first). Missed conditions are added automatically at
+    /// the view layer; these are the deliberate saves.
+    private(set) var savedConditions: [String] = []
+
     private let cursorKey = "illnessLibrary.syncCursor"
     private let syncAtKey = "illnessLibrary.lastSyncAt"
+    private var savedURL: URL { dir.appendingPathComponent("saved.json") }
 
     private let dir: URL
     private let catalogURL: URL
@@ -57,6 +63,26 @@ final class IllnessLibraryStore {
     }
 
     var count: Int { catalog.count }
+
+    // MARK: - My Illness Scripts (manual saves)
+
+    func isSaved(_ condition: String) -> Bool {
+        let k = IllnessKey.normalize(condition)
+        return savedConditions.contains { IllnessKey.normalize($0) == k }
+    }
+
+    func addToMyScripts(_ condition: String) {
+        let name = condition.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, !isSaved(name) else { return }
+        savedConditions.insert(name, at: 0)
+        persistSaved()
+    }
+
+    func removeFromMyScripts(_ condition: String) {
+        let k = IllnessKey.normalize(condition)
+        savedConditions.removeAll { IllnessKey.normalize($0) == k }
+        persistSaved()
+    }
 
     /// Fetch the latest global catalog (cheap select). Falls back to cache on failure.
     func refreshCatalog() async {
@@ -146,10 +172,15 @@ final class IllnessLibraryStore {
     private func persistScripts() {
         if let data = try? JSONEncoder().encode(scripts) { try? data.write(to: scriptsURL) }
     }
+    private func persistSaved() {
+        if let data = try? JSONEncoder().encode(savedConditions) { try? data.write(to: savedURL) }
+    }
     private func load() {
         if let d = try? Data(contentsOf: catalogURL),
            let c = try? JSONDecoder().decode([IllnessScriptSummary].self, from: d) { catalog = c }
         if let d = try? Data(contentsOf: scriptsURL),
            let s = try? JSONDecoder().decode([String: IllnessScript].self, from: d) { scripts = s }
+        if let d = try? Data(contentsOf: savedURL),
+           let s = try? JSONDecoder().decode([String].self, from: d) { savedConditions = s }
     }
 }
