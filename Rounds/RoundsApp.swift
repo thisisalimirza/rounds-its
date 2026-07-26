@@ -141,6 +141,11 @@ struct RoundsApp: App {
                     // merges rather than overwrites, so this is safe even from
                     // a device that is behind — see public.sync_progress.
                     ProgressSyncManager.shared.configure(modelContext: sharedModelContainer.mainContext)
+
+                    // A reinstalled device restores its session from the
+                    // keychain and comes back signed in but empty; this is what
+                    // puts the account's history back on screen.
+                    await ProgressSyncManager.shared.pullIfDeviceIsEmpty()
                     await ProgressSyncManager.shared.pushIfPossible(force: true)
 
                     // CloudKit restores history asynchronously after launch, so
