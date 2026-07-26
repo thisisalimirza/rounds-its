@@ -60,29 +60,22 @@ struct AccountView: View {
     private var syncSection: some View {
         if account.isAnonymousAccount {
             Section {
-                // Warning banner first: the risk has to land before the ask.
-                // Without it "Sync across devices" reads as an optional
-                // convenience rather than "your progress is not backed up".
-                HStack(alignment: .top, spacing: 10) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Your progress isn't backed up")
-                            .font(.subheadline.weight(.semibold))
-                        Text("If you delete Rounds or change phones, your streak, stats and Pro access are gone. Signing in takes a few seconds and fixes it permanently.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.vertical, 4)
+                // Same stakes-first layout as the SecureAccountPromptView
+                // nudge, rather than the flat warning row this used to be.
+                // The nudge reads well precisely because it names the three
+                // concrete consequences instead of saying "sync across
+                // devices", and there's no reason this screen should be worse.
+                AccountSyncStakes()
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    .listRowBackground(Color.clear)
 
                 AccountLinkingControls()
-                    .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 12, trailing: 16))
                     .listRowBackground(Color.clear)
             } header: {
                 Label("Sync across devices", systemImage: "icloud.and.arrow.up")
             } footer: {
-                Text("Your data stays exactly where it is — signing in only adds a backup.")
+                Text("Takes about ten seconds. No password to remember, and your data stays exactly where it is.")
             }
         } else {
             Section {
@@ -349,6 +342,8 @@ struct AccountLinkingControls: View {
     @State private var isLinkingEmail = false
     @State private var isVerifying = false
     @State private var emailLinkSent = false
+    @State private var didLink = false
+    @State private var successMessage: String?
     @State private var errorMessage: String?
     @FocusState private var emailFocused: Bool
     @FocusState private var codeFocused: Bool
@@ -361,7 +356,9 @@ struct AccountLinkingControls: View {
     }
 
     var body: some View {
-        if emailLinkSent {
+        if didLink {
+            linkedConfirmation
+        } else if emailLinkSent {
             codeEntryStep
         } else {
             VStack(spacing: 16) {
@@ -439,6 +436,31 @@ struct AccountLinkingControls: View {
                 }
             }
         }
+    }
+
+    /// Shown once linking succeeds. Previously there was no success state at
+    /// all — the sheet just sat there with the code still in the box, so the
+    /// only way to discover it had worked was to submit again and be told the
+    /// code was already used.
+    private var linkedConfirmation: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 44))
+                .foregroundStyle(.green)
+            Text("You're all set")
+                .font(.system(.title3, design: .rounded).weight(.bold))
+            Text(successMessage ?? "Signed in. Your progress is backed up from now on.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            if let email = account.accountEmail {
+                Text(email)
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
     }
 
     /// Code entry. A typed code rather than a tapped link, matching the web,
@@ -540,10 +562,16 @@ struct AccountLinkingControls: View {
 
         let outcome = await account.verifyEmailCode(emailEntry, code: codeEntry)
         switch outcome {
-        case .linked:
-            // The view disappears on success: AccountView switches to the
-            // signed-in section once the account is no longer anonymous.
-            break
+        case .linked(let merged):
+            // Success previously showed nothing at all. The sheet stayed put
+            // with the code still in the box, so the only way to find out it
+            // had worked was to submit again and be told the code was already
+            // used. Confirm it explicitly, then let the parent dismiss.
+            didLink = true
+            successMessage = merged
+                ? "Signed in. Your streak, stats and Pro access are saved to your account."
+                : "Signed in. Your progress is backed up from now on."
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
         case .invalidCode, .error:
             errorMessage = outcome.message
         }

@@ -878,6 +878,15 @@ struct GameView: View {
             
             stats.recordGame(won: won, guessCount: gameSession.guesses.count, score: gameSession.score, isPro: isPro)
 
+            // Mirror to the account immediately. Syncing only on launch and on
+            // backgrounding meant finishing a case and then checking the web
+            // showed nothing until the app happened to be backgrounded — which
+            // is the opposite of the expected order, since people check the web
+            // *because* they just did something. force: true bypasses the
+            // debounce; the server merge is idempotent so an extra call is
+            // cheap.
+            Task { await ProgressSyncManager.shared.pushIfPossible(force: true) }
+
             // Refresh personalized reminders now that streak/last-played changed
             SmartNotificationManager.shared.refreshReminders(stats: stats)
 

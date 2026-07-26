@@ -182,6 +182,7 @@ final class AccountManager {
         case codeInactive = "code_inactive"
         case codeExpired = "code_expired"
         case codeNotStarted = "code_not_started"
+        case inviterNotPro = "inviter_not_pro"
         case missingCode = "missing_code"
         case error
 
@@ -199,6 +200,9 @@ final class AccountManager {
             case .codeInactive:   return "That code is no longer active."
             case .codeExpired:    return "That code has expired."
             case .codeNotStarted: return "That code isn't active yet."
+            // Invite codes only work while their owner has Pro — you cannot
+            // give away access you don't have.
+            case .inviterNotPro:  return "That invite code isn't active. The person who shared it needs Rounds Pro for their invites to work."
             case .missingCode:    return "Please enter a code."
             case .error:          return "Something went wrong. Please try again."
             }
@@ -456,13 +460,35 @@ final class AccountManager {
         await ProgressSyncManager.shared.pushIfPossible()
 
         do {
-            // Supabase verifies a code for an existing user as `.email` and a
-            // brand-new signup as `.signup`. There's no way to know which case
-            // applies beforehand, so try the common one and fall back.
-            do {
-                _ = try await supabase.auth.verifyOTP(email: trimmedEmail, token: trimmedCode, type: .email)
-            } catch {
-                _ = try await supabase.auth.verifyOTP(email: trimmedEmail, token: trimmedCode, type: .signup)
+            // The code must be verified under the same type GoTrue stored it
+            // as, which depends on the template that sent it:
+            //
+            //   existing user -> Magic Link template -> .magiclink
+            //   new user      -> Confirm signup      -> .signup
+            //
+            // `.magiclink` is first because it is the common case and was the
+            // one previously missing: trying `.email` then `.signup` produced
+            // two 403s about 120ms apart in the Supabase auth logs, and a
+            // perfectly correct code was reported as invalid. The same token
+            // worked through the emailed link, which carries type=magiclink —
+            // that mismatch is what identified the bug.
+            var verified = false
+            var lastError: Error?
+
+            for type in [EmailOTPType.magiclink, .email, .signup] {
+                do {
+                    _ = try await supabase.auth.verifyOTP(
+                        email: trimmedEmail, token: trimmedCode, type: type
+                    )
+                    verified = true
+                    break
+                } catch {
+                    lastError = error
+                }
+            }
+
+            if !verified, let lastError {
+                throw lastError
             }
         } catch {
             let text = error.localizedDescription.lowercased()
