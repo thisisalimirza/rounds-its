@@ -74,7 +74,26 @@ final class AccountManager {
     /// Ensures the user has a Supabase account (creating an anonymous one if
     /// needed), ties it to RevenueCat, and loads referral status. Safe to call
     /// repeatedly; it reuses an existing session.
+    /// Tracks the in-flight bootstrap so concurrent callers await the same work
+    /// instead of each starting their own.
+    ///
+    /// This matters for more than tidiness. Two concurrent calls would both see
+    /// `currentSession == nil` and both call `signInAnonymously()`, creating two
+    /// anonymous accounts for one person — the second silently orphaning the
+    /// first along with its progress and any Pro grant.
+    private var bootstrapTask: Task<Void, Never>?
+
     func bootstrap() async {
+        if let inFlight = bootstrapTask {
+            await inFlight.value
+            return
+        }
+        let task = Task { await performBootstrap() }
+        bootstrapTask = task
+        await task.value
+    }
+
+    private func performBootstrap() async {
         do {
             let session: Session
             if let existing = supabase.auth.currentSession {

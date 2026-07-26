@@ -235,7 +235,14 @@ struct ContentView: View {
             .sheet(isPresented: $showingInviteRedeem) {
                 AccountView(initialCode: inviteCodeToRedeem)
             }
-            .sheet(isPresented: $showingSecureAccount) {
+            .sheet(isPresented: $showingSecureAccount, onDismiss: {
+                // Mark the nudge as spent only once it has actually been seen.
+                // Marking before presentation meant that if the sheet failed to
+                // present — plausible here, since this view stacks 19 .sheet
+                // modifiers and only one can be up at a time — the user was
+                // permanently recorded as prompted without ever seeing it.
+                AccountManager.shared.markAccountSecuringPrompted()
+            }) {
                 SecureAccountPromptView()
                     .presentationDetents([.medium, .large])
             }
@@ -349,12 +356,28 @@ struct ContentView: View {
                 if whatsNewManager.shouldShowWhatsNew {
                     try? await Task.sleep(nanoseconds: 500_000_000)
                     showingWhatsNew = true
-                } else if AccountManager.shared.isReady,
-                          AccountManager.shared.shouldOfferAccountSecuring,
-                          stats.currentStreak >= 3 {
-                    try? await Task.sleep(nanoseconds: 700_000_000)
-                    AccountManager.shared.markAccountSecuringPrompted()
-                    showingSecureAccount = true
+                } else {
+                    // Wait for the account to actually be ready before deciding.
+                    //
+                    // This previously read `AccountManager.shared.isReady` inline.
+                    // That is set only after bootstrap's two network round trips
+                    // (anonymous sign-in, then my-status), while this .task runs
+                    // the moment the view appears — so on a cold launch the check
+                    // essentially always lost the race and read false. Because
+                    // .task runs once per appearance and nothing re-evaluated
+                    // when isReady later flipped, the nudge never fired for
+                    // anyone. bootstrap() is deduplicated, so awaiting it here
+                    // joins the launch-time call rather than starting a second.
+                    await AccountManager.shared.bootstrap()
+
+                    // Gate on having played at all, not on a 3-day streak.
+                    // Requiring streak >= 3 meant almost nobody qualified before
+                    // the one-shot flag was spent. Tune this if it feels early.
+                    if AccountManager.shared.shouldOfferAccountSecuring,
+                       stats.gamesPlayed >= 1 {
+                        try? await Task.sleep(nanoseconds: 700_000_000)
+                        showingSecureAccount = true
+                    }
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
