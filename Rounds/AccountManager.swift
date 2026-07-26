@@ -49,6 +49,13 @@ final class AccountManager {
     private(set) var accountEmail: String?
     private(set) var isReady = false
 
+    /// True when the last `refreshStatus()` failed.
+    ///
+    /// Without this the UI had no way to tell "still loading" from "gave up":
+    /// refreshStatus swallowed its error, `referralCode` stayed nil, and the
+    /// invite row span a spinner forever with no retry and no explanation.
+    private(set) var statusLoadFailed = false
+
     /// Whether this account is still anonymous (no email/Apple linked yet).
     var isAnonymousAccount: Bool { accountEmail == nil }
 
@@ -161,7 +168,9 @@ final class AccountManager {
             self.proSource = status.pro_source
             self.invitesRemaining = status.invites_remaining
             self.maxReferrals = status.max_referrals
+            self.statusLoadFailed = false
         } catch {
+            self.statusLoadFailed = true
             print("⚠️ my-status error: \(error.localizedDescription)")
         }
     }
@@ -457,7 +466,13 @@ final class AccountManager {
         // Step 2: get local progress onto the server while we still are the
         // anonymous user. If this fails we continue anyway — losing the sync is
         // recoverable on the next launch, failing the sign-in is not.
-        await ProgressSyncManager.shared.pushIfPossible()
+        //
+        // Forced past the debounce: this is the one moment where a skipped push
+        // is not recoverable on the next launch. Anything still unsent belongs
+        // to the anonymous account, and after the claim below that account is
+        // sealed — a later push would write to the new id, leaving the
+        // anonymous rows behind for good.
+        await ProgressSyncManager.shared.pushIfPossible(force: true)
 
         do {
             // The code must be verified under the same type GoTrue stored it
@@ -538,6 +553,13 @@ final class AccountManager {
     }
 
     // MARK: - Progress mirror
+
+    /// The signed-in account's id, or nil before bootstrap finishes.
+    ///
+    /// `userID` is the same value as a lowercased string for display; this is
+    /// what row-level writes need, since every synced table stores `user_id`
+    /// as a uuid and RLS checks it against `auth.uid()`.
+    var authUserID: UUID? { supabase.auth.currentSession?.user.id }
 
     /// Uploads a progress snapshot. The server merges rather than overwrites,
     /// so this is safe to call from any device at any time.
