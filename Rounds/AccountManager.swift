@@ -396,11 +396,161 @@ final class AccountManager {
     /// Attaches an email to the current (possibly anonymous) account. Supabase
     /// sends a confirmation link; the account id is unchanged, so Pro/referrals
     /// carry over. This is the subtle anonymous → permanent conversion.
-    func linkEmail(_ email: String) async throws {
+    /// Sends a one-time code to `email` so the user can claim or create an
+    /// account.
+    ///
+    /// Replaces `auth.update(user:)`, which converted the anonymous user in
+    /// place and therefore **failed outright when the address already had an
+    /// account** — exactly what happens to anyone who signs up on getrounds.app
+    /// before installing the app. They were left permanently unable to link,
+    /// with a misleading "check the address" error.
+    ///
+    /// Code entry also matches the web flow, so the two surfaces behave
+    /// identically.
+    func sendEmailCode(_ email: String) async throws {
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        try await supabase.auth.update(user: UserAttributes(email: trimmed))
-        Purchases.shared.attribution.setEmail(trimmed)
-        self.accountEmail = trimmed
+        try await supabase.auth.signInWithOTP(email: trimmed, shouldCreateUser: true)
+    }
+
+    enum LinkOutcome {
+        /// Signed in and any anonymous progress was carried across.
+        case linked(mergedProgress: Bool)
+        case invalidCode
+        case error(String)
+
+        var message: String {
+            switch self {
+            case .linked(let merged):
+                return merged
+                    ? "You're signed in. Your progress has been saved to your account."
+                    : "You're signed in. Your progress is now backed up."
+            case .invalidCode:
+                return "That code is incorrect or has expired. Check the latest email or request a new code."
+            case .error(let detail):
+                return detail
+            }
+        }
+    }
+
+    /// Verifies the emailed code, then folds the device's anonymous account
+    /// into whichever account that email belongs to.
+    ///
+    /// Order matters throughout:
+    ///  1. capture the anonymous id *before* verifying, since verifying
+    ///     replaces the session and we would otherwise lose the reference;
+    ///  2. push local progress up under the anonymous id, so nothing played
+    ///     before signing in is stranded;
+    ///  3. verify, which signs us in as the email's account (created if new);
+    ///  4. claim the anonymous account server-side, merging progress, any
+    ///     redeemed Pro, and campaign attribution;
+    ///  5. re-point RevenueCat at the new id so entitlements follow.
+    func verifyEmailCode(_ email: String, code: String) async -> LinkOutcome {
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedCode = code.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let anonymousID = supabase.auth.currentSession?.user.id
+
+        // Step 2: get local progress onto the server while we still are the
+        // anonymous user. If this fails we continue anyway — losing the sync is
+        // recoverable on the next launch, failing the sign-in is not.
+        await ProgressSyncManager.shared.pushIfPossible()
+
+        do {
+            // Supabase verifies a code for an existing user as `.email` and a
+            // brand-new signup as `.signup`. There's no way to know which case
+            // applies beforehand, so try the common one and fall back.
+            do {
+                _ = try await supabase.auth.verifyOTP(email: trimmedEmail, token: trimmedCode, type: .email)
+            } catch {
+                _ = try await supabase.auth.verifyOTP(email: trimmedEmail, token: trimmedCode, type: .signup)
+            }
+        } catch {
+            let text = error.localizedDescription.lowercased()
+            if text.contains("expired") || text.contains("invalid") || text.contains("token") {
+                return .invalidCode
+            }
+            print("⚠️ verifyEmailCode error: \(error.localizedDescription)")
+            return .error("We couldn't verify that code. Please try again.")
+        }
+
+        guard let user = supabase.auth.currentSession?.user else {
+            return .error("Signed in, but the session didn't stick. Please reopen the app.")
+        }
+
+        var mergedProgress = false
+
+        // Step 4: only meaningful when the account we landed on differs from
+        // the anonymous one. If Supabase converted the same user, there's
+        // nothing to claim.
+        if let anonymousID, anonymousID != user.id {
+            do {
+                let result: ClaimResult = try await supabase
+                    .rpc("claim_anonymous_account", params: ["p_anonymous_id": anonymousID.uuidString])
+                    .execute()
+                    .value
+                mergedProgress = result.status == "claimed"
+            } catch {
+                // The account is still usable; only the old device's history
+                // failed to carry over.
+                print("⚠️ claim_anonymous_account failed: \(error.localizedDescription)")
+            }
+        }
+
+        // Step 5.
+        await handleSignedIn(user: user)
+        Purchases.shared.attribution.setEmail(trimmedEmail)
+
+        // Pull the merged server state back down so the device reflects the
+        // combined history rather than only what it played locally.
+        await ProgressSyncManager.shared.pullAndMerge()
+
+        return .linked(mergedProgress: mergedProgress)
+    }
+
+    private struct ClaimResult: Decodable {
+        let status: String
+    }
+
+    // MARK: - Progress mirror
+
+    /// Uploads a progress snapshot. The server merges rather than overwrites,
+    /// so this is safe to call from any device at any time.
+    @discardableResult
+    func syncProgress(_ snapshot: ProgressSnapshot) async throws -> RemoteProgress {
+        let dayFormatter = DateFormatter()
+        dayFormatter.calendar = Calendar(identifier: .gregorian)
+        dayFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dayFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        dayFormatter.dateFormat = "yyyy-MM-dd"
+
+        return try await supabase
+            .rpc("sync_progress", params: [
+                "p_games_played":       AnyJSON.integer(snapshot.gamesPlayed),
+                "p_games_won":          AnyJSON.integer(snapshot.gamesWon),
+                "p_total_score":        AnyJSON.integer(snapshot.totalScore),
+                "p_current_streak":     AnyJSON.integer(snapshot.currentStreak),
+                "p_max_streak":         AnyJSON.integer(snapshot.maxStreak),
+                "p_guess_distribution": AnyJSON.array(snapshot.guessDistribution.map { AnyJSON.integer($0) }),
+                "p_completed_case_ids": AnyJSON.array(snapshot.completedCaseIDs.map { AnyJSON.string($0) }),
+                "p_last_played_date":   snapshot.lastPlayedDate.map { AnyJSON.string(dayFormatter.string(from: $0)) } ?? .null,
+                "p_last_daily_case":    snapshot.lastDailyCasePlayed.map { AnyJSON.string($0) } ?? .null,
+                "p_device_updated_at":  AnyJSON.string(ISO8601DateFormatter().string(from: snapshot.deviceUpdatedAt)),
+            ])
+            .execute()
+            .value
+    }
+
+    /// Reads this user's mirrored progress, or nil when they've never synced.
+    func fetchProgress() async throws -> RemoteProgress? {
+        guard let userID = supabase.auth.currentSession?.user.id else { return nil }
+        let rows: [RemoteProgress] = try await supabase
+            .from("player_progress")
+            .select("games_played, games_won, total_score, current_streak, max_streak, guess_distribution, completed_case_ids, last_played_date")
+            .eq("user_id", value: userID.uuidString)
+            .limit(1)
+            .execute()
+            .value
+        return rows.first
     }
 
     // MARK: - Sign in with Apple

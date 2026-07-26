@@ -345,10 +345,13 @@ struct AccountLinkingControls: View {
     private var account: AccountManager { AccountManager.shared }
 
     @State private var emailEntry = ""
+    @State private var codeEntry = ""
     @State private var isLinkingEmail = false
+    @State private var isVerifying = false
     @State private var emailLinkSent = false
     @State private var errorMessage: String?
     @FocusState private var emailFocused: Bool
+    @FocusState private var codeFocused: Bool
 
     private var emailIsValid: Bool {
         let t = emailEntry.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -359,7 +362,7 @@ struct AccountLinkingControls: View {
 
     var body: some View {
         if emailLinkSent {
-            sentConfirmation
+            codeEntryStep
         } else {
             VStack(spacing: 16) {
                 if AppFeatures.signInWithAppleEnabled {
@@ -402,13 +405,13 @@ struct AccountLinkingControls: View {
 
                     Button {
                         emailFocused = false
-                        Task { await linkEmail() }
+                        Task { await sendCode() }
                     } label: {
                         HStack(spacing: 8) {
                             if isLinkingEmail {
                                 ProgressView().tint(.white)
                             }
-                            Text(isLinkingEmail ? "Sending…" : "Email me a sign-in link")
+                            Text(isLinkingEmail ? "Sending…" : "Email me a code")
                                 .font(.body.weight(.semibold))
                         }
                         .frame(maxWidth: .infinity)
@@ -438,41 +441,111 @@ struct AccountLinkingControls: View {
         }
     }
 
-    private var sentConfirmation: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "envelope.badge.fill")
-                .font(.system(size: 34))
-                .foregroundStyle(.green)
-            Text("Check your email")
-                .font(.headline)
-            Text("We sent a link to \(emailEntry). Open it on any device — tapping it finishes securing your account.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+    /// Code entry. A typed code rather than a tapped link, matching the web,
+    /// and because a link opened in a mail app signs in the wrong place.
+    private var codeEntryStep: some View {
+        VStack(spacing: 16) {
+            VStack(spacing: 6) {
+                Image(systemName: "envelope.badge.fill")
+                    .font(.system(size: 30))
+                    .foregroundStyle(.blue)
+                Text("Check your email")
+                    .font(.headline)
+                Text("We sent a code to \(emailEntry). Enter it below to save your progress to your account.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            TextField("Code", text: $codeEntry)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
                 .multilineTextAlignment(.center)
-            Button("Use a different email") {
-                emailLinkSent = false
-                errorMessage = nil
+                .font(.system(.title2, design: .monospaced).weight(.semibold))
+                .focused($codeFocused)
+                .padding(.vertical, 13)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color(.secondarySystemGroupedBackground))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(codeFocused ? Color.accentColor : Color(.separator),
+                                lineWidth: codeFocused ? 2 : 1)
+                )
+
+            Button {
+                codeFocused = false
+                Task { await verifyCode() }
+            } label: {
+                HStack(spacing: 8) {
+                    if isVerifying { ProgressView().tint(.white) }
+                    Text(isVerifying ? "Verifying…" : "Verify and save my progress")
+                        .font(.body.weight(.semibold))
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .foregroundStyle(.white)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(codeEntry.count >= 4 && !isVerifying
+                              ? AnyShapeStyle(LinearGradient(colors: [.blue, .purple],
+                                                             startPoint: .leading, endPoint: .trailing))
+                              : AnyShapeStyle(Color.gray.opacity(0.4)))
+                )
+            }
+            .buttonStyle(.plain)
+            .disabled(codeEntry.count < 4 || isVerifying)
+
+            if let errorMessage {
+                Label(errorMessage, systemImage: "exclamationmark.circle.fill")
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            HStack(spacing: 16) {
+                Button("Resend code") { Task { await sendCode() } }
+                Button("Use a different email") {
+                    emailLinkSent = false
+                    codeEntry = ""
+                    errorMessage = nil
+                }
             }
             .font(.footnote)
-            .padding(.top, 2)
+            .disabled(isLinkingEmail || isVerifying)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
     }
 
-    private func linkEmail() async {
+    private func sendCode() async {
         isLinkingEmail = true
         errorMessage = nil
         defer { isLinkingEmail = false }
         do {
-            try await account.linkEmail(emailEntry)
+            try await account.sendEmailCode(emailEntry)
             emailLinkSent = true
         } catch {
-            // Previously this failure was only printed, so a user whose email
-            // was already taken or malformed saw the button spin and then
-            // nothing at all.
-            errorMessage = "We couldn't send that link. Check the address and try again."
-            print("⚠️ linkEmail error: \(error.localizedDescription)")
+            let text = error.localizedDescription.lowercased()
+            errorMessage = text.contains("rate")
+                ? "Too many requests just now. Wait a minute and try again."
+                : "We couldn't send that code. Check the address and try again."
+            print("⚠️ sendEmailCode error: \(error.localizedDescription)")
+        }
+    }
+
+    private func verifyCode() async {
+        isVerifying = true
+        errorMessage = nil
+        defer { isVerifying = false }
+
+        let outcome = await account.verifyEmailCode(emailEntry, code: codeEntry)
+        switch outcome {
+        case .linked:
+            // The view disappears on success: AccountView switches to the
+            // signed-in section once the account is no longer anonymous.
+            break
+        case .invalidCode, .error:
+            errorMessage = outcome.message
         }
     }
 }
