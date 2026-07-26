@@ -110,6 +110,36 @@ struct ContentView: View {
                             if subscriptionManager.isProUser {
                                 ProBadge(size: .small)
                             }
+
+                            // Persistent "not backed up" chip. The one-time
+                            // nudge is easy to dismiss and never returns, which
+                            // left anonymous users with no standing reminder
+                            // that their progress lives only on this device.
+                            // This stays until they link an account, and taps
+                            // straight through to the sign-in options.
+                            if AccountManager.shared.isReady,
+                               AccountManager.shared.isAnonymousAccount {
+                                Button {
+                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                    showingSecureAccount = true
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "exclamationmark.icloud.fill")
+                                            .font(.system(size: 12, weight: .semibold))
+                                        Text("Not synced")
+                                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                                            .fixedSize()
+                                    }
+                                    .foregroundStyle(.orange)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 5)
+                                    .background(
+                                        Capsule().fill(Color.orange.opacity(0.15))
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Your progress is not backed up. Tap to sign in.")
+                            }
                         }
                         .layoutPriority(1)
 
@@ -236,6 +266,7 @@ struct ContentView: View {
                 AccountView(initialCode: inviteCodeToRedeem)
             }
             .sheet(isPresented: $showingSecureAccount, onDismiss: {
+                // Full height, not a medium detent — see SecureAccountPromptView.
                 // Mark the nudge as spent only once it has actually been seen.
                 // Marking before presentation meant that if the sheet failed to
                 // present — plausible here, since this view stacks 19 .sheet
@@ -244,7 +275,6 @@ struct ContentView: View {
                 AccountManager.shared.markAccountSecuringPrompted()
             }) {
                 SecureAccountPromptView()
-                    .presentationDetents([.medium, .large])
             }
             .onChange(of: DeepLinkManager.shared.pendingInviteCode) { _, newValue in
                 if let code = newValue {
