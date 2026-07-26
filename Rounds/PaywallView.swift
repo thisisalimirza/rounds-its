@@ -13,6 +13,17 @@ import RevenueCatUI
 
 /// Main paywall view using RevenueCat's built-in PaywallView.
 /// Automatically shows the one-time retention offer when dismissed without purchasing.
+///
+/// **This is the paywall that ships.** Every Pro gate in the app presents this
+/// type. Its layout, copy, and — importantly — its Terms of Use and Privacy
+/// Policy links are configured in the **RevenueCat dashboard** paywall editor,
+/// not in this file. Editing `CustomRoundsPaywallView` below has no effect on
+/// what users see.
+///
+/// App Review (Guideline 3.1.2) checks those dashboard-configured links. If a
+/// 3.1.2 rejection cites missing/duplicated legal links on the paywall, fix it
+/// in RevenueCat → Paywalls, then re-publish the paywall. Keep the URLs in sync
+/// with `AppLinks.termsOfUse` / `AppLinks.privacyPolicy`.
 struct RoundsPaywallView: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -106,7 +117,12 @@ struct RoundsPaywallView: View {
 
 // MARK: - Custom Paywall View (Alternative)
 
-/// A custom-built paywall for full UI control
+/// A custom-built paywall for full UI control.
+///
+/// **Not currently shipped.** Nothing presents this type except the `#Preview`
+/// at the bottom of this file — `RoundsPaywallView` is what every Pro gate uses.
+/// It is kept as a working fallback in case we ever need to drop RevenueCatUI,
+/// so its legal copy is maintained to the same 3.1.2 standard.
 struct CustomRoundsPaywallView: View {
     @Environment(\.dismiss) private var dismiss
     
@@ -287,22 +303,59 @@ struct CustomRoundsPaywallView: View {
     
     // MARK: - Legal
     
+    /// Guideline 3.1.2 requires the subscription's title, length, and price per
+    /// period to be visible next to the purchase control, alongside functional
+    /// Terms of Use (EULA) and Privacy Policy links.
     private var legalSection: some View {
         VStack(spacing: 8) {
-            Text("Subscription automatically renews unless cancelled")
+            Text(subscriptionDisclosure)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-            
+
             HStack(spacing: 16) {
-                Link("Terms", destination: URL(string: "https://braskgroup.com/rounds.html")!)
+                Link("Terms of Use (EULA)", destination: AppLinks.terms)
                 Text("•")
-                Link("Privacy", destination: URL(string: "https://braskgroup.com/rounds.html")!)
+                Link("Privacy Policy", destination: AppLinks.privacy)
             }
             .font(.caption2)
             .foregroundStyle(.secondary)
         }
         .padding(.bottom)
+    }
+
+    /// Human-readable "<title> — <price>/<period>, auto-renews" line for the
+    /// currently selected package. Falls back to generic copy before offerings
+    /// have loaded or when nothing is selected yet.
+    private var subscriptionDisclosure: String {
+        guard let package = selectedPackage else {
+            return "Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel in your App Store account settings."
+        }
+
+        let price = package.storeProduct.localizedPriceString
+
+        switch package.packageType {
+        case .lifetime:
+            return "Rounds Pro Lifetime — \(price), one-time purchase. Not a subscription; nothing renews."
+        default:
+            let period = Self.periodDescription(for: package.packageType)
+            return "Rounds Pro \(period.title) — \(price) per \(period.unit). Renews automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel in your App Store account settings."
+        }
+    }
+
+    /// Maps a RevenueCat package type to display copy. Kept exhaustive-by-default
+    /// so a new package type degrades to neutral wording rather than lying about
+    /// the billing period.
+    private static func periodDescription(for type: PackageType) -> (title: String, unit: String) {
+        switch type {
+        case .annual:     return ("Yearly", "year")
+        case .sixMonth:   return ("6-Month", "6 months")
+        case .threeMonth: return ("Quarterly", "3 months")
+        case .twoMonth:   return ("2-Month", "2 months")
+        case .monthly:    return ("Monthly", "month")
+        case .weekly:     return ("Weekly", "week")
+        default:          return ("Subscription", "billing period")
+        }
     }
     
     // MARK: - Functions

@@ -546,7 +546,7 @@ struct AboutView: View {
             }
         }
 
-        Link(destination: URL(string: "https://braskgroup.com")!) {
+        Link(destination: AppLinks.companyURL) {
             HStack {
                 Label("More from Brask Group", systemImage: "building.2.fill")
                     .foregroundStyle(.primary)
@@ -562,7 +562,7 @@ struct AboutView: View {
 
     @ViewBuilder
     private var legalRows: some View {
-        Link(destination: URL(string: "https://braskgroup.com/rounds.html")!) {
+        Link(destination: AppLinks.privacy) {
             HStack {
                 Label("Privacy Policy", systemImage: "hand.raised.fill")
                     .foregroundStyle(.primary)
@@ -573,7 +573,7 @@ struct AboutView: View {
             }
         }
 
-        Link(destination: URL(string: "https://braskgroup.com/rounds.html")!) {
+        Link(destination: AppLinks.terms) {
             HStack {
                 Label("Terms of Service", systemImage: "doc.text.fill")
                     .foregroundStyle(.primary)
