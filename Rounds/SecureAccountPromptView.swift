@@ -63,9 +63,31 @@ struct SecureAccountPromptView: View {
         .padding(.top, 8)
     }
 
-    /// Concrete consequences rather than a vague benefit. "Sync across devices"
-    /// does not tell someone they are one reinstall away from losing everything.
-    private var stakes: some View {
+    private var stakes: some View { AccountSyncStakes() }
+
+    private var reassurance: some View {
+        VStack(spacing: 6) {
+            Label("Takes about ten seconds", systemImage: "clock")
+            Text("We only use this to restore your account. No spam, no password to remember, and your data stays exactly where it is.")
+                .multilineTextAlignment(.center)
+        }
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 4)
+    }
+}
+
+#Preview {
+    SecureAccountPromptView()
+}
+
+/// The three concrete consequences of staying anonymous.
+///
+/// Shared by the post-game nudge and Settings → Account so the two cannot
+/// drift. Naming what is actually lost — this phone only, delete and it's
+/// gone, Pro won't follow you — lands where "sync across devices" does not.
+struct AccountSyncStakes: View {
+    var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             row(icon: "flame.fill", tint: .orange,
                 title: "Right now, nothing is backed up",
@@ -97,19 +119,4 @@ struct SecureAccountPromptView: View {
             Spacer(minLength: 0)
         }
     }
-
-    private var reassurance: some View {
-        VStack(spacing: 6) {
-            Label("Takes about ten seconds", systemImage: "clock")
-            Text("We only use this to restore your account. No spam, no password to remember, and your data stays exactly where it is.")
-                .multilineTextAlignment(.center)
-        }
-        .font(.footnote)
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 4)
-    }
-}
-
-#Preview {
-    SecureAccountPromptView()
 }
