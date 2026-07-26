@@ -288,6 +288,30 @@ struct CustomSubscriptionSettingsView: View {
                 }
             }
             
+            Link(destination: AppLinks.terms) {
+                HStack {
+                    Image(systemName: "doc.text.fill")
+                        .foregroundStyle(.blue)
+                    Text("Terms of Use (EULA)")
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Link(destination: AppLinks.privacy) {
+                HStack {
+                    Image(systemName: "hand.raised.fill")
+                        .foregroundStyle(.blue)
+                    Text("Privacy Policy")
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             Link(destination: URL(string: "mailto:support@braskgroup.com?subject=Rounds%20Subscription%20Support")!) {
                 HStack {
                     Image(systemName: "envelope.fill")
