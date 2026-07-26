@@ -127,12 +127,20 @@ final class AccountManager {
 
     // MARK: - Redeem a code
 
+    /// Mirrors the `status` values returned by the `redeem-code` edge function,
+    /// which in turn come from `public.claim_code()`. Any status added there
+    /// must be added here too — an unmapped status degrades to `.error`, which
+    /// tells the user "something went wrong" for what is really an ordinary,
+    /// explainable refusal.
     enum RedeemOutcome: String {
         case granted
         case alreadyPro = "already_pro"
         case invalidCode = "invalid_code"
         case ownCode = "own_code"
         case codeExhausted = "code_exhausted"
+        case codeInactive = "code_inactive"
+        case codeExpired = "code_expired"
+        case codeNotStarted = "code_not_started"
         case missingCode = "missing_code"
         case error
 
@@ -140,13 +148,18 @@ final class AccountManager {
 
         var message: String {
             switch self {
-            case .granted:       return "🎉 Rounds Pro unlocked!"
-            case .alreadyPro:    return "You already have Rounds Pro."
-            case .invalidCode:   return "That code isn't valid."
-            case .ownCode:       return "You can't redeem your own invite code."
-            case .codeExhausted: return "That code has already been used 3 times."
-            case .missingCode:   return "Please enter a code."
-            case .error:         return "Something went wrong. Please try again."
+            case .granted:        return "🎉 Rounds Pro unlocked!"
+            case .alreadyPro:     return "You already have Rounds Pro."
+            case .invalidCode:    return "That code isn't valid."
+            case .ownCode:        return "You can't redeem your own invite code."
+            // Quotas vary per code (an invite allows 3, a campaign code can
+            // allow thousands), so this stays deliberately unquantified.
+            case .codeExhausted:  return "That code has been fully claimed."
+            case .codeInactive:   return "That code is no longer active."
+            case .codeExpired:    return "That code has expired."
+            case .codeNotStarted: return "That code isn't active yet."
+            case .missingCode:    return "Please enter a code."
+            case .error:          return "Something went wrong. Please try again."
             }
         }
     }
@@ -163,6 +176,12 @@ final class AccountManager {
             )
             let outcome = RedeemOutcome(rawValue: resp.status ?? "error") ?? .error
             if outcome.succeeded {
+                // Record attribution before refreshing, so the campaign is
+                // attached to the RevenueCat customer by the time the refreshed
+                // CustomerInfo (and any later purchase) is reported.
+                if let slug = resp.campaignSlug {
+                    applyCampaignAttribution(slug: slug, source: resp.source)
+                }
                 await SubscriptionManager.shared.refreshCustomerInfo()
                 await refreshStatus()
             }
@@ -171,6 +190,35 @@ final class AccountManager {
             print("⚠️ redeem error: \(error.localizedDescription)")
             return .error
         }
+    }
+
+    // MARK: - Campaign attribution
+
+    /// Mirrors a redeemed campaign into RevenueCat and PostHog.
+    ///
+    /// The authoritative record is the `redemptions` row written server-side by
+    /// `claim_code()`; this exists so the same campaign label shows up in the
+    /// two places we actually read numbers from — RevenueCat's revenue reporting
+    /// and PostHog's retention cohorts. Without it we can count installs per
+    /// creator but never revenue per creator, which is the number that decides
+    /// whether a campaign paid for itself.
+    ///
+    /// `$campaign` / `$mediaSource` / `$creative` are RevenueCat's reserved
+    /// attribution attribute names; using the reserved names is what makes them
+    /// appear in RevenueCat's own charts rather than as arbitrary custom fields.
+    private func applyCampaignAttribution(slug: String, source: String?) {
+        Purchases.shared.attribution.setCampaign(slug)
+        Purchases.shared.attribution.setMediaSource(source ?? "campaign")
+
+        AnalyticsManager.shared.setUserProperties([
+            "campaign": slug,
+            "campaign_source": source ?? "campaign",
+            "attributed_at": ISO8601DateFormatter().string(from: Date()),
+        ])
+        AnalyticsManager.shared.track("campaign_attributed", properties: [
+            "campaign": slug,
+            "source": source ?? "campaign",
+        ])
     }
 
     // MARK: - Differential diagnosis (Claude, via the `ddx` edge function)
@@ -416,6 +464,19 @@ nonisolated private struct AccountStatusResponse: Decodable {
 nonisolated private struct RedeemCodeResponse: Decodable {
     let status: String?
     let source: String?
+    /// Set when the redeemed code belonged to a marketing campaign. Used to
+    /// mirror attribution into RevenueCat and PostHog from the client.
+    let campaignId: String?
+    let campaignSlug: String?
+    let grantDuration: String?
+
+    enum CodingKeys: String, CodingKey {
+        case status
+        case source
+        case campaignId = "campaign_id"
+        case campaignSlug = "campaign_slug"
+        case grantDuration = "grant_duration"
+    }
 }
 
 // MARK: - Differential diagnosis types
