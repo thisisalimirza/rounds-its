@@ -57,6 +57,9 @@ struct RoundsApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var showOnboarding = false
 
+    /// Used to flush the progress mirror when the app goes to the background.
+    @Environment(\.scenePhase) private var scenePhase
+
     init() {
         // Configure RevenueCat on app launch
         // This is nonisolated and safe to call during init
@@ -133,6 +136,20 @@ struct RoundsApp: App {
                     // Ensure a (silent, anonymous) account exists and tie it to
                     // RevenueCat so Pro syncs across devices; loads referral status.
                     await AccountManager.shared.bootstrap()
+
+                    // Mirror on-device progress to the account. The server
+                    // merges rather than overwrites, so this is safe even from
+                    // a device that is behind — see public.sync_progress.
+                    ProgressSyncManager.shared.configure(modelContext: sharedModelContainer.mainContext)
+                    await ProgressSyncManager.shared.pushIfPossible(force: true)
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    // Backgrounding is the reliable moment to capture a
+                    // session's results; pushing per-game would fire a round
+                    // trip for every case played.
+                    if phase == .background {
+                        Task { await ProgressSyncManager.shared.pushIfPossible(force: true) }
+                    }
                 }
                 .sheet(isPresented: $showOnboarding) {
                     OnboardingView()
