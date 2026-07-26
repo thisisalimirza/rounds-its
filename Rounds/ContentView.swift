@@ -110,36 +110,6 @@ struct ContentView: View {
                             if subscriptionManager.isProUser {
                                 ProBadge(size: .small)
                             }
-
-                            // Persistent "not backed up" chip. The one-time
-                            // nudge is easy to dismiss and never returns, which
-                            // left anonymous users with no standing reminder
-                            // that their progress lives only on this device.
-                            // This stays until they link an account, and taps
-                            // straight through to the sign-in options.
-                            if AccountManager.shared.isReady,
-                               AccountManager.shared.isAnonymousAccount {
-                                Button {
-                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                    showingSecureAccount = true
-                                } label: {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "exclamationmark.icloud.fill")
-                                            .font(.system(size: 12, weight: .semibold))
-                                        Text("Not synced")
-                                            .font(.system(size: 11, weight: .bold, design: .rounded))
-                                            .fixedSize()
-                                    }
-                                    .foregroundStyle(.orange)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 5)
-                                    .background(
-                                        Capsule().fill(Color.orange.opacity(0.15))
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Your progress is not backed up. Tap to sign in.")
-                            }
                         }
                         .layoutPriority(1)
 
@@ -186,6 +156,54 @@ struct ContentView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
                     .padding(.bottom, 12)
+
+                    // MARK: - Not-backed-up banner
+
+                    // Deliberately its own full-width row rather than a pill in
+                    // the header. The header already carries the logo, title,
+                    // Pro badge, achievements and streak; adding a sixth item
+                    // squeezed the row until the title truncated to "R…" and the
+                    // Pro badge and streak pill both clipped. A banner also has
+                    // room to say what is actually at risk, which "Not synced"
+                    // on its own does not.
+                    if AccountManager.shared.isReady,
+                       AccountManager.shared.isAnonymousAccount {
+                        Button {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            showingSecureAccount = true
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "exclamationmark.icloud.fill")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(.orange)
+
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text("Your progress isn't backed up")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(.primary)
+                                    Text("Sign in so it survives a new phone")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                Spacer(minLength: 8)
+
+                                Text("Sign in")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(.orange)
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(Color.orange.opacity(0.12))
+                            )
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 12)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Your progress isn't backed up. Tap to sign in.")
+                    }
 
                     // MARK: - Main Content (Tab-based)
                     TabView(selection: $selectedTab) {
