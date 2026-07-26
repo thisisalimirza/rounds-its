@@ -104,9 +104,6 @@ struct AccountView: View {
         }
     }
 
-    // MARK: - Pro status
-
-    @ViewBuilder
     // MARK: - Beta controls
 
     /// Beta-only Pro/free override, surfaced here because this is the screen
@@ -139,6 +136,9 @@ struct AccountView: View {
         }
     }
 
+    // MARK: - Pro status
+
+    @ViewBuilder
     private var proSection: some View {
         Section {
             if subscription.isProUser {
@@ -362,21 +362,23 @@ struct AccountLinkingControls: View {
             sentConfirmation
         } else {
             VStack(spacing: 16) {
-                SignInWithAppleButton(.signIn) { request in
-                    account.configureAppleRequest(request)
-                } onCompletion: { result in
-                    Task { await account.handleAppleSignIn(result) }
-                }
-                .signInWithAppleButtonStyle(.black)
-                .frame(height: 50)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                if AppFeatures.signInWithAppleEnabled {
+                    SignInWithAppleButton(.signIn) { request in
+                        account.configureAppleRequest(request)
+                    } onCompletion: { result in
+                        Task { await account.handleAppleSignIn(result) }
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 50)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
-                HStack(spacing: 12) {
-                    Rectangle().fill(.quaternary).frame(height: 1)
-                    Text("or")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                    Rectangle().fill(.quaternary).frame(height: 1)
+                    HStack(spacing: 12) {
+                        Rectangle().fill(.quaternary).frame(height: 1)
+                        Text("or")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        Rectangle().fill(.quaternary).frame(height: 1)
+                    }
                 }
 
                 VStack(spacing: 10) {
