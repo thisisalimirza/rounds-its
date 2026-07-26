@@ -697,6 +697,10 @@ struct LeaderboardRow: Codable, Sendable {
     /// and would defeat the point of comparing.
     var signature: Int {
         var hasher = Hasher()
+        // Included so that removing a leaderboard profile and building a new
+        // one always re-pushes: the replacement gets a fresh playerID, which
+        // would otherwise be the only difference and get skipped.
+        hasher.combine(legacy_player_id)
         hasher.combine(display_name)
         hasher.combine(school_id)
         hasher.combine(state)

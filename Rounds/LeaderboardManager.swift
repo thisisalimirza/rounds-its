@@ -2,12 +2,19 @@
 //  LeaderboardManager.swift
 //  Rounds
 //
-//  CloudKit-backed leaderboard manager
+//  Leaderboard standings, read from CloudKit and Supabase and ranked over the
+//  union of the two.
+//
+//  Writes still go to CloudKit here; the Supabase entry is written by
+//  ProgressSyncManager alongside the rest of the account. Reading both is a
+//  transition measure — see SupabaseLeaderboard for why, and for what comes
+//  out once adoption is high enough.
 //
 
 import Foundation
 import CloudKit
 import SwiftData
+import Supabase
 
 // MARK: - CloudKit Record Types
 
@@ -27,6 +34,38 @@ private enum RecordField {
     static let gamesWon = "gamesWon"
     static let visibilityLevel = "visibilityLevel"
     static let lastUpdated = "lastUpdated"
+}
+
+// MARK: - Filters
+
+extension LeaderboardFilter {
+    /// The CloudKit half of the shared filter. Lives here, next to the field
+    /// names it depends on, so `LeaderboardFilter` itself stays store-agnostic.
+    ///
+    /// CloudKit's public database supports no OR, which is why every scope
+    /// above school matches only players who chose global visibility.
+    var cloudKitPredicate: NSPredicate {
+        let global = LeaderboardVisibility.global.rawValue
+
+        switch self {
+        case .school(let schoolID):
+            return NSPredicate(format: "%K == %@", RecordField.schoolID, schoolID)
+        case .state(let state):
+            return NSPredicate(format: "%K == %@ AND %K == %@",
+                               RecordField.state, state,
+                               RecordField.visibilityLevel, global)
+        case .country(let country):
+            return NSPredicate(format: "%K == %@ AND %K == %@",
+                               RecordField.country, country,
+                               RecordField.visibilityLevel, global)
+        case .national:
+            return NSPredicate(format: "%K == %@ AND %K == %@",
+                               RecordField.country, "US",
+                               RecordField.visibilityLevel, global)
+        case .global:
+            return NSPredicate(format: "%K == %@", RecordField.visibilityLevel, global)
+        }
+    }
 }
 
 // MARK: - Leaderboard Manager
@@ -96,19 +135,26 @@ final class LeaderboardManager {
 
         let record: CKRecord
 
-        // Check if we have an existing record
+        // Every path must land on a deterministic record id.
+        //
+        // This previously fell back to `CKRecord(recordType:)` with no id when
+        // fetching the existing record failed, which CloudKit answers by
+        // generating a fresh UUID. The fetch fails on an ordinary network
+        // blip, not just a missing record, so each failure minted another row
+        // for the same player — which is why one playerID holds three entries
+        // in the live data. Naming the record after the player makes a retry
+        // overwrite instead of duplicate.
+        let canonicalID = CKRecord.ID(recordName: "player_\(profile.playerID)")
+
         if let existingRecordID = profile.cloudKitRecordID {
             let recordID = CKRecord.ID(recordName: existingRecordID)
             do {
                 record = try await publicDatabase.record(for: recordID)
             } catch {
-                // Record doesn't exist, create new one
-                record = CKRecord(recordType: RecordType.leaderboardEntry)
+                record = CKRecord(recordType: RecordType.leaderboardEntry, recordID: canonicalID)
             }
         } else {
-            // Create new record with player ID as record name for easy lookup
-            let recordID = CKRecord.ID(recordName: "player_\(profile.playerID)")
-            record = CKRecord(recordType: RecordType.leaderboardEntry, recordID: recordID)
+            record = CKRecord(recordType: RecordType.leaderboardEntry, recordID: canonicalID)
         }
 
         // Update record fields
@@ -133,8 +179,21 @@ final class LeaderboardManager {
         profile.lastSyncedAt = Date()
     }
 
-    /// Delete leaderboard entry from CloudKit
+    /// Removes the player from the leaderboard, in both stores.
+    ///
+    /// Leaving Supabase out would make "remove me from the leaderboard" a lie
+    /// as soon as the merged read landed: the CloudKit row would go and the
+    /// Supabase one would keep them listed. The Supabase delete goes first, so
+    /// a CloudKit failure can't leave them visible.
     func deleteProfile(profile: LeaderboardProfile) async throws {
+        if let userID = AccountManager.shared.authUserID {
+            try await AccountManager.shared.supabase
+                .from("leaderboard_entries")
+                .delete()
+                .eq("user_id", value: userID.uuidString)
+                .execute()
+        }
+
         guard let recordIDName = profile.cloudKitRecordID else { return }
 
         let recordID = CKRecord.ID(recordName: recordIDName)
@@ -151,8 +210,7 @@ final class LeaderboardManager {
 
         defer { isLoading = false }
 
-        let predicate = NSPredicate(format: "%K == %@", RecordField.schoolID, schoolID)
-        let entries = try await fetchLeaderboard(predicate: predicate, currentPlayerID: currentPlayerID)
+        let entries = try await fetchLeaderboard(filter: .school(schoolID), currentPlayerID: currentPlayerID)
 
         schoolLeaderboard = entries
         schoolRank = entries.first { $0.isCurrentUser }?.rank
@@ -185,16 +243,9 @@ final class LeaderboardManager {
 
         defer { isLoading = false }
 
-        // CloudKit public database does NOT support OR predicates
-        // Only show globally visible users on state leaderboard
-        // Users who chose "School Only" privacy won't appear here (expected behavior)
-        let predicate = NSPredicate(
-            format: "%K == %@ AND %K == %@",
-            RecordField.state, state,
-            RecordField.visibilityLevel, LeaderboardVisibility.global.rawValue
-        )
-
-        let entries = try await fetchLeaderboard(predicate: predicate, currentPlayerID: currentPlayerID)
+        // Users who chose "School Only" privacy won't appear here (expected
+        // behavior) — see LeaderboardFilter.cloudKitPredicate.
+        let entries = try await fetchLeaderboard(filter: .state(state), currentPlayerID: currentPlayerID)
 
         stateLeaderboard = entries
         stateRank = entries.first { $0.isCurrentUser }?.rank
@@ -212,15 +263,7 @@ final class LeaderboardManager {
 
         defer { isLoading = false }
 
-        // CloudKit public database does NOT support OR predicates
-        // Only show globally visible users on country leaderboard
-        let predicate = NSPredicate(
-            format: "%K == %@ AND %K == %@",
-            RecordField.country, country,
-            RecordField.visibilityLevel, LeaderboardVisibility.global.rawValue
-        )
-
-        let entries = try await fetchLeaderboard(predicate: predicate, currentPlayerID: currentPlayerID)
+        let entries = try await fetchLeaderboard(filter: .country(country), currentPlayerID: currentPlayerID)
 
         countryLeaderboard = entries
         countryRank = entries.first { $0.isCurrentUser }?.rank
@@ -234,15 +277,7 @@ final class LeaderboardManager {
 
         defer { isLoading = false }
 
-        // CloudKit public database does NOT support OR predicates
-        // Only show globally visible US users on national leaderboard
-        let predicate = NSPredicate(
-            format: "%K == %@ AND %K == %@",
-            RecordField.country, "US",
-            RecordField.visibilityLevel, LeaderboardVisibility.global.rawValue
-        )
-
-        let entries = try await fetchLeaderboard(predicate: predicate, currentPlayerID: currentPlayerID)
+        let entries = try await fetchLeaderboard(filter: .national, currentPlayerID: currentPlayerID)
 
         nationalLeaderboard = entries
         nationalRank = entries.first { $0.isCurrentUser }?.rank
@@ -260,14 +295,7 @@ final class LeaderboardManager {
 
         defer { isLoading = false }
 
-        // CloudKit public database does NOT support OR predicates
-        // Only show globally visible users on global leaderboard
-        let predicate = NSPredicate(
-            format: "%K == %@",
-            RecordField.visibilityLevel, LeaderboardVisibility.global.rawValue
-        )
-
-        let entries = try await fetchLeaderboard(predicate: predicate, currentPlayerID: currentPlayerID)
+        let entries = try await fetchLeaderboard(filter: .global, currentPlayerID: currentPlayerID)
 
         globalLeaderboard = entries
         globalRank = entries.first { $0.isCurrentUser }?.rank
@@ -279,43 +307,150 @@ final class LeaderboardManager {
 
     // MARK: - Private Helpers
 
-    private func fetchLeaderboard(predicate: NSPredicate, currentPlayerID: String) async throws -> [LeaderboardEntry] {
-        let query = CKQuery(recordType: RecordType.leaderboardEntry, predicate: predicate)
-        query.sortDescriptors = [NSSortDescriptor(key: RecordField.totalScore, ascending: false)]
+    /// Reads both stores and ranks the union.
+    ///
+    /// See SupabaseLeaderboard for why both: a player only reaches Supabase
+    /// once they install a build that writes it, so reading Supabase alone
+    /// would empty the standings on release day, and reading CloudKit alone
+    /// keeps the duplicates.
+    ///
+    /// Either store may fail on its own without failing the fetch — a leaderboard
+    /// missing the half that didn't load beats an error screen. Only a double
+    /// failure throws.
+    private func fetchLeaderboard(filter: LeaderboardFilter, currentPlayerID: String) async throws -> [LeaderboardEntry] {
+        async let cloudTask = fetchCloudKitRecords(filter: filter)
+        async let remoteTask = SupabaseLeaderboard.fetch(filter)
 
-        let operation = CKQueryOperation(query: query)
-        operation.resultsLimit = 100 // Limit to top 100
+        var cloudRecords: [CKRecord] = []
+        var remoteRows: [RemoteLeaderboardRow] = []
+        var cloudError: Error?
+        var remoteError: Error?
 
-        var records: [CKRecord] = []
+        do { cloudRecords = try await cloudTask } catch { cloudError = error }
+        do { remoteRows = try await remoteTask } catch { remoteError = error }
 
-        // Fetch records
-        let (matchResults, _) = try await publicDatabase.records(matching: query, resultsLimit: 100)
-
-        for (_, result) in matchResults {
-            if case .success(let record) = result {
-                records.append(record)
-            }
+        if let cloudError, remoteError != nil {
+            throw cloudError
         }
 
-        // Convert to LeaderboardEntry with ranks
-        let entries = records.enumerated().map { index, record in
-            LeaderboardEntry(
-                id: record.recordID.recordName,
-                playerID: record[RecordField.playerID] as? String ?? "",
+        return merge(cloudRecords: cloudRecords,
+                     remoteRows: remoteRows,
+                     currentPlayerID: currentPlayerID)
+    }
+
+    private func fetchCloudKitRecords(filter: LeaderboardFilter) async throws -> [CKRecord] {
+        let query = CKQuery(recordType: RecordType.leaderboardEntry,
+                            predicate: filter.cloudKitPredicate)
+        query.sortDescriptors = [NSSortDescriptor(key: RecordField.totalScore, ascending: false)]
+
+        let (matchResults, _) = try await publicDatabase.records(matching: query, resultsLimit: 100)
+
+        return matchResults.compactMap { _, result in
+            guard case .success(let record) = result else { return nil }
+            return record
+        }
+    }
+
+    /// Folds both stores into one ranked list.
+    ///
+    /// Keyed on the CloudKit `playerID`, which a Supabase row carries as
+    /// `legacy_player_id`, so a player present in both appears once. Supabase
+    /// wins where both have them: it is rewritten whenever the score changes,
+    /// while a CloudKit row is only as fresh as that device's last successful
+    /// save.
+    ///
+    /// Collapsing on that key also repairs the existing CloudKit duplicates for
+    /// everyone immediately — including players still on a build with the bug —
+    /// by keeping the highest-scoring row of each set.
+    private func merge(
+        cloudRecords: [CKRecord],
+        remoteRows: [RemoteLeaderboardRow],
+        currentPlayerID: String
+    ) -> [LeaderboardEntry] {
+        let currentUserID = AccountManager.shared.authUserID?.uuidString.lowercased()
+        let currentPlayer = currentPlayerID.lowercased()
+
+        struct Candidate {
+            let playerID: String
+            let displayName: String
+            let schoolID: String
+            let schoolName: String
+            let state: String
+            let country: String
+            let totalScore: Int
+            let gamesPlayed: Int
+            let gamesWon: Int
+            let isCurrentUser: Bool
+        }
+
+        var byIdentity: [String: Candidate] = [:]
+
+        for record in cloudRecords {
+            let playerID = (record[RecordField.playerID] as? String) ?? ""
+            let identity = playerID.lowercased()
+            guard !identity.isEmpty else { continue }
+
+            let score = record[RecordField.totalScore] as? Int ?? 0
+            if let existing = byIdentity[identity], existing.totalScore >= score { continue }
+
+            byIdentity[identity] = Candidate(
+                playerID: playerID,
                 displayName: record[RecordField.displayName] as? String ?? "Unknown",
                 schoolID: record[RecordField.schoolID] as? String ?? "",
                 schoolName: record[RecordField.schoolName] as? String ?? "",
                 state: record[RecordField.state] as? String ?? "",
                 country: record[RecordField.country] as? String ?? "",
-                totalScore: record[RecordField.totalScore] as? Int ?? 0,
+                totalScore: score,
                 gamesPlayed: record[RecordField.gamesPlayed] as? Int ?? 0,
                 gamesWon: record[RecordField.gamesWon] as? Int ?? 0,
-                rank: index + 1,
-                isCurrentUser: (record[RecordField.playerID] as? String) == currentPlayerID
+                isCurrentUser: identity == currentPlayer
             )
         }
 
-        return entries
+        for row in remoteRows {
+            byIdentity[row.identity] = Candidate(
+                playerID: row.legacy_player_id ?? row.user_id,
+                displayName: row.display_name.isEmpty ? "Unknown" : row.display_name,
+                schoolID: row.school_id,
+                schoolName: row.school_name,
+                state: row.state,
+                country: row.country,
+                totalScore: row.total_score,
+                gamesPlayed: row.games_played,
+                gamesWon: row.games_won,
+                // Matching on either identifier: the account is authoritative,
+                // but a device that hasn't linked one still knows its playerID.
+                isCurrentUser: row.user_id.lowercased() == currentUserID
+                    || row.identity == currentPlayer
+            )
+        }
+
+        // Ties broken by name so the order is stable between refreshes rather
+        // than following whatever the dictionary happened to hand back.
+        let sorted = byIdentity
+            .sorted {
+                $0.value.totalScore != $1.value.totalScore
+                    ? $0.value.totalScore > $1.value.totalScore
+                    : $0.value.displayName.localizedCaseInsensitiveCompare($1.value.displayName) == .orderedAscending
+            }
+            .prefix(100)
+
+        return sorted.enumerated().map { index, item in
+            LeaderboardEntry(
+                id: item.key,
+                playerID: item.value.playerID,
+                displayName: item.value.displayName,
+                schoolID: item.value.schoolID,
+                schoolName: item.value.schoolName,
+                state: item.value.state,
+                country: item.value.country,
+                totalScore: item.value.totalScore,
+                gamesPlayed: item.value.gamesPlayed,
+                gamesWon: item.value.gamesWon,
+                rank: index + 1,
+                isCurrentUser: item.value.isCurrentUser
+            )
+        }
     }
 
     /// Get cached leaderboard for a scope
