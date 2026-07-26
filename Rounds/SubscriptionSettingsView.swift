@@ -258,6 +258,25 @@ struct CustomSubscriptionSettingsView: View {
             }
             .padding(.vertical, 4)
 
+            // Reachable on TestFlight, not just local DEBUG builds. TestFlight
+            // auto-grants Pro so beta testers get the full app, which also made
+            // the free experience impossible to see — this is the escape hatch.
+            // `isBetaBuild` is false in App Store builds, so the row is absent
+            // there and the underlying flag is ignored even if it was left set.
+            if subscriptionManager.isBetaBuild {
+                Toggle(isOn: Binding(
+                    get: { subscriptionManager.isSimulatingFreeUser },
+                    set: { subscriptionManager.isSimulatingFreeUser = $0 }
+                )) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Simulate Free User")
+                        Text("See the app as a non-subscriber")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
             #if DEBUG
             Text("Debug controls → triple-tap \"Rounds\" on the home screen")
                 .font(.caption)
@@ -266,11 +285,11 @@ struct CustomSubscriptionSettingsView: View {
         } header: {
             Text("Debug Info")
         } footer: {
-            #if DEBUG
-            Text("'Simulate Free User' forces free tier so you can screenshot paywalls. Stripped from App Store builds.")
-            #else
-            Text("Use this to verify TestFlight detection and subscription status.")
-            #endif
+            if subscriptionManager.isBetaBuild {
+                Text("'Simulate Free User' forces the free tier so you can test paywalls and gated features. Beta builds only — App Store builds ignore it entirely. Some screens may need reopening to pick up the change.")
+            } else {
+                Text("Use this to verify TestFlight detection and subscription status.")
+            }
         }
     }
     

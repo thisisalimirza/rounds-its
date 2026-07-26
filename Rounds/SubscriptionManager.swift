@@ -31,6 +31,43 @@ final class SubscriptionManager {
     var isProUser: Bool {
         return hasProAccess()
     }
+
+    // MARK: - Beta overrides
+
+    /// UserDefaults key backing the "simulate free user" override.
+    static let simulateFreeUserKey = "debug_simulate_free_user"
+
+    /// True for builds where beta-only overrides are honoured: local DEBUG
+    /// builds and TestFlight. False for App Store builds, which must never let
+    /// a stale UserDefaults value affect what a paying customer sees.
+    var isBetaBuild: Bool {
+        #if DEBUG
+        return true
+        #else
+        return isTestFlightBuild()
+        #endif
+    }
+
+    /// Stored mirror of the UserDefaults flag.
+    ///
+    /// @Observable tracks stored properties, not UserDefaults, so reading the
+    /// defaults directly would let the toggle flip without any view re-rendering
+    /// — the app would keep showing Pro until something else happened to
+    /// invalidate. Keeping a stored copy is what makes the switch take effect
+    /// immediately; UserDefaults is only for persistence across launches.
+    private var simulateFreeUserStorage: Bool =
+        UserDefaults.standard.bool(forKey: "debug_simulate_free_user")
+
+    /// Whether the free-user simulation is currently on. Setting it is a no-op
+    /// outside beta builds.
+    var isSimulatingFreeUser: Bool {
+        get { isBetaBuild && simulateFreeUserStorage }
+        set {
+            guard isBetaBuild else { return }
+            simulateFreeUserStorage = newValue
+            UserDefaults.standard.set(newValue, forKey: Self.simulateFreeUserKey)
+        }
+    }
     
     // MARK: - Constants (nonisolated for cross-actor access)
     
@@ -198,14 +235,19 @@ final class SubscriptionManager {
     /// Check if user has active Pro subscription
     /// Note: This is @MainActor isolated - call from SwiftUI views or main thread only
     func hasProAccess() -> Bool {
-        // DEBUG-only: allow simulating a free user for screenshots / UI testing
-        // (toggled from the triple-tap debug menu). Never compiled into App Store builds.
-        #if DEBUG
-        if UserDefaults.standard.bool(forKey: "debug_simulate_free_user") {
-            print("🧪 Simulating free user (debug override active)")
+        // Beta-only: allow simulating a free user for screenshots and for
+        // testing the free-tier experience.
+        //
+        // This used to be #if DEBUG, which meant it was compiled out of
+        // TestFlight builds — those are Release builds, so DEBUG is undefined.
+        // Combined with the TestFlight auto-grant below, that made it
+        // impossible to see the free experience on TestFlight at all. The gate
+        // is now a runtime check that covers DEBUG *and* TestFlight, while
+        // still ignoring the flag entirely in App Store builds.
+        if isBetaBuild, simulateFreeUserStorage {
+            print("🧪 Simulating free user (beta override active)")
             return false
         }
-        #endif
 
         // Auto-grant Pro access for TestFlight users
         if isTestFlightBuild() {

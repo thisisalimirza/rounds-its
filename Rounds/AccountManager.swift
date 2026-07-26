@@ -108,10 +108,30 @@ final class AccountManager {
         isReady = true
     }
 
+    /// Normalizes an auth email to nil when it carries no actual address.
+    ///
+    /// Supabase/GoTrue reports an anonymous user's email as an **empty string**
+    /// rather than null. Assigning that straight to `accountEmail` made
+    /// `isAnonymousAccount` (which tests `== nil`) return false for every
+    /// anonymous user, with two consequences:
+    ///
+    ///   * Settings → Account showed "Synced & signed in" — with a blank line
+    ///     where the address should be — to users who had never signed in.
+    ///   * `shouldOfferAccountSecuring` was false for everyone, so the
+    ///     secure-your-account nudge could never fire regardless of timing.
+    ///
+    /// Together with the ContentView `.task` race, that is why all 28 production
+    /// accounts were anonymous. Fixing the race alone would not have been enough.
+    private static func normalizedEmail(_ raw: String?) -> String? {
+        guard let raw else { return nil }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
     private func handleSignedIn(user: User) async {
         let id = user.id.uuidString.lowercased()
         self.userID = id
-        self.accountEmail = user.email
+        self.accountEmail = Self.normalizedEmail(user.email)
 
         // Tie RevenueCat identity to this account so Pro syncs everywhere.
         do {
@@ -121,7 +141,9 @@ final class AccountManager {
         }
 
         // Set the email attribute so this customer is searchable in RevenueCat.
-        if let email = user.email {
+        // Normalized, so anonymous users don't get an empty-string email
+        // attribute written against their RevenueCat customer.
+        if let email = Self.normalizedEmail(user.email) {
             Purchases.shared.attribution.setEmail(email)
         }
 

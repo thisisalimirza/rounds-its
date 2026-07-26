@@ -25,10 +25,15 @@ struct DebugMenuView: View {
 
                 // MARK: - Subscription simulation
                 Section {
+                    // Routed through SubscriptionManager rather than writing
+                    // UserDefaults directly: the manager keeps a stored mirror
+                    // of this flag so @Observable views re-render on change.
+                    // Writing the defaults behind its back would set the value
+                    // without invalidating anything.
                     Toggle(isOn: Binding(
-                        get: { UserDefaults.standard.bool(forKey: "debug_simulate_free_user") },
+                        get: { SubscriptionManager.shared.isSimulatingFreeUser },
                         set: {
-                            UserDefaults.standard.set($0, forKey: "debug_simulate_free_user")
+                            SubscriptionManager.shared.isSimulatingFreeUser = $0
                             refreshToggle.toggle()
                         }
                     )) {
@@ -97,7 +102,7 @@ struct DebugMenuView: View {
                     DebugRow(label: "Plan", value: sm.subscriptionStatus.displayName)
                     DebugRow(
                         label: "Free Simulation",
-                        value: UserDefaults.standard.bool(forKey: "debug_simulate_free_user") ? "🟠 ON" : "off"
+                        value: SubscriptionManager.shared.isSimulatingFreeUser ? "🟠 ON" : "off"
                     )
                     DebugRow(
                         label: "Seen Retention",
