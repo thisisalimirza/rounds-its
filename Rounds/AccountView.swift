@@ -104,9 +104,6 @@ struct AccountView: View {
         }
     }
 
-    // MARK: - Pro status
-
-    @ViewBuilder
     // MARK: - Beta controls
 
     /// Beta-only Pro/free override, surfaced here because this is the screen
@@ -139,6 +136,9 @@ struct AccountView: View {
         }
     }
 
+    // MARK: - Pro status
+
+    @ViewBuilder
     private var proSection: some View {
         Section {
             if subscription.isProUser {
