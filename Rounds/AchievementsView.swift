@@ -225,7 +225,11 @@ final class AchievementProgress {
     }
 }
 
-struct CategoryStat: Codable, Hashable {
+/// nonisolated so it can be encoded off the main actor. It is stored inside
+/// `AchievementSyncRow`, which has to be `Sendable` to be uploaded, and a
+/// main-actor-isolated `Codable` conformance cannot satisfy that. Two Ints have
+/// no reason to be actor-bound anyway.
+nonisolated struct CategoryStat: Codable, Hashable {
     var totalCases: Int
     var wins: Int
     

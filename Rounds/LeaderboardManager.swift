@@ -318,15 +318,19 @@ final class LeaderboardManager {
     /// missing the half that didn't load beats an error screen. Only a double
     /// failure throws.
     private func fetchLeaderboard(filter: LeaderboardFilter, currentPlayerID: String) async throws -> [LeaderboardEntry] {
-        async let cloudTask = fetchCloudKitRecords(filter: filter)
+        // Only the Supabase half runs as `async let`. Its rows are Sendable, so
+        // they can leave the child task; `[CKRecord]` is not, and returning it
+        // out of one would be crossing an actor boundary with a mutable
+        // reference type. CloudKit is awaited directly instead — still
+        // concurrent, because the request above is already in flight.
         async let remoteTask = SupabaseLeaderboard.fetch(filter)
 
         var cloudRecords: [CKRecord] = []
-        var remoteRows: [RemoteLeaderboardRow] = []
         var cloudError: Error?
-        var remoteError: Error?
+        do { cloudRecords = try await fetchCloudKitRecords(filter: filter) } catch { cloudError = error }
 
-        do { cloudRecords = try await cloudTask } catch { cloudError = error }
+        var remoteRows: [RemoteLeaderboardRow] = []
+        var remoteError: Error?
         do { remoteRows = try await remoteTask } catch { remoteError = error }
 
         if let cloudError, remoteError != nil {

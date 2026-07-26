@@ -225,21 +225,21 @@ final class ProgressSyncManager {
         do {
             let history = try context.fetch(FetchDescriptor<CaseHistoryEntry>())
             try await reconcile(table: "case_history", userID: uid,
-                                rows: history.map { CaseHistoryRow($0, userID: uid) })
+                                rows: history.map { CaseHistorySyncRow($0, userID: uid) })
 
             let misses = try context.fetch(FetchDescriptor<MissedItem>())
             try await reconcile(table: "missed_items", userID: uid,
-                                rows: misses.map { MissedItemRow($0, userID: uid) })
+                                rows: misses.map { MissedItemSyncRow($0, userID: uid) })
 
             let ddx = try context.fetch(FetchDescriptor<DDxSession>())
             try await reconcile(table: "ddx_sessions", userID: uid,
-                                rows: ddx.map { DDxSessionRow($0, userID: uid) })
+                                rows: ddx.map { DDxSessionSyncRow($0, userID: uid) })
 
             // Single-row tables. Nothing to reconcile — just overwrite, but
             // only when the row would actually differ, so a phone sitting on
             // the home screen isn't writing the same row every minute.
             if let progress = try context.fetch(FetchDescriptor<AchievementProgress>()).first {
-                let row = AchievementRow(progress, userID: uid)
+                let row = AchievementSyncRow(progress, userID: uid)
                 if changed("achievements", row.signature) {
                     try await upsert(table: "achievements", conflict: "user_id", rows: [row])
                     pushedSignatures["achievements"] = row.signature
@@ -248,7 +248,7 @@ final class ProgressSyncManager {
 
             if let profile = try context.fetch(FetchDescriptor<LeaderboardProfile>()).first,
                let stats = try context.fetch(FetchDescriptor<PlayerStats>()).first {
-                let row = LeaderboardRow(profile, stats: stats, userID: uid)
+                let row = LeaderboardSyncRow(profile, stats: stats, userID: uid)
                 if changed("leaderboard_entries", row.signature) {
                     try await upsert(table: "leaderboard_entries", conflict: "user_id", rows: [row])
                     pushedSignatures["leaderboard_entries"] = row.signature
@@ -347,7 +347,7 @@ final class ProgressSyncManager {
         pushedSignatures.removeAll()
 
         do {
-            let remoteHistory: [CaseHistoryRow] = try await client
+            let remoteHistory: [CaseHistorySyncRow] = try await client
                 .from("case_history").select().eq("user_id", value: uid)
                 .execute().value
             let localHistory = Set(try context.fetch(FetchDescriptor<CaseHistoryEntry>())
@@ -356,7 +356,7 @@ final class ProgressSyncManager {
                 if let entry = row.makeEntry() { context.insert(entry) }
             }
 
-            let remoteMisses: [MissedItemRow] = try await client
+            let remoteMisses: [MissedItemSyncRow] = try await client
                 .from("missed_items").select().eq("user_id", value: uid)
                 .execute().value
             let localMisses = Set(try context.fetch(FetchDescriptor<MissedItem>())
@@ -365,7 +365,7 @@ final class ProgressSyncManager {
                 if let item = row.makeItem() { context.insert(item) }
             }
 
-            let remoteDDx: [DDxSessionRow] = try await client
+            let remoteDDx: [DDxSessionSyncRow] = try await client
                 .from("ddx_sessions").select().eq("user_id", value: uid)
                 .execute().value
             let localDDx = Set(try context.fetch(FetchDescriptor<DDxSession>())
@@ -377,7 +377,7 @@ final class ProgressSyncManager {
             // Only when this device has no profile of its own — the local one
             // is what the user last chose here, and it is already on its way up.
             if try context.fetch(FetchDescriptor<LeaderboardProfile>()).first == nil {
-                let remoteEntry: [LeaderboardRow] = try await client
+                let remoteEntry: [LeaderboardSyncRow] = try await client
                     .from("leaderboard_entries").select().eq("user_id", value: uid).limit(1)
                     .execute().value
                 if let row = remoteEntry.first, !row.display_name.isEmpty {
@@ -388,7 +388,7 @@ final class ProgressSyncManager {
             // Achievements merge rather than replace: unlocks are a union and
             // the counters only ever grow, so a device that is behind can't
             // take badges away from one that is ahead.
-            let remoteAchievements: [AchievementRow] = try await client
+            let remoteAchievements: [AchievementSyncRow] = try await client
                 .from("achievements").select().eq("user_id", value: uid).limit(1)
                 .execute().value
             if let remote = remoteAchievements.first {
@@ -429,12 +429,12 @@ struct ProgressSnapshot: Encodable {
 
 /// A row whose identity the server and the device agree on, so reconciliation
 /// is a set difference rather than a replay.
-protocol SyncableRow: Encodable, Sendable {
+nonisolated protocol SyncableRow: Encodable, Sendable {
     var id: String { get }
 }
 
 /// Just enough of a row to answer "do you already have this one?".
-struct SyncedRowID: Decodable, Sendable {
+nonisolated struct SyncedRowID: Decodable, Sendable {
     let id: String
 }
 
@@ -443,7 +443,7 @@ struct SyncedRowID: Decodable, Sendable {
 /// Dates cross the wire as strings rather than relying on the client's date
 /// encoding strategy, which differs between the encoder PostgREST uses for
 /// writes and what Postgres returns on reads.
-enum SyncTime {
+nonisolated enum SyncTime {
     // nonisolated(unsafe) because these are shared from nonisolated row
     // initializers. Formatting and parsing on ISO8601DateFormatter is
     // thread-safe once configured, and nothing mutates these after setup —
@@ -481,7 +481,7 @@ enum SyncTime {
 
 // MARK: - Record rows
 
-struct CaseHistoryRow: Codable, SyncableRow {
+nonisolated struct CaseHistorySyncRow: Codable, SyncableRow {
     let id: String
     let user_id: String
     let case_id: String
@@ -496,7 +496,7 @@ struct CaseHistoryRow: Codable, SyncableRow {
     let was_daily_case: Bool
     let played_at: String
 
-    init(_ entry: CaseHistoryEntry, userID: String) {
+    @MainActor init(_ entry: CaseHistoryEntry, userID: String) {
         id = entry.id.uuidString
         user_id = userID
         case_id = entry.caseID.uuidString
@@ -515,7 +515,7 @@ struct CaseHistoryRow: Codable, SyncableRow {
     /// Rebuilds the local record, preserving the server's id and timestamp —
     /// the initializer generates fresh ones, which would make every pull
     /// duplicate the history it just downloaded.
-    func makeEntry() -> CaseHistoryEntry? {
+    @MainActor func makeEntry() -> CaseHistoryEntry? {
         guard let rowID = UUID(uuidString: id), let caseUUID = UUID(uuidString: case_id) else { return nil }
         let entry = CaseHistoryEntry(
             caseID: caseUUID,
@@ -535,7 +535,7 @@ struct CaseHistoryRow: Codable, SyncableRow {
     }
 }
 
-struct MissedItemRow: Codable, SyncableRow {
+nonisolated struct MissedItemSyncRow: Codable, SyncableRow {
     let id: String
     let user_id: String
     let source: String
@@ -545,7 +545,7 @@ struct MissedItemRow: Codable, SyncableRow {
     let reviewed: Bool
     let occurred_at: String
 
-    init(_ missed: MissedItem, userID: String) {
+    @MainActor init(_ missed: MissedItem, userID: String) {
         id = missed.id.uuidString
         user_id = userID
         source = missed.source
@@ -556,7 +556,7 @@ struct MissedItemRow: Codable, SyncableRow {
         occurred_at = SyncTime.string(from: missed.timestamp)
     }
 
-    func makeItem() -> MissedItem? {
+    @MainActor func makeItem() -> MissedItem? {
         guard let rowID = UUID(uuidString: id) else { return nil }
         // The model stores `source` as a raw string, so an unrecognised value
         // from a newer build round-trips intact instead of being dropped.
@@ -570,7 +570,7 @@ struct MissedItemRow: Codable, SyncableRow {
     }
 }
 
-struct DDxSessionRow: Codable, SyncableRow {
+nonisolated struct DDxSessionSyncRow: Codable, SyncableRow {
     let id: String
     let user_id: String
     let findings: String
@@ -580,7 +580,7 @@ struct DDxSessionRow: Codable, SyncableRow {
     let result: DifferentialResult?
     let created_at: String
 
-    init(_ session: DDxSession, userID: String) {
+    @MainActor init(_ session: DDxSession, userID: String) {
         id = session.id.uuidString
         user_id = userID
         findings = session.findings
@@ -591,7 +591,7 @@ struct DDxSessionRow: Codable, SyncableRow {
         created_at = SyncTime.string(from: session.timestamp)
     }
 
-    func makeSession() -> DDxSession? {
+    @MainActor func makeSession() -> DDxSession? {
         guard let rowID = UUID(uuidString: id), let result else { return nil }
         let session = DDxSession(findings: findings, context: context, result: result)
         session.id = rowID
@@ -600,7 +600,7 @@ struct DDxSessionRow: Codable, SyncableRow {
     }
 }
 
-struct AchievementRow: Codable, Sendable {
+nonisolated struct AchievementSyncRow: Codable, Sendable {
     let user_id: String
     let unlocked: [String]
     let first_hint_win_count: Int
@@ -609,7 +609,7 @@ struct AchievementRow: Codable, Sendable {
     let last_streak_freeze_reset: String?
     let updated_at: String
 
-    init(_ progress: AchievementProgress, userID: String) {
+    @MainActor init(_ progress: AchievementProgress, userID: String) {
         user_id = userID
         unlocked = progress.unlockedAchievements
         first_hint_win_count = progress.firstHintWinCount
@@ -640,7 +640,7 @@ struct AchievementRow: Codable, Sendable {
     /// The weekly streak-freeze allowance is deliberately left alone. It is a
     /// spendable Pro benefit, not a record of something earned, and taking the
     /// max would refill it by signing in on a second device.
-    func merge(into progress: AchievementProgress) {
+    @MainActor func merge(into progress: AchievementProgress) {
         let combined = Set(progress.unlockedAchievements).union(unlocked)
         if combined.count != progress.unlockedAchievements.count {
             progress.unlockedAchievements = Array(combined).sorted()
@@ -657,7 +657,7 @@ struct AchievementRow: Codable, Sendable {
     }
 }
 
-struct LeaderboardRow: Codable, Sendable {
+nonisolated struct LeaderboardSyncRow: Codable, Sendable {
     let user_id: String
     let display_name: String
     let school_id: String
@@ -672,7 +672,7 @@ struct LeaderboardRow: Codable, Sendable {
     let legacy_player_id: String?
     let updated_at: String
 
-    init(_ profile: LeaderboardProfile, stats: PlayerStats, userID: String) {
+    @MainActor init(_ profile: LeaderboardProfile, stats: PlayerStats, userID: String) {
         user_id = userID
         display_name = profile.displayName
         school_id = profile.schoolID
@@ -715,7 +715,7 @@ struct LeaderboardRow: Codable, Sendable {
     /// Restores the leaderboard identity on a device that has none, so a new
     /// phone keeps the player's school and display name instead of dropping
     /// them off the standings until they set it up again.
-    func makeProfile() -> LeaderboardProfile {
+    @MainActor func makeProfile() -> LeaderboardProfile {
         LeaderboardProfile(
             playerID: legacy_player_id.flatMap { $0.isEmpty ? nil : $0 } ?? UUID().uuidString,
             displayName: display_name,
