@@ -186,7 +186,7 @@ struct ShareTextGenerator {
         schoolName: String? = nil
     ) -> String {
         let hook = won ? "Think you can diagnose it faster? 🩺" : "This case stumped me — can you get it? 🩺"
-        let appStoreLink = "apps.apple.com/app/id6740487567"
+        let appStoreLink = AppLinks.appStoreDisplayURL
 
         if let caseID, !isDailyCase {
             // Non-daily: deep link opens the exact case; App Store link for new users

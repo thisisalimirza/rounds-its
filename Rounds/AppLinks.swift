@@ -17,9 +17,27 @@ import Foundation
 enum AppLinks {
     // MARK: - Marketing
 
+    /// The App Store numeric id for Rounds. Everything below derives from this,
+    /// so there is exactly one place to change it.
+    ///
+    /// History: share text in ShareResultView and LeaderboardView previously
+    /// hard-coded id6740487567 while this file used id6756315417. Only one can
+    /// be the live listing, so every share and invite sent from those screens —
+    /// the app's main organic growth loop — pointed somewhere wrong. Do not
+    /// reintroduce a literal store id anywhere else.
+    static let appStoreID = "6756315417"
+
     /// Public App Store listing for Rounds. Used in invite messages so a friend
     /// who doesn't have the app yet can install it, then redeem the code.
-    static let appStoreURL = "https://apps.apple.com/us/app/rounds-step-1/id6756315417"
+    static let appStoreURL = "https://apps.apple.com/us/app/rounds-step-1/id\(appStoreID)"
+
+    /// Short form for share sheets and message bodies, where the full localized
+    /// slug URL is unwieldy. Resolves to the same listing.
+    static let appStoreShortURL = "https://apps.apple.com/app/id\(appStoreID)"
+
+    /// Bare-domain form for inline prose ("New here? apps.apple.com/…"), where a
+    /// scheme prefix reads as noise. Still auto-links in iMessage and most apps.
+    static let appStoreDisplayURL = "apps.apple.com/app/id\(appStoreID)"
 
     /// Marketing site root.
     static let website = "https://getrounds.app"

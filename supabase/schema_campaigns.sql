@@ -367,14 +367,27 @@ alter table public.promo_codes enable row level security;
 -- No policies == no client access under RLS. Service role bypasses RLS.
 -- Declared explicitly so a future "enable read for all" is a deliberate act.
 
-revoke all on public.campaigns   from anon, authenticated;
-revoke all on public.promo_codes from anon, authenticated;
-revoke all on public.campaign_performance from anon, authenticated;
+revoke all on public.campaigns            from public, anon, authenticated;
+revoke all on public.promo_codes          from public, anon, authenticated;
+revoke all on public.campaign_performance from public, anon, authenticated;
 
 -- claim_code / release_code are SECURITY DEFINER and must only ever be invoked
 -- by the edge function under the service role, never directly by a client.
-revoke all on function public.claim_code(text, uuid, integer)  from anon, authenticated;
-revoke all on function public.release_code(uuid)               from anon, authenticated;
+--
+-- Revoking from PUBLIC is the part that matters. Postgres grants EXECUTE on a
+-- new function to PUBLIC by default, so revoking from anon/authenticated alone
+-- leaves the function callable through the PUBLIC grant. Both take the target
+-- user as a *parameter* rather than reading auth.uid(), so a reachable
+-- claim_code() would let any signed-in client burn codes against arbitrary
+-- user ids — and release_code() would let them delete another user's
+-- redemption. Revoke from PUBLIC first, then grant back only to service_role.
+revoke all on function public.claim_code(text, uuid, integer) from public, anon, authenticated;
+revoke all on function public.release_code(uuid)              from public, anon, authenticated;
+revoke all on function public.grant_expiry(text)              from public, anon, authenticated;
+
+grant execute on function public.claim_code(text, uuid, integer) to service_role;
+grant execute on function public.release_code(uuid)              to service_role;
+grant execute on function public.grant_expiry(text)              to service_role;
 
 -- =========================================================================
 -- Seed: migrate the env-var MASTER_CODE into promo_codes.

@@ -731,7 +731,7 @@ struct LeaderboardInvitePromptView: View {
         """
         I just joined Rounds — a daily medical diagnosis game for med students. \
         Challenge me on the \(schoolName) leaderboard 🩺
-        Download it: https://apps.apple.com/app/id6740487567
+        Download it: \(AppLinks.appStoreShortURL)
         """
     }
 
