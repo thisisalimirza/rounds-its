@@ -14,6 +14,27 @@
 
 import Foundation
 
+/// Build-level feature switches.
+enum AppFeatures {
+    /// Whether "Sign in with Apple" is offered as an account-linking option.
+    ///
+    /// Temporarily off. Apple sign-in only exists on iOS, so an account created
+    /// with it cannot be reached from the web — and with Hide My Email the
+    /// address is a private relay, so emailing that user a sign-in link doesn't
+    /// reach them either. Rather than ship a half-supported path, accounts are
+    /// email-only for now: one identity that works on iOS, the web, and later
+    /// Android.
+    ///
+    /// Safe to flip back on once Sign in with Apple is configured on the web
+    /// (Services ID + domain verification + key in Supabase). The Swift plumbing
+    /// — `AccountManager.configureAppleRequest` and `handleAppleSignIn`, and the
+    /// entitlement — is deliberately left in place so re-enabling is one line.
+    ///
+    /// Guideline 4.8 does not require Sign in with Apple here: it only applies
+    /// when an app offers *third-party* login. Email-only is first-party.
+    static let signInWithAppleEnabled = false
+}
+
 enum AppLinks {
     // MARK: - Marketing
 
