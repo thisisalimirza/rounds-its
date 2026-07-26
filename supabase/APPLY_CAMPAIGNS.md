@@ -1,5 +1,19 @@
 # Applying the campaigns migration to production
 
+> **Status: steps 1–4 are DONE.** Applied to `gvbycponexvxsbrlaejw` as migrations
+> `campaigns_and_promo_codes`, `admin_email_allowlist` and
+> `harden_security_definer_functions`. Pre-flight was clean (0 rows violating
+> the new constraint), the privilege lockdown is verified, and profile/redemption
+> counts are unchanged at 28/5.
+>
+> **Still outstanding: step 5 (master code) and step 6 (edge function redeploy).**
+> Step 6 is required — redemptions will not use `claim_code` until it runs.
+>
+> Admin access is now handled by the `admin_emails` allowlist rather than a
+> manual grant: `alimirzar@gmail.com` is seeded as `owner` and the role is
+> applied automatically the first time that email appears on an auth user
+> (web magic-link sign-in, or linking the email in the app).
+
 Target project: **rounds-ios** (`gvbycponexvxsbrlaejw`), Postgres 17.
 
 There are live users in this database (27 profiles, 5 redemptions at the time of
