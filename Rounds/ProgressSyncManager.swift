@@ -118,10 +118,13 @@ final class ProgressSyncManager {
 
             // Completed cases come from finished sessions rather than a
             // dedicated list, so the mirror reflects what was actually played.
+            //
+            // GameSession stores `caseID` as a plain UUID rather than holding a
+            // relationship to MedicalCase, so read it directly.
             let sessions = try context.fetch(FetchDescriptor<GameSession>())
             let completed = sessions
                 .filter { $0.gameState != .playing }
-                .compactMap { $0.medicalCase?.id.uuidString }
+                .map { $0.caseID.uuidString }
 
             return ProgressSnapshot(
                 gamesPlayed: stats.gamesPlayed,
