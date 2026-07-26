@@ -190,7 +190,6 @@ struct AccountView: View {
     // MARK: - Invite
 
     @ViewBuilder
-    @ViewBuilder
     private var inviteSection: some View {
         Section {
             if let code = account.referralCode {
