@@ -142,6 +142,10 @@ struct RoundsApp: App {
                     // a device that is behind — see public.sync_progress.
                     ProgressSyncManager.shared.configure(modelContext: sharedModelContainer.mainContext)
                     await ProgressSyncManager.shared.pushIfPossible(force: true)
+
+                    // CloudKit restores history asynchronously after launch, so
+                    // the push above can only see what has arrived so far.
+                    ProgressSyncManager.shared.startBackfillWatch()
                 }
                 .onChange(of: scenePhase) { _, phase in
                     // Backgrounding is the reliable moment to capture a
@@ -149,6 +153,10 @@ struct RoundsApp: App {
                     // trip for every case played.
                     if phase == .background {
                         Task { await ProgressSyncManager.shared.pushIfPossible(force: true) }
+                    } else if phase == .active {
+                        // Returning to the app is also when CloudKit tends to
+                        // have delivered anything it fetched while suspended.
+                        ProgressSyncManager.shared.startBackfillWatch()
                     }
                 }
                 .sheet(isPresented: $showOnboarding) {

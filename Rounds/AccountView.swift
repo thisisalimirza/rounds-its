@@ -32,7 +32,8 @@ struct AccountView: View {
             List {
                 syncSection
                 proSection
-                inviteSection
+                // Invites require Pro — you cannot gift access you don't have.
+                if subscription.isProUser { inviteSection } else { inviteUpsellSection }
                 redeemSection
                 accountIDSection
                 betaSection
@@ -189,6 +190,7 @@ struct AccountView: View {
     // MARK: - Invite
 
     @ViewBuilder
+    @ViewBuilder
     private var inviteSection: some View {
         Section {
             if let code = account.referralCode {
@@ -212,6 +214,20 @@ struct AccountView: View {
                     }
                     .disabled((account.invitesRemaining ?? 0) == 0)
                 }
+            } else if account.statusLoadFailed {
+                // Previously any failure left this spinning forever: the error
+                // was swallowed, referralCode stayed nil, and there was no
+                // retry and nothing to tell the user what had happened.
+                Button {
+                    Task { await account.refreshStatus() }
+                } label: {
+                    HStack {
+                        Label("Couldn't load your invite code", systemImage: "exclamationmark.circle")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text("Retry").fontWeight(.medium)
+                    }
+                }
             } else {
                 HStack {
                     Text("Loading your invite code…").foregroundStyle(.secondary)
@@ -223,6 +239,35 @@ struct AccountView: View {
             Label("Invite friends", systemImage: "gift.fill")
         } footer: {
             Text("Share your code with up to \(account.maxReferrals) friends. Each one unlocks Rounds Pro free.")
+        }
+    }
+
+    /// Shown instead of the invite code when the user doesn't have Pro.
+    ///
+    /// Invites now require the inviter to have Pro — you cannot give away
+    /// access you don't have. Continuing to show a code and promise "each one
+    /// unlocks Rounds Pro free" to a free user advertised something that would
+    /// simply fail when their friend tried to redeem it.
+    private var inviteUpsellSection: some View {
+        Section {
+            Button {
+                showingPaywall = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "gift.fill")
+                        .font(.title2).foregroundStyle(.pink).frame(width: 32)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Invite friends with Rounds Pro")
+                            .font(.body).fontWeight(.medium).foregroundStyle(.primary)
+                        Text("Pro members can gift Rounds Pro to \(account.maxReferrals) friends")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+                }
+            }
+        } header: {
+            Label("Invite friends", systemImage: "gift.fill")
         }
     }
 

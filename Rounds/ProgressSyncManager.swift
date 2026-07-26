@@ -41,6 +41,42 @@ final class ProgressSyncManager {
     /// mirror costs nothing.
     private static let minimumInterval: TimeInterval = 60
 
+    /// Number of completed cases at the last successful push, used to notice
+    /// when CloudKit has delivered history this device didn't have.
+    private var lastPushedCaseCount = -1
+
+    /// Re-pushes after CloudKit has had a chance to backfill.
+    ///
+    /// SwiftData's CloudKit mirroring is asynchronous: on a fresh install the
+    /// local store starts empty and history arrives over the following seconds
+    /// or minutes. A single push at launch therefore captures almost nothing —
+    /// which is why a reinstalled device showed two hundred cases locally and
+    /// one on the web.
+    ///
+    /// Rather than guess at a settle time, this re-checks on a short schedule
+    /// and pushes only when the case count has actually grown, so a device with
+    /// nothing new makes no requests at all.
+    func startBackfillWatch() {
+        backfillTask?.cancel()
+        backfillTask = Task { [weak self] in
+            for delay in [3, 10, 30, 60, 120] as [UInt64] {
+                try? await Task.sleep(nanoseconds: delay * 1_000_000_000)
+                if Task.isCancelled { return }
+                await self?.pushIfCaseCountChanged()
+            }
+        }
+    }
+
+    private var backfillTask: Task<Void, Never>?
+
+    private func pushIfCaseCountChanged() async {
+        guard let context = modelContext else { return }
+        let count = (try? context.fetchCount(FetchDescriptor<CaseHistoryEntry>())) ?? 0
+        guard count != lastPushedCaseCount else { return }
+        await pushIfPossible(force: true)
+        lastPushedCaseCount = count
+    }
+
     // MARK: - Push
 
     /// Uploads local stats, merging server-side. Safe to call often.
@@ -116,15 +152,19 @@ final class ProgressSyncManager {
         do {
             guard let stats = try context.fetch(FetchDescriptor<PlayerStats>()).first else { return nil }
 
-            // Completed cases come from finished sessions rather than a
-            // dedicated list, so the mirror reflects what was actually played.
+            // Completed cases come from CaseHistoryEntry, not GameSession.
             //
-            // GameSession stores `caseID` as a plain UUID rather than holding a
-            // relationship to MedicalCase, so read it directly.
-            let sessions = try context.fetch(FetchDescriptor<GameSession>())
-            let completed = sessions
-                .filter { $0.gameState != .playing }
-                .map { $0.caseID.uuidString }
+            // GameSession is a transient per-play object — GameView creates one
+            // with @State when a case opens and replaces it on the next case,
+            // so at any moment the store holds roughly the case being played.
+            // CaseHistoryEntry is the durable record written on completion, and
+            // it is what CaseHistoryView actually lists.
+            //
+            // Reading GameSession meant the mirror uploaded only the most
+            // recent case, which is exactly what the web dashboard showed
+            // while the phone displayed two hundred.
+            let history = try context.fetch(FetchDescriptor<CaseHistoryEntry>())
+            let completed = history.map { $0.caseID.uuidString }
 
             return ProgressSnapshot(
                 gamesPlayed: stats.gamesPlayed,

@@ -49,6 +49,13 @@ final class AccountManager {
     private(set) var accountEmail: String?
     private(set) var isReady = false
 
+    /// True when the last `refreshStatus()` failed.
+    ///
+    /// Without this the UI had no way to tell "still loading" from "gave up":
+    /// refreshStatus swallowed its error, `referralCode` stayed nil, and the
+    /// invite row span a spinner forever with no retry and no explanation.
+    private(set) var statusLoadFailed = false
+
     /// Whether this account is still anonymous (no email/Apple linked yet).
     var isAnonymousAccount: Bool { accountEmail == nil }
 
@@ -161,7 +168,9 @@ final class AccountManager {
             self.proSource = status.pro_source
             self.invitesRemaining = status.invites_remaining
             self.maxReferrals = status.max_referrals
+            self.statusLoadFailed = false
         } catch {
+            self.statusLoadFailed = true
             print("⚠️ my-status error: \(error.localizedDescription)")
         }
     }
