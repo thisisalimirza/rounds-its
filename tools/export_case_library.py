@@ -243,7 +243,7 @@ def export_schedule(cases: list[dict], start, days: int) -> list[dict]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default=".", type=pathlib.Path)
-    ap.add_argument("--out", default="build/content", type=pathlib.Path)
+    ap.add_argument("--out", default="Rounds/Content", type=pathlib.Path)
     ap.add_argument("--schedule-days", default=180, type=int,
                     help="Days of daily-case schedule to generate, matching the legacy algorithm.")
     ap.add_argument("--schedule-from", default=None,

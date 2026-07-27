@@ -14,7 +14,7 @@ import json
 import pathlib
 
 BATCH = 50
-SRC = pathlib.Path("build/content")
+SRC = pathlib.Path("Rounds/Content")
 OUT = pathlib.Path("supabase/seed")
 
 

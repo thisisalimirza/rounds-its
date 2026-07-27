@@ -9,7 +9,25 @@ import Foundation
 import SwiftData
 
 class CaseLibrary {
+
+    /// The playable library.
+    ///
+    /// Now served from CaseStore, which loads it from disk (synced), the
+    /// bundled JSON (shipped with this build), or `legacyCases()` below. Every
+    /// caller kept working unchanged because this stayed synchronous — see
+    /// CaseStore.load() for why that mattered.
     static func getSampleCases() -> [MedicalCase] {
+        let stored = CaseStore.shared.cases
+        return stored.isEmpty ? legacyCases() : stored
+    }
+
+    /// The hard-coded library this app shipped with for its first year.
+    ///
+    /// Redundant with Rounds/Content/cases.json, which was exported from it,
+    /// and kept for exactly one release: if anything about loading the JSON is
+    /// wrong in production, the app still has a full library rather than none.
+    /// Delete once CaseStore has been observed working in the wild.
+    static func legacyCases() -> [MedicalCase] {
         let cases: [MedicalCase] = [
             // Cardiology
             MedicalCase(

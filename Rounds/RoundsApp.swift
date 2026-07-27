@@ -140,6 +140,11 @@ struct RoundsApp: App {
                     // Mirror on-device progress to the account. The server
                     // merges rather than overwrites, so this is safe even from
                     // a device that is behind — see public.sync_progress.
+                    // Content refresh is fire-and-forget and never blocks play:
+                    // the library is already loaded from disk or the bundle by
+                    // the time this runs.
+                    CaseStore.shared.refresh()
+
                     ProgressSyncManager.shared.configure(modelContext: sharedModelContainer.mainContext)
 
                     // Before anything reads or uploads the totals. Runs even
