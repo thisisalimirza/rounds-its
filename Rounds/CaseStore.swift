@@ -61,6 +61,16 @@ final class CaseStore {
     private var scheduleURL: URL { dir.appendingPathComponent("daily_schedule.json") }
 
     private static let cursorKey = "caseStore.updatedAtCursor"
+    private static let diagnosisCursorKey = "caseStore.diagnosisCursor"
+    private static let lastRefreshKey = "caseStore.lastRefreshAt"
+
+    /// Minimum gap between content refreshes.
+    ///
+    /// Cases change when someone edits them, which is rare and never urgent —
+    /// a fix landing within six hours is fine. Refreshing on every launch
+    /// instead multiplies a fixed cost by however many times a day a student
+    /// opens the app, which is the wrong thing to scale with the user base.
+    private static let refreshInterval: TimeInterval = 6 * 60 * 60
 
     private init() {
         let base = (try? FileManager.default.url(for: .applicationSupportDirectory,
@@ -159,8 +169,12 @@ final class CaseStore {
 
     /// Pulls content changes. Safe to call at every launch; usually costs one
     /// small request that returns nothing.
-    func refresh() {
+    func refresh(force: Bool = false) {
         guard refreshTask == nil else { return }
+        if !force, let last = UserDefaults.standard.object(forKey: Self.lastRefreshKey) as? Date,
+           Date().timeIntervalSince(last) < Self.refreshInterval {
+            return
+        }
         refreshTask = Task { [weak self] in
             await self?.performRefresh()
             self?.refreshTask = nil
@@ -203,18 +217,48 @@ final class CaseStore {
             // Order is content too — Browse Cases lists in library order.
             caseRecords.sort { ($0.sort_order ?? .max, $0.diagnosis) < ($1.sort_order ?? .max, $1.diagnosis) }
 
-            let dx: [DiagnosisRecord] = try await client
+            // Same treatment as cases: count first to catch removals, then
+            // pull only what changed. Fetching all 366 rows on every refresh
+            // was ~65KB per user per launch for data that changes monthly.
+            let dxCounted: PostgrestResponse<Void> = try await client
                 .from("diagnoses")
-                .select("slug, canonical_name, alternative_names, category")
-                .execute().value
-            if !dx.isEmpty { diagnosisRecords = dx }
+                .select("slug", head: true, count: .exact)
+                .execute()
+            let dxCursor = UserDefaults.standard.string(forKey: Self.diagnosisCursorKey)
+            let dxFull = (dxCounted.count ?? diagnosisRecords.count) != diagnosisRecords.count || dxCursor == nil
 
-            let upcoming: [ScheduleRow] = try await client
-                .from("daily_cases")
-                .select("day, case_id")
-                .gte("day", value: Self.dayKey(Date().addingTimeInterval(-86_400 * 2)))
-                .execute().value
-            if !upcoming.isEmpty {
+            var dxQuery = client
+                .from("diagnoses")
+                .select("slug, canonical_name, alternative_names, category, updated_at")
+            if !dxFull, let dxCursor {
+                dxQuery = dxQuery.gt("updated_at", value: dxCursor)
+            }
+            let dx: [DiagnosisRecord] = try await dxQuery.execute().value
+
+            if dxFull, !dx.isEmpty {
+                diagnosisRecords = dx
+            } else if !dx.isEmpty {
+                var bySlug = Dictionary(diagnosisRecords.map { ($0.slug, $0) },
+                                        uniquingKeysWith: { a, _ in a })
+                for record in dx { bySlug[record.slug] = record }
+                diagnosisRecords = Array(bySlug.values).sorted { $0.canonical_name < $1.canonical_name }
+            }
+            if let newestDx = dx.compactMap(\.updated_at).max() {
+                UserDefaults.standard.set(newestDx, forKey: Self.diagnosisCursorKey)
+            } else if dxCursor == nil {
+                UserDefaults.standard.set(SyncTime.string(from: Date()), forKey: Self.diagnosisCursorKey)
+            }
+
+            // Only when the local copy is running out. The schedule is
+            // months of tiny rows; re-pulling it because a refresh happened
+            // is pure waste.
+            let horizon = Self.dayKey(Date().addingTimeInterval(86_400 * 14))
+            if schedule[Self.dayKey(Date())] == nil || schedule[horizon] == nil {
+                let upcoming: [ScheduleRow] = try await client
+                    .from("daily_cases")
+                    .select("day, case_id")
+                    .gte("day", value: Self.dayKey(Date().addingTimeInterval(-86_400 * 2)))
+                    .execute().value
                 for row in upcoming { schedule[row.day] = row.case_id }
             }
 
@@ -228,6 +272,7 @@ final class CaseStore {
             rebuild()
             source = .disk
             lastRefreshedAt = Date()
+            UserDefaults.standard.set(lastRefreshedAt, forKey: Self.lastRefreshKey)
         } catch {
             // Deliberately silent. The library on disk is still good, and a
             // student on ward wifi should never see a sync error over a game.
@@ -293,12 +338,14 @@ nonisolated struct DiagnosisRecord: Codable, Sendable {
     let canonical_name: String
     let alternative_names: [String]
     let category: String
+    var updated_at: String?
 
     init(_ definition: DiagnosisDefinition) {
         slug = definition.id
         canonical_name = definition.canonicalName
         alternative_names = definition.alternativeNames
         category = definition.category
+        updated_at = nil
     }
 
     func makeDefinition() -> DiagnosisDefinition {
