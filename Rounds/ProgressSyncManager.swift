@@ -347,20 +347,57 @@ final class ProgressSyncManager {
             .execute()
     }
 
-    /// Pulls at launch when this device looks like it has nothing.
+    /// A full round trip: send what the server lacks, take what this device lacks.
     ///
-    /// Signing in triggers a pull, which covers a new phone — but not a delete
-    /// and reinstall. The Supabase session lives in the keychain, which
-    /// survives app deletion, so that user comes back already signed in, with
-    /// an empty local store and no linking step to hang a pull off.
+    /// Sync used to be one-directional in practice. Push ran on launch, after
+    /// every game, on backgrounding and on the CloudKit backfill watch, while
+    /// pull ran only after linking an account or on a device whose history was
+    /// completely empty. An established second device therefore uploaded
+    /// forever and never learned anything: play on the iPhone, open the iPad,
+    /// and the iPad — which has its own history, so the empty check exits
+    /// early — never sees those games. The two drift apart permanently.
     ///
-    /// Gated on an empty history so an established device never pays for this.
-    func pullIfDeviceIsEmpty() async {
-        guard let context = modelContext else { return }
-        guard !AccountManager.shared.isAnonymousAccount else { return }
-        let local = (try? context.fetchCount(FetchDescriptor<CaseHistoryEntry>())) ?? 0
-        guard local == 0 else { return }
+    /// Both directions are pure set differences over immutable, client-keyed
+    /// rows, so running them together converges and never fights: neither side
+    /// can overwrite the other, only add what the other is missing.
+    func sync() async {
+        await pushIfPossible(force: true)
         await pullAndMerge()
+    }
+
+    /// Downloads only the rows this device is actually missing.
+    ///
+    /// The mirror image of `reconcile`, and cheap for the same reason: ask the
+    /// server for ids, diff against what is here, then fetch the bodies of the
+    /// difference alone. Pulling every row and filtering locally was affordable
+    /// only while pulling happened once per device lifetime.
+    ///
+    /// A device that is up to date pays one request returning a list of uuids
+    /// and downloads nothing.
+    private func missingRows<Row: Decodable & Sendable>(
+        _ type: Row.Type,
+        table: String,
+        userID: String,
+        local: Set<String>
+    ) async throws -> [Row] {
+        let client = AccountManager.shared.supabase
+
+        let ids: [SyncedRowID] = try await client
+            .from(table).select("id").eq("user_id", value: userID)
+            .execute().value
+
+        let missing = ids.map(\.id).filter { !local.contains($0.lowercased()) }
+        guard !missing.isEmpty else { return [] }
+
+        var fetched: [Row] = []
+        for chunk in stride(from: 0, to: missing.count, by: Self.uploadChunkSize) {
+            let slice = Array(missing[chunk ..< min(chunk + Self.uploadChunkSize, missing.count)])
+            let rows: [Row] = try await client
+                .from(table).select().in("id", values: slice)
+                .execute().value
+            fetched.append(contentsOf: rows)
+        }
+        return fetched
     }
 
     /// Brings down records this device has never seen.
@@ -382,30 +419,24 @@ final class ProgressSyncManager {
         pushedSignatures.removeAll()
 
         do {
-            let remoteHistory: [CaseHistorySyncRow] = try await client
-                .from("case_history").select().eq("user_id", value: uid)
-                .execute().value
             let localHistory = Set(try context.fetch(FetchDescriptor<CaseHistoryEntry>())
                 .map { $0.id.uuidString.lowercased() })
-            for row in remoteHistory where !localHistory.contains(row.id.lowercased()) {
+            for row in try await missingRows(CaseHistorySyncRow.self,
+                                             table: "case_history", userID: uid, local: localHistory) {
                 if let entry = row.makeEntry() { context.insert(entry) }
             }
 
-            let remoteMisses: [MissedItemSyncRow] = try await client
-                .from("missed_items").select().eq("user_id", value: uid)
-                .execute().value
             let localMisses = Set(try context.fetch(FetchDescriptor<MissedItem>())
                 .map { $0.id.uuidString.lowercased() })
-            for row in remoteMisses where !localMisses.contains(row.id.lowercased()) {
+            for row in try await missingRows(MissedItemSyncRow.self,
+                                             table: "missed_items", userID: uid, local: localMisses) {
                 if let item = row.makeItem() { context.insert(item) }
             }
 
-            let remoteDDx: [DDxSessionSyncRow] = try await client
-                .from("ddx_sessions").select().eq("user_id", value: uid)
-                .execute().value
             let localDDx = Set(try context.fetch(FetchDescriptor<DDxSession>())
                 .map { $0.id.uuidString.lowercased() })
-            for row in remoteDDx where !localDDx.contains(row.id.lowercased()) {
+            for row in try await missingRows(DDxSessionSyncRow.self,
+                                             table: "ddx_sessions", userID: uid, local: localDDx) {
                 if let session = row.makeSession() { context.insert(session) }
             }
 

@@ -152,11 +152,9 @@ struct RoundsApp: App {
                     // the Stats tab too, not just on the web.
                     ProgressSyncManager.shared.repairLocalStats()
 
-                    // A reinstalled device restores its session from the
-                    // keychain and comes back signed in but empty; this is what
-                    // puts the account's history back on screen.
-                    await ProgressSyncManager.shared.pullIfDeviceIsEmpty()
-                    await ProgressSyncManager.shared.pushIfPossible(force: true)
+                    // Both directions. Pushing alone left a second device
+                    // uploading forever and never receiving.
+                    await ProgressSyncManager.shared.sync()
 
                     // CloudKit restores history asynchronously after launch, so
                     // the push above can only see what has arrived so far.
@@ -168,9 +166,12 @@ struct RoundsApp: App {
                     // trip for every case played.
                     if phase == .background {
                         Task { await ProgressSyncManager.shared.pushIfPossible(force: true) }
-                    } else if phase == .active {
-                        // Returning to the app is also when CloudKit tends to
-                        // have delivered anything it fetched while suspended.
+                    }
+                    if phase == .active {
+                        // Coming back is when another device's games are most
+                        // likely to be waiting, and also when CloudKit tends to
+                        // have delivered whatever it fetched while suspended.
+                        Task { await ProgressSyncManager.shared.sync() }
                         ProgressSyncManager.shared.startBackfillWatch()
                     }
                 }
