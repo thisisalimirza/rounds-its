@@ -7,7 +7,7 @@ Rounds is an **iOS game for medical students** (USMLE Step 1 prep). It's a Wordl
 - **Platform:** iOS 18+, SwiftUI, SwiftData, Swift 6
 - **Monetization:** RevenueCat — entitlement `"Rounds Pro"` (monthly/yearly/lifetime)
 - **Analytics:** PostHog via `AnalyticsManager.swift`
-- **Version:** 1.3.0
+- **Version:** 1.5 (`MARKETING_VERSION` in project.pbxproj; must match the version open in App Store Connect or the upload step fails)
 
 ## Gameplay
 
