@@ -1,0 +1,2965 @@
+[
+  {
+    "slug": "myocardial-infarction",
+    "canonical_name": "Myocardial Infarction",
+    "alternative_names": [
+      "MI",
+      "Heart Attack",
+      "Acute MI",
+      "STEMI",
+      "NSTEMI"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "aortic-dissection",
+    "canonical_name": "Aortic Dissection",
+    "alternative_names": [
+      "Dissecting Aortic Aneurysm"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "acute-pericarditis",
+    "canonical_name": "Acute Pericarditis",
+    "alternative_names": [
+      "Pericarditis"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "infective-endocarditis",
+    "canonical_name": "Infective Endocarditis",
+    "alternative_names": [
+      "IE",
+      "Bacterial Endocarditis",
+      "Endocarditis"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "wpw-syndrome",
+    "canonical_name": "Wolff-Parkinson-White Syndrome",
+    "alternative_names": [
+      "WPW",
+      "WPW Syndrome",
+      "Wolff Parkinson White"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "hypertrophic-cardiomyopathy",
+    "canonical_name": "Hypertrophic Cardiomyopathy",
+    "alternative_names": [
+      "HCM",
+      "HOCM",
+      "Hypertrophic Obstructive Cardiomyopathy"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "atrial-fibrillation",
+    "canonical_name": "Atrial Fibrillation",
+    "alternative_names": [
+      "AFib",
+      "AF",
+      "A-Fib"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "acute-rheumatic-fever",
+    "canonical_name": "Acute Rheumatic Fever",
+    "alternative_names": [
+      "Rheumatic Fever",
+      "ARF"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "cardiac-tamponade",
+    "canonical_name": "Cardiac Tamponade",
+    "alternative_names": [
+      "Tamponade",
+      "Pericardial Tamponade"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "dilated-cardiomyopathy",
+    "canonical_name": "Dilated Cardiomyopathy",
+    "alternative_names": [
+      "DCM"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "mitral-regurgitation",
+    "canonical_name": "Mitral Regurgitation",
+    "alternative_names": [
+      "MR",
+      "Mitral Insufficiency"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "aortic-stenosis",
+    "canonical_name": "Aortic Stenosis",
+    "alternative_names": [
+      "AS"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "ventricular-septal-defect",
+    "canonical_name": "Ventricular Septal Defect",
+    "alternative_names": [
+      "VSD"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "coarctation-of-aorta",
+    "canonical_name": "Coarctation of the Aorta",
+    "alternative_names": [
+      "Aortic Coarctation",
+      "CoA"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "tetralogy-of-fallot",
+    "canonical_name": "Tetralogy of Fallot",
+    "alternative_names": [
+      "TOF",
+      "Tet Spell",
+      "Tetralogy of Fallot - Tet Spell"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "restrictive-cardiomyopathy",
+    "canonical_name": "Restrictive Cardiomyopathy",
+    "alternative_names": [
+      "RCM"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "takotsubo-cardiomyopathy",
+    "canonical_name": "Takotsubo Cardiomyopathy",
+    "alternative_names": [
+      "Broken Heart Syndrome",
+      "Stress Cardiomyopathy"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "mitral-stenosis",
+    "canonical_name": "Mitral Stenosis",
+    "alternative_names": [
+      "MS"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "aortic-regurgitation",
+    "canonical_name": "Aortic Regurgitation",
+    "alternative_names": [
+      "AR",
+      "Aortic Insufficiency"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "atrial-septal-defect",
+    "canonical_name": "Atrial Septal Defect",
+    "alternative_names": [
+      "ASD"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "patent-ductus-arteriosus",
+    "canonical_name": "Patent Ductus Arteriosus",
+    "alternative_names": [
+      "PDA"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "dressler-syndrome",
+    "canonical_name": "Dressler Syndrome",
+    "alternative_names": [
+      "Post-MI Pericarditis",
+      "Postmyocardial Infarction Syndrome"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "myocarditis",
+    "canonical_name": "Myocarditis",
+    "alternative_names": [
+      "Viral Myocarditis"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "pulmonary-hypertension",
+    "canonical_name": "Pulmonary Hypertension",
+    "alternative_names": [
+      "PH",
+      "PAH",
+      "Pulmonary Arterial Hypertension"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "tricuspid-regurgitation",
+    "canonical_name": "Tricuspid Regurgitation",
+    "alternative_names": [
+      "TR"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "pulmonic-stenosis",
+    "canonical_name": "Pulmonic Stenosis",
+    "alternative_names": [
+      "PS",
+      "Pulmonary Stenosis"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "brugada-syndrome",
+    "canonical_name": "Brugada Syndrome",
+    "alternative_names": [
+      "Brugada"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "long-qt-syndrome",
+    "canonical_name": "Long QT Syndrome",
+    "alternative_names": [
+      "LQTS"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "transposition-great-arteries",
+    "canonical_name": "Transposition of Great Arteries",
+    "alternative_names": [
+      "TGA",
+      "D-TGA"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "eisenmenger-syndrome",
+    "canonical_name": "Eisenmenger Syndrome",
+    "alternative_names": [
+      "Eisenmenger"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "sick-sinus-syndrome",
+    "canonical_name": "Sick Sinus Syndrome",
+    "alternative_names": [
+      "SSS",
+      "Sinus Node Dysfunction"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "patent-foramen-ovale",
+    "canonical_name": "Patent Foramen Ovale",
+    "alternative_names": [
+      "PFO"
+    ],
+    "category": "Cardiology"
+  },
+  {
+    "slug": "multiple-sclerosis",
+    "canonical_name": "Multiple Sclerosis",
+    "alternative_names": [
+      "MS"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "subarachnoid-hemorrhage",
+    "canonical_name": "Subarachnoid Hemorrhage",
+    "alternative_names": [
+      "SAH"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "myasthenia-gravis",
+    "canonical_name": "Myasthenia Gravis",
+    "alternative_names": [
+      "MG"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "guillain-barre-syndrome",
+    "canonical_name": "Guillain-Barre Syndrome",
+    "alternative_names": [
+      "GBS",
+      "Guillain Barre",
+      "Guillain-Barre"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "parkinson-disease",
+    "canonical_name": "Parkinson Disease",
+    "alternative_names": [
+      "PD",
+      "Parkinson's Disease",
+      "Parkinsons"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "alzheimer-disease",
+    "canonical_name": "Alzheimer Disease",
+    "alternative_names": [
+      "AD",
+      "Alzheimer's Disease",
+      "Alzheimers"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "ischemic-stroke",
+    "canonical_name": "Ischemic Stroke",
+    "alternative_names": [
+      "Stroke",
+      "CVA",
+      "Cerebrovascular Accident"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "migraine",
+    "canonical_name": "Migraine",
+    "alternative_names": [
+      "Migraine Headache"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "seizure-disorder",
+    "canonical_name": "Seizure Disorder",
+    "alternative_names": [
+      "Epilepsy",
+      "Seizures"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "huntington-disease",
+    "canonical_name": "Huntington Disease",
+    "alternative_names": [
+      "HD",
+      "Huntington's Disease",
+      "Huntingtons"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "bells-palsy",
+    "canonical_name": "Bell's Palsy",
+    "alternative_names": [
+      "Bells Palsy",
+      "Bell Palsy"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "als",
+    "canonical_name": "Amyotrophic Lateral Sclerosis",
+    "alternative_names": [
+      "ALS",
+      "Lou Gehrig Disease",
+      "Lou Gehrig's Disease"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "pseudotumor-cerebri",
+    "canonical_name": "Pseudotumor Cerebri",
+    "alternative_names": [
+      "Idiopathic Intracranial Hypertension",
+      "IIH"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "normal-pressure-hydrocephalus",
+    "canonical_name": "Normal Pressure Hydrocephalus",
+    "alternative_names": [
+      "NPH"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "wernicke-encephalopathy",
+    "canonical_name": "Wernicke Encephalopathy",
+    "alternative_names": [
+      "Wernicke's Encephalopathy",
+      "Wernicke-Korsakoff"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "central-pontine-myelinolysis",
+    "canonical_name": "Central Pontine Myelinolysis",
+    "alternative_names": [
+      "CPM",
+      "Osmotic Demyelination Syndrome"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "trigeminal-neuralgia",
+    "canonical_name": "Trigeminal Neuralgia",
+    "alternative_names": [
+      "Tic Douloureux"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "creutzfeldt-jakob-disease",
+    "canonical_name": "Creutzfeldt-Jakob Disease",
+    "alternative_names": [
+      "CJD",
+      "Creutzfeldt Jakob"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "friedreich-ataxia",
+    "canonical_name": "Friedreich Ataxia",
+    "alternative_names": [
+      "Friedreich's Ataxia"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "charcot-marie-tooth",
+    "canonical_name": "Charcot-Marie-Tooth Disease",
+    "alternative_names": [
+      "CMT"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "syringomyelia",
+    "canonical_name": "Syringomyelia",
+    "alternative_names": [
+      "Syrinx"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "chiari-malformation",
+    "canonical_name": "Posterior Fossa Malformations - Chiari",
+    "alternative_names": [
+      "Chiari Malformation",
+      "Arnold-Chiari"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "lambert-eaton",
+    "canonical_name": "Lambert-Eaton Myasthenic Syndrome",
+    "alternative_names": [
+      "LEMS",
+      "Lambert Eaton"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "vertebrobasilar-insufficiency",
+    "canonical_name": "Vertebrobasilar Insufficiency",
+    "alternative_names": [
+      "VBI"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "cavernous-sinus-thrombosis",
+    "canonical_name": "Cavernous Sinus Thrombosis",
+    "alternative_names": [
+      "CST"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "subdural-hematoma",
+    "canonical_name": "Subdural Hematoma",
+    "alternative_names": [
+      "SDH"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "epidural-hematoma",
+    "canonical_name": "Epidural Hematoma",
+    "alternative_names": [
+      "EDH"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "tia",
+    "canonical_name": "Transient Ischemic Attack",
+    "alternative_names": [
+      "TIA",
+      "Mini Stroke"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "essential-tremor",
+    "canonical_name": "Benign Essential Tremor",
+    "alternative_names": [
+      "Essential Tremor"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "neurofibromatosis-1",
+    "canonical_name": "Neurofibromatosis Type 1",
+    "alternative_names": [
+      "NF1",
+      "Von Recklinghausen Disease"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "tuberous-sclerosis",
+    "canonical_name": "Tuberous Sclerosis",
+    "alternative_names": [
+      "TSC"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "glioblastoma",
+    "canonical_name": "Glioblastoma Multiforme",
+    "alternative_names": [
+      "GBM",
+      "Grade IV Astrocytoma",
+      "Glioblastoma"
+    ],
+    "category": "Neurology"
+  },
+  {
+    "slug": "pulmonary-embolism",
+    "canonical_name": "Pulmonary Embolism",
+    "alternative_names": [
+      "PE"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "sarcoidosis",
+    "canonical_name": "Sarcoidosis",
+    "alternative_names": [
+      "Sarcoid"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "asthma-exacerbation",
+    "canonical_name": "Asthma Exacerbation",
+    "alternative_names": [
+      "Asthma Attack",
+      "Acute Asthma"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "pneumothorax",
+    "canonical_name": "Pneumothorax",
+    "alternative_names": [
+      "Collapsed Lung"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "tension-pneumothorax",
+    "canonical_name": "Tension Pneumothorax",
+    "alternative_names": [],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "copd",
+    "canonical_name": "Chronic Obstructive Pulmonary Disease",
+    "alternative_names": [
+      "COPD",
+      "Emphysema",
+      "Chronic Bronchitis"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "cystic-fibrosis",
+    "canonical_name": "Cystic Fibrosis",
+    "alternative_names": [
+      "CF"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "idiopathic-pulmonary-fibrosis",
+    "canonical_name": "Idiopathic Pulmonary Fibrosis",
+    "alternative_names": [
+      "IPF"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "community-acquired-pneumonia",
+    "canonical_name": "Community-Acquired Pneumonia",
+    "alternative_names": [
+      "CAP",
+      "Pneumonia"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "sleep-apnea",
+    "canonical_name": "Sleep Apnea",
+    "alternative_names": [
+      "OSA",
+      "Obstructive Sleep Apnea"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "lung-adenocarcinoma",
+    "canonical_name": "Lung Adenocarcinoma",
+    "alternative_names": [
+      "Lung Cancer",
+      "NSCLC"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "alpha-1-antitrypsin-deficiency",
+    "canonical_name": "Alpha-1 Antitrypsin Deficiency",
+    "alternative_names": [
+      "A1AT Deficiency",
+      "Alpha-1"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "aspiration-pneumonia",
+    "canonical_name": "Aspiration Pneumonia",
+    "alternative_names": [],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "bronchiectasis",
+    "canonical_name": "Bronchiectasis",
+    "alternative_names": [],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "hypersensitivity-pneumonitis",
+    "canonical_name": "Hypersensitivity Pneumonitis",
+    "alternative_names": [
+      "HP",
+      "Extrinsic Allergic Alveolitis"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "ards",
+    "canonical_name": "Acute Respiratory Distress Syndrome",
+    "alternative_names": [
+      "ARDS"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "silicosis",
+    "canonical_name": "Silicosis",
+    "alternative_names": [],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "asbestosis",
+    "canonical_name": "Asbestosis",
+    "alternative_names": [],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "small-cell-lung-cancer",
+    "canonical_name": "Small Cell Lung Cancer",
+    "alternative_names": [
+      "SCLC"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "mesothelioma",
+    "canonical_name": "Mesothelioma",
+    "alternative_names": [
+      "Malignant Mesothelioma"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "pancoast-tumor",
+    "canonical_name": "Pancoast Tumor",
+    "alternative_names": [
+      "Superior Sulcus Tumor"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "granulomatosis-with-polyangiitis",
+    "canonical_name": "Granulomatosis with Polyangiitis",
+    "alternative_names": [
+      "Wegener Granulomatosis",
+      "Wegener's Granulomatosis",
+      "GPA"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "churg-strauss-syndrome",
+    "canonical_name": "Churg-Strauss Syndrome",
+    "alternative_names": [
+      "Eosinophilic Granulomatosis with Polyangiitis",
+      "EGPA",
+      "Churg Strauss Syndrome"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "kartagener-syndrome",
+    "canonical_name": "Kartagener Syndrome",
+    "alternative_names": [
+      "Primary Ciliary Dyskinesia",
+      "Kartagener Syndrome Ciliary Defect"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "hamartoma",
+    "canonical_name": "Hamartoma",
+    "alternative_names": [
+      "Pulmonary Hamartoma"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "loeffler-syndrome",
+    "canonical_name": "Loeffler Syndrome",
+    "alternative_names": [
+      "Loffler Syndrome",
+      "Simple Pulmonary Eosinophilia"
+    ],
+    "category": "Pulmonology"
+  },
+  {
+    "slug": "crohns-disease",
+    "canonical_name": "Crohn's Disease",
+    "alternative_names": [
+      "Crohn Disease",
+      "Crohns",
+      "Regional Enteritis"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "ulcerative-colitis",
+    "canonical_name": "Ulcerative Colitis",
+    "alternative_names": [
+      "UC"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "appendicitis",
+    "canonical_name": "Appendicitis",
+    "alternative_names": [
+      "Acute Appendicitis"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "celiac-disease",
+    "canonical_name": "Celiac Disease",
+    "alternative_names": [
+      "Celiac Sprue",
+      "Gluten Enteropathy"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "acute-cholecystitis",
+    "canonical_name": "Acute Cholecystitis",
+    "alternative_names": [
+      "Cholecystitis"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "hepatic-encephalopathy",
+    "canonical_name": "Hepatic Encephalopathy",
+    "alternative_names": [
+      "HE"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "peptic-ulcer-disease",
+    "canonical_name": "Peptic Ulcer Disease",
+    "alternative_names": [
+      "PUD",
+      "Gastric Ulcer",
+      "Duodenal Ulcer"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "esophageal-varices",
+    "canonical_name": "Esophageal Varices",
+    "alternative_names": [
+      "Varices"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "diverticulitis",
+    "canonical_name": "Diverticulitis",
+    "alternative_names": [
+      "Acute Diverticulitis"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "primary-sclerosing-cholangitis",
+    "canonical_name": "Primary Sclerosing Cholangitis",
+    "alternative_names": [
+      "PSC"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "alcoholic-hepatitis",
+    "canonical_name": "Alcoholic Hepatitis",
+    "alternative_names": [],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "acute-pancreatitis",
+    "canonical_name": "Acute Pancreatitis",
+    "alternative_names": [
+      "Pancreatitis"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "achalasia",
+    "canonical_name": "Achalasia",
+    "alternative_names": [],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "mallory-weiss-tear",
+    "canonical_name": "Mallory-Weiss Tear",
+    "alternative_names": [
+      "Mallory Weiss Syndrome"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "zenker-diverticulum",
+    "canonical_name": "Zenker Diverticulum",
+    "alternative_names": [
+      "Zenker's Diverticulum",
+      "Pharyngeal Pouch"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "barrett-esophagus",
+    "canonical_name": "Barrett Esophagus",
+    "alternative_names": [
+      "Barrett's Esophagus"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "primary-biliary-cholangitis",
+    "canonical_name": "Primary Biliary Cholangitis",
+    "alternative_names": [
+      "PBC",
+      "Primary Biliary Cirrhosis"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "whipple-disease",
+    "canonical_name": "Whipple Disease",
+    "alternative_names": [
+      "Whipple's Disease"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "hemochromatosis",
+    "canonical_name": "Hemochromatosis",
+    "alternative_names": [
+      "Iron Overload",
+      "Hereditary Hemochromatosis"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "wilson-disease",
+    "canonical_name": "Wilson Disease",
+    "alternative_names": [
+      "Wilson's Disease",
+      "Hepatolenticular Degeneration"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "budd-chiari-syndrome",
+    "canonical_name": "Budd-Chiari Syndrome",
+    "alternative_names": [
+      "Budd Chiari",
+      "Hepatic Vein Thrombosis"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "spontaneous-bacterial-peritonitis",
+    "canonical_name": "Spontaneous Bacterial Peritonitis",
+    "alternative_names": [
+      "SBP"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "peutz-jeghers-syndrome",
+    "canonical_name": "Peutz-Jeghers Syndrome",
+    "alternative_names": [
+      "PJS"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "familial-adenomatous-polyposis",
+    "canonical_name": "Familial Adenomatous Polyposis",
+    "alternative_names": [
+      "FAP"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "lynch-syndrome",
+    "canonical_name": "Lynch Syndrome",
+    "alternative_names": [
+      "HNPCC",
+      "Hereditary Nonpolyposis Colorectal Cancer"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "ogilvie-syndrome",
+    "canonical_name": "Ogilvie Syndrome",
+    "alternative_names": [
+      "Acute Colonic Pseudo-obstruction"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "tropical-sprue",
+    "canonical_name": "Tropical Sprue",
+    "alternative_names": [],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "ischemic-colitis",
+    "canonical_name": "Ischemic Colitis",
+    "alternative_names": [],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "carcinoid-tumor",
+    "canonical_name": "Carcinoid Tumor",
+    "alternative_names": [
+      "Carcinoid"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "mesenteric-ischemia",
+    "canonical_name": "Mesenteric Ischemia",
+    "alternative_names": [
+      "Acute Mesenteric Ischemia"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "pseudomembranous-colitis",
+    "canonical_name": "Pseudomembranous Colitis",
+    "alternative_names": [
+      "C. diff Colitis"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "clostridium-difficile-colitis",
+    "canonical_name": "Clostridium difficile Colitis",
+    "alternative_names": [
+      "C. diff",
+      "CDI",
+      "C difficile Infection"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "meckel-diverticulum",
+    "canonical_name": "Meckel Diverticulum",
+    "alternative_names": [
+      "Meckel's Diverticulum"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "gardner-syndrome",
+    "canonical_name": "Gardner Syndrome",
+    "alternative_names": [
+      "FAP with Extra-intestinal Manifestations"
+    ],
+    "category": "Gastroenterology"
+  },
+  {
+    "slug": "acute-kidney-injury",
+    "canonical_name": "Acute Kidney Injury",
+    "alternative_names": [
+      "AKI",
+      "Acute Renal Failure",
+      "ARF"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "nephrotic-syndrome",
+    "canonical_name": "Nephrotic Syndrome",
+    "alternative_names": [],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "iga-nephropathy",
+    "canonical_name": "IgA Nephropathy",
+    "alternative_names": [
+      "Berger Disease",
+      "Berger's Disease"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "acute-tubular-necrosis",
+    "canonical_name": "Acute Tubular Necrosis",
+    "alternative_names": [
+      "ATN"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "polycystic-kidney-disease",
+    "canonical_name": "Polycystic Kidney Disease",
+    "alternative_names": [
+      "PKD",
+      "ADPKD",
+      "Polycystic Kidney Disease (ADPKD)",
+      "Adult Polycystic Kidney Disease",
+      "Adult PKD"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "goodpasture-syndrome",
+    "canonical_name": "Goodpasture Syndrome",
+    "alternative_names": [
+      "Anti-GBM Disease",
+      "Goodpasture's Syndrome"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "acute-interstitial-nephritis",
+    "canonical_name": "Acute Interstitial Nephritis",
+    "alternative_names": [
+      "AIN"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "renal-artery-stenosis",
+    "canonical_name": "Renal Artery Stenosis",
+    "alternative_names": [
+      "RAS"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "nephrolithiasis",
+    "canonical_name": "Nephrolithiasis",
+    "alternative_names": [
+      "Kidney Stones",
+      "Renal Calculi"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "membranous-nephropathy",
+    "canonical_name": "Membranous Nephropathy",
+    "alternative_names": [
+      "Membranous Glomerulonephritis"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "hemolytic-uremic-syndrome",
+    "canonical_name": "Hemolytic Uremic Syndrome",
+    "alternative_names": [
+      "HUS"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "alport-syndrome",
+    "canonical_name": "Alport Syndrome",
+    "alternative_names": [],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "fanconi-syndrome",
+    "canonical_name": "Fanconi Syndrome",
+    "alternative_names": [],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "bartter-syndrome",
+    "canonical_name": "Bartter Syndrome",
+    "alternative_names": [],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "gitelman-syndrome",
+    "canonical_name": "Gitelman Syndrome",
+    "alternative_names": [],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "focal-segmental-glomerulosclerosis",
+    "canonical_name": "Focal Segmental Glomerulosclerosis",
+    "alternative_names": [
+      "FSGS"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "psgn",
+    "canonical_name": "Poststreptococcal Glomerulonephritis",
+    "alternative_names": [
+      "PSGN",
+      "Post-Streptococcal Glomerulonephritis",
+      "Post Streptococcal Glomerulonephritis"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "liddle-syndrome",
+    "canonical_name": "Liddle Syndrome",
+    "alternative_names": [
+      "Pseudohyperaldosteronism"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "rpgn",
+    "canonical_name": "Rapidly Progressive Glomerulonephritis",
+    "alternative_names": [
+      "RPGN",
+      "Crescentic Glomerulonephritis"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "diabetic-nephropathy",
+    "canonical_name": "Diabetic Nephropathy",
+    "alternative_names": [
+      "Diabetic Kidney Disease"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "hypertensive-nephropathy",
+    "canonical_name": "Hypertensive Nephropathy",
+    "alternative_names": [
+      "Hypertensive Kidney Disease"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "contrast-induced-nephropathy",
+    "canonical_name": "Contrast-Induced Nephropathy",
+    "alternative_names": [
+      "CIN",
+      "Contrast Nephropathy"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "rhabdomyolysis",
+    "canonical_name": "Rhabdomyolysis",
+    "alternative_names": [],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "tumor-lysis-syndrome",
+    "canonical_name": "Tumor Lysis Syndrome",
+    "alternative_names": [
+      "TLS"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "medullary-sponge-kidney",
+    "canonical_name": "Medullary Sponge Kidney",
+    "alternative_names": [],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "minimal-change-disease",
+    "canonical_name": "Minimal Change Disease",
+    "alternative_names": [
+      "MCD",
+      "Nil Disease"
+    ],
+    "category": "Nephrology"
+  },
+  {
+    "slug": "diabetic-ketoacidosis",
+    "canonical_name": "Diabetic Ketoacidosis",
+    "alternative_names": [
+      "DKA"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "graves-disease",
+    "canonical_name": "Graves Disease",
+    "alternative_names": [
+      "Graves' Disease",
+      "Basedow Disease",
+      "Hyperthyroidism",
+      "Thyrotoxicosis",
+      "Toxic Diffuse Goiter"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "hashimoto-thyroiditis",
+    "canonical_name": "Hashimoto Thyroiditis",
+    "alternative_names": [
+      "Hashimoto's Thyroiditis",
+      "Chronic Lymphocytic Thyroiditis"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "cushing-syndrome",
+    "canonical_name": "Cushing Syndrome",
+    "alternative_names": [
+      "Cushing's Syndrome",
+      "Hypercortisolism"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "addison-disease",
+    "canonical_name": "Addison Disease",
+    "alternative_names": [
+      "Addison's Disease",
+      "Primary Adrenal Insufficiency"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "hypothyroidism",
+    "canonical_name": "Hypothyroidism",
+    "alternative_names": [
+      "Underactive Thyroid"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "diabetes-insipidus",
+    "canonical_name": "Diabetes Insipidus",
+    "alternative_names": [
+      "DI",
+      "Central Diabetes Insipidus",
+      "Diabetes Insipidus (Central)",
+      "Neurogenic DI"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "siadh",
+    "canonical_name": "SIADH",
+    "alternative_names": [
+      "Syndrome of Inappropriate ADH",
+      "Syndrome of Inappropriate Antidiuretic Hormone"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "pheochromocytoma",
+    "canonical_name": "Pheochromocytoma",
+    "alternative_names": [
+      "Pheo"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "hyperparathyroidism",
+    "canonical_name": "Hyperparathyroidism",
+    "alternative_names": [
+      "Primary Hyperparathyroidism"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "acromegaly",
+    "canonical_name": "Acromegaly",
+    "alternative_names": [],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "type-2-diabetes",
+    "canonical_name": "Type 2 Diabetes Mellitus",
+    "alternative_names": [
+      "T2DM",
+      "Type 2 Diabetes",
+      "Diabetes Mellitus"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "conn-syndrome",
+    "canonical_name": "Conn Syndrome",
+    "alternative_names": [
+      "Primary Hyperaldosteronism"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "secondary-hyperaldosteronism",
+    "canonical_name": "Hyperaldosteronism Secondary",
+    "alternative_names": [
+      "Secondary Hyperaldosteronism"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "carcinoid-syndrome",
+    "canonical_name": "Carcinoid Syndrome",
+    "alternative_names": [],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "zollinger-ellison-syndrome",
+    "canonical_name": "Zollinger-Ellison Syndrome",
+    "alternative_names": [
+      "ZES",
+      "Gastrinoma"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "men-1",
+    "canonical_name": "Multiple Endocrine Neoplasia Type 1",
+    "alternative_names": [
+      "MEN1",
+      "MEN 1"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "men-2",
+    "canonical_name": "Multiple Endocrine Neoplasia Type 2",
+    "alternative_names": [
+      "MEN2",
+      "MEN 2"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "sheehan-syndrome",
+    "canonical_name": "Sheehan Syndrome",
+    "alternative_names": [
+      "Postpartum Hypopituitarism"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "craniopharyngioma",
+    "canonical_name": "Craniopharyngioma",
+    "alternative_names": [],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "insulinoma",
+    "canonical_name": "Insulinoma",
+    "alternative_names": [],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "glucagonoma",
+    "canonical_name": "Glucagonoma",
+    "alternative_names": [],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "vipoma",
+    "canonical_name": "VIPoma",
+    "alternative_names": [
+      "Verner-Morrison Syndrome",
+      "WDHA Syndrome"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "congenital-adrenal-hyperplasia",
+    "canonical_name": "Congenital Adrenal Hyperplasia",
+    "alternative_names": [
+      "CAH"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "klinefelter-syndrome",
+    "canonical_name": "Klinefelter Syndrome",
+    "alternative_names": [
+      "47 XXY",
+      "XXY"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "turner-syndrome",
+    "canonical_name": "Turner Syndrome",
+    "alternative_names": [
+      "45 XO",
+      "XO"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "prolactinoma",
+    "canonical_name": "Prolactinoma",
+    "alternative_names": [],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "congenital-hypothyroidism",
+    "canonical_name": "Congenital Hypothyroidism",
+    "alternative_names": [
+      "Cretinism"
+    ],
+    "category": "Endocrinology"
+  },
+  {
+    "slug": "systemic-lupus-erythematosus",
+    "canonical_name": "Systemic Lupus Erythematosus",
+    "alternative_names": [
+      "SLE",
+      "Lupus"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "giant-cell-arteritis",
+    "canonical_name": "Giant Cell Arteritis",
+    "alternative_names": [
+      "Temporal Arteritis",
+      "GCA",
+      "Cranial Arteritis"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "ankylosing-spondylitis",
+    "canonical_name": "Ankylosing Spondylitis",
+    "alternative_names": [
+      "AS"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "gout",
+    "canonical_name": "Gout",
+    "alternative_names": [
+      "Gouty Arthritis"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "rheumatoid-arthritis",
+    "canonical_name": "Rheumatoid Arthritis",
+    "alternative_names": [
+      "RA"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "osteoarthritis",
+    "canonical_name": "Osteoarthritis",
+    "alternative_names": [
+      "OA",
+      "Degenerative Joint Disease"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "pseudogout",
+    "canonical_name": "Pseudogout",
+    "alternative_names": [
+      "CPPD",
+      "Calcium Pyrophosphate Deposition Disease"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "reactive-arthritis",
+    "canonical_name": "Reactive Arthritis",
+    "alternative_names": [
+      "Reiter Syndrome"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "sjogren-syndrome",
+    "canonical_name": "Sjogren Syndrome",
+    "alternative_names": [
+      "Sjögren Syndrome",
+      "Sjogren's Syndrome",
+      "Sjögren's Syndrome",
+      "Sicca Syndrome",
+      "Sjogren's"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "polymyalgia-rheumatica",
+    "canonical_name": "Polymyalgia Rheumatica",
+    "alternative_names": [
+      "PMR"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "systemic-sclerosis",
+    "canonical_name": "Scleroderma",
+    "alternative_names": [
+      "Systemic Sclerosis",
+      "Scleroderma (Diffuse)",
+      "Diffuse Scleroderma",
+      "SSc"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "dermatomyositis",
+    "canonical_name": "Dermatomyositis",
+    "alternative_names": [
+      "DM"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "behcet-disease",
+    "canonical_name": "Behcet Disease",
+    "alternative_names": [
+      "Behçet Disease",
+      "Behcet's Disease"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "mixed-connective-tissue-disease",
+    "canonical_name": "Mixed Connective Tissue Disease",
+    "alternative_names": [
+      "MCTD"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "takayasu-arteritis",
+    "canonical_name": "Takayasu Arteritis",
+    "alternative_names": [
+      "Pulseless Disease"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "polyarteritis-nodosa",
+    "canonical_name": "Polyarteritis Nodosa",
+    "alternative_names": [
+      "PAN"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "relapsing-polychondritis",
+    "canonical_name": "Relapsing Polychondritis",
+    "alternative_names": [],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "adult-onset-still-disease",
+    "canonical_name": "Adult-Onset Still Disease",
+    "alternative_names": [
+      "AOSD",
+      "Adult Still Disease"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "felty-syndrome",
+    "canonical_name": "Felty Syndrome",
+    "alternative_names": [],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "henoch-schonlein-purpura",
+    "canonical_name": "Henoch-Schonlein Purpura",
+    "alternative_names": [
+      "HSP",
+      "IgA Vasculitis",
+      "Henoch-Schönlein Purpura"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "microscopic-polyangiitis",
+    "canonical_name": "Microscopic Polyangiitis",
+    "alternative_names": [
+      "MPA"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "cryoglobulinemia",
+    "canonical_name": "Cryoglobulinemia",
+    "alternative_names": [],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "antiphospholipid-syndrome",
+    "canonical_name": "Antiphospholipid Syndrome",
+    "alternative_names": [
+      "APS",
+      "APLS"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "septic-arthritis",
+    "canonical_name": "Septic Arthritis",
+    "alternative_names": [
+      "Infectious Arthritis"
+    ],
+    "category": "Rheumatology"
+  },
+  {
+    "slug": "sickle-cell-crisis",
+    "canonical_name": "Sickle Cell Crisis",
+    "alternative_names": [
+      "Sickle Cell Disease",
+      "SCD",
+      "Vaso-occlusive Crisis"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "iron-deficiency-anemia",
+    "canonical_name": "Iron Deficiency Anemia",
+    "alternative_names": [
+      "IDA"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "apl",
+    "canonical_name": "Acute Promyelocytic Leukemia",
+    "alternative_names": [
+      "APL",
+      "M3 AML"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "itp",
+    "canonical_name": "Immune Thrombocytopenic Purpura",
+    "alternative_names": [
+      "ITP",
+      "Idiopathic Thrombocytopenic Purpura"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "vitamin-b12-deficiency",
+    "canonical_name": "Vitamin B12 Deficiency",
+    "alternative_names": [
+      "B12 Deficiency",
+      "Cobalamin Deficiency"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "aml",
+    "canonical_name": "Acute Myeloid Leukemia",
+    "alternative_names": [
+      "AML"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "all",
+    "canonical_name": "Acute Lymphoblastic Leukemia",
+    "alternative_names": [
+      "ALL"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "cml",
+    "canonical_name": "Chronic Myeloid Leukemia",
+    "alternative_names": [
+      "CML"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "hodgkin-lymphoma",
+    "canonical_name": "Hodgkin Lymphoma",
+    "alternative_names": [
+      "Hodgkin's Lymphoma",
+      "Hodgkin Disease"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "non-hodgkin-lymphoma",
+    "canonical_name": "Non-Hodgkin Lymphoma",
+    "alternative_names": [
+      "NHL"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "hemophilia-a",
+    "canonical_name": "Hemophilia A",
+    "alternative_names": [
+      "Factor VIII Deficiency"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "von-willebrand-disease",
+    "canonical_name": "Von Willebrand Disease",
+    "alternative_names": [
+      "vWD"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "dic",
+    "canonical_name": "Disseminated Intravascular Coagulation",
+    "alternative_names": [
+      "DIC"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "thalassemia",
+    "canonical_name": "Thalassemia",
+    "alternative_names": [
+      "Beta Thalassemia",
+      "Alpha Thalassemia"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "g6pd-deficiency",
+    "canonical_name": "Glucose-6-Phosphate Dehydrogenase Deficiency",
+    "alternative_names": [
+      "G6PD Deficiency"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "hereditary-spherocytosis",
+    "canonical_name": "Hereditary Spherocytosis",
+    "alternative_names": [
+      "HS"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "pnh",
+    "canonical_name": "Paroxysmal Nocturnal Hemoglobinuria",
+    "alternative_names": [
+      "PNH"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "polycythemia-vera",
+    "canonical_name": "Polycythemia Vera",
+    "alternative_names": [
+      "PV"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "essential-thrombocythemia",
+    "canonical_name": "Essential Thrombocythemia",
+    "alternative_names": [
+      "ET"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "myelofibrosis",
+    "canonical_name": "Myelofibrosis",
+    "alternative_names": [
+      "Primary Myelofibrosis"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "multiple-myeloma",
+    "canonical_name": "Multiple Myeloma",
+    "alternative_names": [
+      "MM",
+      "Plasma Cell Myeloma"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "waldenstrom-macroglobulinemia",
+    "canonical_name": "Waldenstrom Macroglobulinemia",
+    "alternative_names": [
+      "WM",
+      "Waldenström Macroglobulinemia"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "ttp",
+    "canonical_name": "Thrombotic Thrombocytopenic Purpura",
+    "alternative_names": [
+      "TTP"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "aplastic-anemia",
+    "canonical_name": "Aplastic Anemia",
+    "alternative_names": [],
+    "category": "Hematology"
+  },
+  {
+    "slug": "myelodysplastic-syndrome",
+    "canonical_name": "Myelodysplastic Syndrome",
+    "alternative_names": [
+      "MDS"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "hairy-cell-leukemia",
+    "canonical_name": "Hairy Cell Leukemia",
+    "alternative_names": [
+      "HCL"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "cll",
+    "canonical_name": "Chronic Lymphocytic Leukemia",
+    "alternative_names": [
+      "CLL"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "langerhans-cell-histiocytosis",
+    "canonical_name": "Langerhans Cell Histiocytosis",
+    "alternative_names": [
+      "LCH",
+      "Histiocytosis X"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "bernard-soulier-syndrome",
+    "canonical_name": "Bernard-Soulier Syndrome",
+    "alternative_names": [],
+    "category": "Hematology"
+  },
+  {
+    "slug": "glanzmann-thrombasthenia",
+    "canonical_name": "Glanzmann Thrombasthenia",
+    "alternative_names": [],
+    "category": "Hematology"
+  },
+  {
+    "slug": "factor-v-leiden",
+    "canonical_name": "Factor V Leiden",
+    "alternative_names": [
+      "FVL"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "pernicious-anemia",
+    "canonical_name": "Pernicious Anemia",
+    "alternative_names": [],
+    "category": "Hematology"
+  },
+  {
+    "slug": "burkitt-lymphoma",
+    "canonical_name": "Burkitt Lymphoma",
+    "alternative_names": [
+      "Burkitt's Lymphoma"
+    ],
+    "category": "Hematology"
+  },
+  {
+    "slug": "bacterial-meningitis",
+    "canonical_name": "Bacterial Meningitis",
+    "alternative_names": [
+      "Meningitis"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "tuberculosis",
+    "canonical_name": "Tuberculosis",
+    "alternative_names": [
+      "TB"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "lyme-disease",
+    "canonical_name": "Lyme Disease",
+    "alternative_names": [
+      "Lyme Borreliosis"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "rocky-mountain-spotted-fever",
+    "canonical_name": "Rocky Mountain Spotted Fever",
+    "alternative_names": [
+      "RMSF"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "hiv-aids",
+    "canonical_name": "HIV/AIDS",
+    "alternative_names": [
+      "HIV",
+      "AIDS"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "infectious-mononucleosis",
+    "canonical_name": "Infectious Mononucleosis",
+    "alternative_names": [
+      "Mono",
+      "EBV Infection"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "toxic-shock-syndrome",
+    "canonical_name": "Toxic Shock Syndrome",
+    "alternative_names": [
+      "TSS"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "candidiasis",
+    "canonical_name": "Candidiasis",
+    "alternative_names": [
+      "Candida Infection",
+      "Thrush"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "pneumocystis-pneumonia",
+    "canonical_name": "Pneumocystis Pneumonia",
+    "alternative_names": [
+      "PCP",
+      "Pneumocystis Jirovecii Pneumonia",
+      "PJP"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "malaria",
+    "canonical_name": "Malaria",
+    "alternative_names": [],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "toxoplasmosis",
+    "canonical_name": "Toxoplasmosis",
+    "alternative_names": [
+      "Toxoplasma Infection"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "cryptococcal-meningitis",
+    "canonical_name": "Cryptococcal Meningitis",
+    "alternative_names": [
+      "Cryptococcosis"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "histoplasmosis",
+    "canonical_name": "Histoplasmosis",
+    "alternative_names": [],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "coccidioidomycosis",
+    "canonical_name": "Coccidioidomycosis",
+    "alternative_names": [
+      "Valley Fever"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "blastomycosis",
+    "canonical_name": "Blastomycosis",
+    "alternative_names": [],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "actinomycosis",
+    "canonical_name": "Actinomycosis",
+    "alternative_names": [],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "nocardiosis",
+    "canonical_name": "Nocardiosis",
+    "alternative_names": [],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "cat-scratch-disease",
+    "canonical_name": "Cat Scratch Disease",
+    "alternative_names": [
+      "Bartonella Infection"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "erythema-migrans",
+    "canonical_name": "Erythema Migrans",
+    "alternative_names": [],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "scarlet-fever",
+    "canonical_name": "Scarlet Fever",
+    "alternative_names": [
+      "Scarlatina"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "roseola-infantum",
+    "canonical_name": "Roseola Infantum",
+    "alternative_names": [
+      "Sixth Disease",
+      "Exanthem Subitum"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "hand-foot-mouth-disease",
+    "canonical_name": "Hand-Foot-Mouth Disease",
+    "alternative_names": [
+      "HFMD"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "botulism",
+    "canonical_name": "Botulism",
+    "alternative_names": [],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "tetanus",
+    "canonical_name": "Tetanus",
+    "alternative_names": [
+      "Lockjaw"
+    ],
+    "category": "Infectious Disease"
+  },
+  {
+    "slug": "major-depressive-disorder",
+    "canonical_name": "Major Depressive Disorder",
+    "alternative_names": [
+      "MDD",
+      "Depression",
+      "Major Depression"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "generalized-anxiety-disorder",
+    "canonical_name": "Generalized Anxiety Disorder",
+    "alternative_names": [
+      "GAD",
+      "Anxiety"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "schizophrenia",
+    "canonical_name": "Schizophrenia",
+    "alternative_names": [],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "bipolar-disorder",
+    "canonical_name": "Bipolar Disorder",
+    "alternative_names": [
+      "Bipolar",
+      "Manic Depression"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "panic-disorder",
+    "canonical_name": "Panic Disorder",
+    "alternative_names": [
+      "Panic Attacks"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "anorexia-nervosa",
+    "canonical_name": "Anorexia Nervosa",
+    "alternative_names": [
+      "Anorexia"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "ocd",
+    "canonical_name": "Obsessive-Compulsive Disorder",
+    "alternative_names": [
+      "OCD"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "ptsd",
+    "canonical_name": "Post-Traumatic Stress Disorder",
+    "alternative_names": [
+      "PTSD"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "alcohol-withdrawal",
+    "canonical_name": "Alcohol Withdrawal",
+    "alternative_names": [
+      "Delirium Tremens",
+      "DTs"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "bulimia-nervosa",
+    "canonical_name": "Bulimia Nervosa",
+    "alternative_names": [
+      "Bulimia"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "adhd",
+    "canonical_name": "Attention-Deficit Hyperactivity Disorder",
+    "alternative_names": [
+      "ADHD",
+      "ADD"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "autism-spectrum-disorder",
+    "canonical_name": "Autism Spectrum Disorder",
+    "alternative_names": [
+      "ASD",
+      "Autism"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "neuroleptic-malignant-syndrome",
+    "canonical_name": "Neuroleptic Malignant Syndrome",
+    "alternative_names": [
+      "NMS"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "serotonin-syndrome",
+    "canonical_name": "Serotonin Syndrome",
+    "alternative_names": [],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "somatization-disorder",
+    "canonical_name": "Somatization Disorder",
+    "alternative_names": [
+      "Somatic Symptom Disorder"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "conversion-disorder",
+    "canonical_name": "Conversion Disorder",
+    "alternative_names": [
+      "Functional Neurological Disorder"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "tourette-syndrome",
+    "canonical_name": "Tourette Syndrome",
+    "alternative_names": [
+      "Tourette's Syndrome"
+    ],
+    "category": "Psychiatry"
+  },
+  {
+    "slug": "psoriasis",
+    "canonical_name": "Psoriasis",
+    "alternative_names": [],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "melanoma",
+    "canonical_name": "Melanoma",
+    "alternative_names": [
+      "Malignant Melanoma"
+    ],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "basal-cell-carcinoma",
+    "canonical_name": "Basal Cell Carcinoma",
+    "alternative_names": [
+      "BCC"
+    ],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "eczema",
+    "canonical_name": "Eczema",
+    "alternative_names": [
+      "Atopic Dermatitis"
+    ],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "stevens-johnson-syndrome",
+    "canonical_name": "Stevens-Johnson Syndrome",
+    "alternative_names": [
+      "SJS",
+      "TEN",
+      "Toxic Epidermal Necrolysis"
+    ],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "squamous-cell-carcinoma",
+    "canonical_name": "Squamous Cell Carcinoma",
+    "alternative_names": [
+      "SCC"
+    ],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "pemphigus-vulgaris",
+    "canonical_name": "Pemphigus Vulgaris",
+    "alternative_names": [],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "bullous-pemphigoid",
+    "canonical_name": "Bullous Pemphigoid",
+    "alternative_names": [],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "erythema-multiforme",
+    "canonical_name": "Erythema Multiforme",
+    "alternative_names": [
+      "EM"
+    ],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "acanthosis-nigricans",
+    "canonical_name": "Acanthosis Nigricans",
+    "alternative_names": [],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "pityriasis-rosea",
+    "canonical_name": "Pityriasis Rosea",
+    "alternative_names": [],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "seborrheic-keratosis",
+    "canonical_name": "Seborrheic Keratosis",
+    "alternative_names": [],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "actinic-keratosis",
+    "canonical_name": "Actinic Keratosis",
+    "alternative_names": [
+      "Solar Keratosis"
+    ],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "dermatitis-herpetiformis",
+    "canonical_name": "Dermatitis Herpetiformis",
+    "alternative_names": [
+      "DH"
+    ],
+    "category": "Dermatology"
+  },
+  {
+    "slug": "kawasaki-disease",
+    "canonical_name": "Kawasaki Disease",
+    "alternative_names": [
+      "Mucocutaneous Lymph Node Syndrome"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "croup",
+    "canonical_name": "Croup",
+    "alternative_names": [
+      "Laryngotracheobronchitis"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "epiglottitis",
+    "canonical_name": "Epiglottitis",
+    "alternative_names": [],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "intussusception",
+    "canonical_name": "Intussusception",
+    "alternative_names": [],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "pyloric-stenosis",
+    "canonical_name": "Pyloric Stenosis",
+    "alternative_names": [
+      "Hypertrophic Pyloric Stenosis",
+      "Hypertrophic Pyloric Stenosis - Late Presentation"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "respiratory-distress-syndrome",
+    "canonical_name": "Respiratory Distress Syndrome",
+    "alternative_names": [
+      "RDS",
+      "Hyaline Membrane Disease"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "neonatal-jaundice",
+    "canonical_name": "Neonatal Jaundice",
+    "alternative_names": [
+      "Physiologic Jaundice",
+      "Hyperbilirubinemia"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "hirschsprung-disease",
+    "canonical_name": "Hirschsprung Disease",
+    "alternative_names": [
+      "Congenital Megacolon"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "necrotizing-enterocolitis",
+    "canonical_name": "Necrotizing Enterocolitis",
+    "alternative_names": [
+      "NEC"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "retinopathy-of-prematurity",
+    "canonical_name": "Retinopathy of Prematurity",
+    "alternative_names": [
+      "ROP"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "digeorge-syndrome",
+    "canonical_name": "DiGeorge Syndrome",
+    "alternative_names": [
+      "22q11.2 Deletion Syndrome",
+      "Velocardiofacial Syndrome"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "wiskott-aldrich-syndrome",
+    "canonical_name": "Wiskott-Aldrich Syndrome",
+    "alternative_names": [
+      "WAS"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "bronchiolitis",
+    "canonical_name": "Bronchiolitis",
+    "alternative_names": [
+      "RSV Bronchiolitis"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "kernicterus",
+    "canonical_name": "Kernicterus",
+    "alternative_names": [
+      "Bilirubin Encephalopathy"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "erb-palsy",
+    "canonical_name": "Erb Palsy",
+    "alternative_names": [
+      "Erb's Palsy",
+      "Erb-Duchenne Palsy"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "tracheoesophageal-fistula",
+    "canonical_name": "Tracheoesophageal Fistula",
+    "alternative_names": [
+      "TEF",
+      "Esophageal Atresia"
+    ],
+    "category": "Pediatrics"
+  },
+  {
+    "slug": "ectopic-pregnancy",
+    "canonical_name": "Ectopic Pregnancy",
+    "alternative_names": [
+      "Tubal Pregnancy"
+    ],
+    "category": "Obstetrics/Gynecology"
+  },
+  {
+    "slug": "pcos",
+    "canonical_name": "Polycystic Ovary Syndrome",
+    "alternative_names": [
+      "PCOS"
+    ],
+    "category": "Obstetrics/Gynecology"
+  },
+  {
+    "slug": "preeclampsia",
+    "canonical_name": "Preeclampsia",
+    "alternative_names": [
+      "Pre-eclampsia",
+      "Toxemia of Pregnancy"
+    ],
+    "category": "Obstetrics/Gynecology"
+  },
+  {
+    "slug": "endometriosis",
+    "canonical_name": "Endometriosis",
+    "alternative_names": [],
+    "category": "Obstetrics/Gynecology"
+  },
+  {
+    "slug": "placenta-previa",
+    "canonical_name": "Placenta Previa",
+    "alternative_names": [],
+    "category": "Obstetrics/Gynecology"
+  },
+  {
+    "slug": "hellp-syndrome",
+    "canonical_name": "HELLP Syndrome",
+    "alternative_names": [],
+    "category": "Obstetrics/Gynecology"
+  },
+  {
+    "slug": "placental-abruption",
+    "canonical_name": "Placental Abruption",
+    "alternative_names": [
+      "Abruptio Placentae"
+    ],
+    "category": "Obstetrics/Gynecology"
+  },
+  {
+    "slug": "gestational-trophoblastic-disease",
+    "canonical_name": "Gestational Trophoblastic Disease",
+    "alternative_names": [
+      "Molar Pregnancy",
+      "Hydatidiform Mole"
+    ],
+    "category": "Obstetrics/Gynecology"
+  },
+  {
+    "slug": "chorioamnionitis",
+    "canonical_name": "Chorioamnionitis",
+    "alternative_names": [
+      "Intra-amniotic Infection"
+    ],
+    "category": "Obstetrics/Gynecology"
+  },
+  {
+    "slug": "testicular-torsion",
+    "canonical_name": "Testicular Torsion",
+    "alternative_names": [],
+    "category": "Urology"
+  },
+  {
+    "slug": "bph",
+    "canonical_name": "Benign Prostatic Hyperplasia",
+    "alternative_names": [
+      "BPH",
+      "Enlarged Prostate"
+    ],
+    "category": "Urology"
+  },
+  {
+    "slug": "prostate-cancer",
+    "canonical_name": "Prostate Cancer",
+    "alternative_names": [],
+    "category": "Urology"
+  },
+  {
+    "slug": "testicular-seminoma",
+    "canonical_name": "Testicular Seminoma",
+    "alternative_names": [
+      "Seminoma"
+    ],
+    "category": "Urology"
+  },
+  {
+    "slug": "testicular-nsgct",
+    "canonical_name": "Testicular Non-Seminomatous Germ Cell Tumor",
+    "alternative_names": [
+      "NSGCT"
+    ],
+    "category": "Urology"
+  },
+  {
+    "slug": "epididymitis",
+    "canonical_name": "Epididymitis",
+    "alternative_names": [],
+    "category": "Urology"
+  },
+  {
+    "slug": "varicocele",
+    "canonical_name": "Varicocele",
+    "alternative_names": [],
+    "category": "Urology"
+  },
+  {
+    "slug": "hydrocele",
+    "canonical_name": "Hydrocele",
+    "alternative_names": [],
+    "category": "Urology"
+  },
+  {
+    "slug": "osteomyelitis",
+    "canonical_name": "Osteomyelitis",
+    "alternative_names": [],
+    "category": "Orthopedics"
+  },
+  {
+    "slug": "osgood-schlatter",
+    "canonical_name": "Osgood-Schlatter Disease",
+    "alternative_names": [
+      "Osgood Schlatter"
+    ],
+    "category": "Orthopedics"
+  },
+  {
+    "slug": "scfe",
+    "canonical_name": "Slipped Capital Femoral Epiphysis",
+    "alternative_names": [
+      "SCFE"
+    ],
+    "category": "Orthopedics"
+  },
+  {
+    "slug": "legg-calve-perthes",
+    "canonical_name": "Legg-Calve-Perthes Disease",
+    "alternative_names": [
+      "Legg Calve Perthes",
+      "Perthes Disease"
+    ],
+    "category": "Orthopedics"
+  },
+  {
+    "slug": "developmental-dysplasia-hip",
+    "canonical_name": "Developmental Dysplasia of the Hip",
+    "alternative_names": [
+      "DDH",
+      "Hip Dysplasia"
+    ],
+    "category": "Orthopedics"
+  },
+  {
+    "slug": "compartment-syndrome",
+    "canonical_name": "Compartment Syndrome",
+    "alternative_names": [],
+    "category": "Orthopedics"
+  },
+  {
+    "slug": "osteosarcoma",
+    "canonical_name": "Osteosarcoma",
+    "alternative_names": [],
+    "category": "Orthopedics"
+  },
+  {
+    "slug": "ewing-sarcoma",
+    "canonical_name": "Ewing Sarcoma",
+    "alternative_names": [
+      "Ewing's Sarcoma"
+    ],
+    "category": "Orthopedics"
+  },
+  {
+    "slug": "paget-disease-bone",
+    "canonical_name": "Paget Disease of Bone",
+    "alternative_names": [
+      "Paget's Disease"
+    ],
+    "category": "Orthopedics"
+  },
+  {
+    "slug": "glaucoma",
+    "canonical_name": "Glaucoma",
+    "alternative_names": [
+      "Open-Angle Glaucoma",
+      "Acute Angle-Closure Glaucoma"
+    ],
+    "category": "Ophthalmology"
+  },
+  {
+    "slug": "cataract",
+    "canonical_name": "Cataract",
+    "alternative_names": [],
+    "category": "Ophthalmology"
+  },
+  {
+    "slug": "retinal-detachment",
+    "canonical_name": "Retinal Detachment",
+    "alternative_names": [],
+    "category": "Ophthalmology"
+  },
+  {
+    "slug": "macular-degeneration",
+    "canonical_name": "Macular Degeneration",
+    "alternative_names": [
+      "AMD",
+      "Age-Related Macular Degeneration"
+    ],
+    "category": "Ophthalmology"
+  },
+  {
+    "slug": "diabetic-retinopathy",
+    "canonical_name": "Diabetic Retinopathy",
+    "alternative_names": [],
+    "category": "Ophthalmology"
+  },
+  {
+    "slug": "central-retinal-artery-occlusion",
+    "canonical_name": "Central Retinal Artery Occlusion",
+    "alternative_names": [
+      "CRAO"
+    ],
+    "category": "Ophthalmology"
+  },
+  {
+    "slug": "papilledema",
+    "canonical_name": "Papilledema",
+    "alternative_names": [],
+    "category": "Ophthalmology"
+  },
+  {
+    "slug": "meniere-disease",
+    "canonical_name": "Meniere Disease",
+    "alternative_names": [
+      "Ménière Disease",
+      "Meniere's Disease"
+    ],
+    "category": "ENT"
+  },
+  {
+    "slug": "vestibular-schwannoma",
+    "canonical_name": "Vestibular Schwannoma",
+    "alternative_names": [
+      "Acoustic Neuroma"
+    ],
+    "category": "ENT"
+  },
+  {
+    "slug": "acute-otitis-media",
+    "canonical_name": "Acute Otitis Media",
+    "alternative_names": [
+      "AOM",
+      "Ear Infection"
+    ],
+    "category": "ENT"
+  },
+  {
+    "slug": "otitis-externa",
+    "canonical_name": "Otitis Externa",
+    "alternative_names": [
+      "Swimmer's Ear"
+    ],
+    "category": "ENT"
+  },
+  {
+    "slug": "acute-bacterial-sinusitis",
+    "canonical_name": "Acute Bacterial Sinusitis",
+    "alternative_names": [
+      "Sinusitis"
+    ],
+    "category": "ENT"
+  },
+  {
+    "slug": "allergic-rhinitis",
+    "canonical_name": "Allergic Rhinitis",
+    "alternative_names": [
+      "Hay Fever"
+    ],
+    "category": "ENT"
+  },
+  {
+    "slug": "dvt",
+    "canonical_name": "Deep Vein Thrombosis",
+    "alternative_names": [
+      "DVT"
+    ],
+    "category": "Vascular"
+  },
+  {
+    "slug": "peripheral-arterial-disease",
+    "canonical_name": "Peripheral Arterial Disease",
+    "alternative_names": [
+      "PAD",
+      "Peripheral Vascular Disease"
+    ],
+    "category": "Vascular"
+  },
+  {
+    "slug": "aaa",
+    "canonical_name": "Abdominal Aortic Aneurysm",
+    "alternative_names": [
+      "AAA"
+    ],
+    "category": "Vascular"
+  },
+  {
+    "slug": "varicose-veins",
+    "canonical_name": "Varicose Veins",
+    "alternative_names": [],
+    "category": "Vascular"
+  },
+  {
+    "slug": "phenylketonuria",
+    "canonical_name": "Phenylketonuria",
+    "alternative_names": [
+      "PKU"
+    ],
+    "category": "Genetics"
+  },
+  {
+    "slug": "maple-syrup-urine-disease",
+    "canonical_name": "Maple Syrup Urine Disease",
+    "alternative_names": [
+      "MSUD"
+    ],
+    "category": "Genetics"
+  },
+  {
+    "slug": "fragile-x-syndrome",
+    "canonical_name": "Fragile X Syndrome",
+    "alternative_names": [],
+    "category": "Genetics"
+  },
+  {
+    "slug": "prader-willi-syndrome",
+    "canonical_name": "Prader-Willi Syndrome",
+    "alternative_names": [
+      "PWS"
+    ],
+    "category": "Genetics"
+  },
+  {
+    "slug": "angelman-syndrome",
+    "canonical_name": "Angelman Syndrome",
+    "alternative_names": [],
+    "category": "Genetics"
+  },
+  {
+    "slug": "achondroplasia",
+    "canonical_name": "Achondroplasia",
+    "alternative_names": [],
+    "category": "Genetics"
+  },
+  {
+    "slug": "marfan-syndrome",
+    "canonical_name": "Marfan Syndrome",
+    "alternative_names": [],
+    "category": "Genetics"
+  },
+  {
+    "slug": "ehlers-danlos-syndrome",
+    "canonical_name": "Ehlers-Danlos Syndrome",
+    "alternative_names": [
+      "EDS"
+    ],
+    "category": "Genetics"
+  },
+  {
+    "slug": "osteogenesis-imperfecta",
+    "canonical_name": "Osteogenesis Imperfecta",
+    "alternative_names": [
+      "OI",
+      "Brittle Bone Disease"
+    ],
+    "category": "Genetics"
+  },
+  {
+    "slug": "duchenne-muscular-dystrophy",
+    "canonical_name": "Duchenne Muscular Dystrophy",
+    "alternative_names": [
+      "DMD"
+    ],
+    "category": "Genetics"
+  },
+  {
+    "slug": "becker-muscular-dystrophy",
+    "canonical_name": "Becker Muscular Dystrophy",
+    "alternative_names": [
+      "BMD"
+    ],
+    "category": "Genetics"
+  },
+  {
+    "slug": "myotonic-dystrophy",
+    "canonical_name": "Myotonic Dystrophy",
+    "alternative_names": [
+      "DM1",
+      "Steinert Disease"
+    ],
+    "category": "Genetics"
+  },
+  {
+    "slug": "von-hippel-lindau",
+    "canonical_name": "Von Hippel-Lindau Disease",
+    "alternative_names": [
+      "VHL",
+      "Von Hippel Lindau Disease"
+    ],
+    "category": "Genetics"
+  },
+  {
+    "slug": "ovarian-cancer",
+    "canonical_name": "Ovarian Cancer",
+    "alternative_names": [],
+    "category": "Oncology"
+  },
+  {
+    "slug": "cin",
+    "canonical_name": "Cervical Intraepithelial Neoplasia",
+    "alternative_names": [
+      "CIN"
+    ],
+    "category": "Oncology"
+  },
+  {
+    "slug": "cervical-cancer",
+    "canonical_name": "Invasive Cervical Cancer",
+    "alternative_names": [
+      "Cervical Cancer"
+    ],
+    "category": "Oncology"
+  },
+  {
+    "slug": "breast-cancer",
+    "canonical_name": "Breast Cancer",
+    "alternative_names": [],
+    "category": "Oncology"
+  }
+]

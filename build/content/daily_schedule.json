@@ -1,0 +1,902 @@
+[
+  {
+    "day": "2026-07-26",
+    "case_id": "1342f70c-9ee8-3475-404f-10329df3e37a",
+    "diagnosis": "Multiple Sclerosis"
+  },
+  {
+    "day": "2026-07-27",
+    "case_id": "54f06796-c0b4-7258-e8a1-3a6e28c1e49c",
+    "diagnosis": "Conn Syndrome"
+  },
+  {
+    "day": "2026-07-28",
+    "case_id": "76619edb-61e4-b7f0-6e6f-3cf4541f5fba",
+    "diagnosis": "X-Linked Agammaglobulinemia"
+  },
+  {
+    "day": "2026-07-29",
+    "case_id": "95601b0d-8809-3c77-741e-e0f7d0797896",
+    "diagnosis": "Asthma Exacerbation"
+  },
+  {
+    "day": "2026-07-30",
+    "case_id": "8979928d-d410-8806-d1d0-61bb32edbd41",
+    "diagnosis": "Thalassemia"
+  },
+  {
+    "day": "2026-07-31",
+    "case_id": "7012e59d-caf5-8ce8-a1a3-4b1299278438",
+    "diagnosis": "Granuloma Inguinale"
+  },
+  {
+    "day": "2026-08-01",
+    "case_id": "d970f6bd-1944-b874-da36-8b1a435cb2f6",
+    "diagnosis": "Meniere Disease"
+  },
+  {
+    "day": "2026-08-02",
+    "case_id": "6aa8fe60-6cb0-4240-28c9-70c7c3d982eb",
+    "diagnosis": "Pseudogout"
+  },
+  {
+    "day": "2026-08-03",
+    "case_id": "2baaea10-acae-4f1b-8760-b736cbbb77d8",
+    "diagnosis": "Antiphospholipid Syndrome"
+  },
+  {
+    "day": "2026-08-04",
+    "case_id": "95af3a46-c93a-a41b-6a6b-c453535dcf47",
+    "diagnosis": "Fluoroquinolone Side Effects"
+  },
+  {
+    "day": "2026-08-05",
+    "case_id": "c04859b2-5c78-f658-f183-06947982cef9",
+    "diagnosis": "Retinal Detachment"
+  },
+  {
+    "day": "2026-08-06",
+    "case_id": "3bc1c3ef-545c-37ba-fa95-07ac005127d2",
+    "diagnosis": "Congenital Hypothyroidism"
+  },
+  {
+    "day": "2026-08-07",
+    "case_id": "0e9d3fee-5470-3201-feec-014c05550042",
+    "diagnosis": "Hypovolemic Shock"
+  },
+  {
+    "day": "2026-08-08",
+    "case_id": "fc0b112c-83f9-8131-478d-3fb745e566a6",
+    "diagnosis": "Atrial Septal Defect"
+  },
+  {
+    "day": "2026-08-09",
+    "case_id": "f6f0e6ac-e35f-3d28-113b-79069c54c30e",
+    "diagnosis": "Tyrosinemia Type I"
+  },
+  {
+    "day": "2026-08-10",
+    "case_id": "73b64515-2501-fb0b-672b-4ddf61a697ca",
+    "diagnosis": "Paget Disease of Bone"
+  },
+  {
+    "day": "2026-08-11",
+    "case_id": "6836d86e-dd38-ff41-0723-7800c7b937d9",
+    "diagnosis": "Wilson Disease"
+  },
+  {
+    "day": "2026-08-12",
+    "case_id": "042dd250-a1fd-6190-d562-3db12fc00f38",
+    "diagnosis": "Krabbe Disease"
+  },
+  {
+    "day": "2026-08-13",
+    "case_id": "aa115d7c-da5e-365d-594b-8b6b7a271a58",
+    "diagnosis": "Major Depressive Disorder"
+  },
+  {
+    "day": "2026-08-14",
+    "case_id": "f4657c39-cd0f-680a-a074-50edb539723d",
+    "diagnosis": "Normal Pressure Hydrocephalus"
+  },
+  {
+    "day": "2026-08-15",
+    "case_id": "9d0c95c9-5a09-01ec-403b-422aac3c01f1",
+    "diagnosis": "Ataxia-Telangiectasia"
+  },
+  {
+    "day": "2026-08-16",
+    "case_id": "ae4efefb-e64a-0740-7ee8-b493cccd725a",
+    "diagnosis": "Minimal Change Disease"
+  },
+  {
+    "day": "2026-08-17",
+    "case_id": "a3698cc9-1eb3-aceb-4c08-c207c4935d31",
+    "diagnosis": "Waldenstrom Macroglobulinemia"
+  },
+  {
+    "day": "2026-08-18",
+    "case_id": "cef36eee-f3de-fd4c-8585-3dbcd0c4685c",
+    "diagnosis": "Hepatitis D"
+  },
+  {
+    "day": "2026-08-19",
+    "case_id": "573735d3-52d8-bd57-9138-4538b0e61907",
+    "diagnosis": "Phenylketonuria"
+  },
+  {
+    "day": "2026-08-20",
+    "case_id": "32897450-70a8-6526-6e43-54f5f470b3fb",
+    "diagnosis": "Necrotizing Enterocolitis"
+  },
+  {
+    "day": "2026-08-21",
+    "case_id": "bbb717bd-4a93-4a11-bffe-d31b5a5f0a03",
+    "diagnosis": "Isoniazid Toxicity"
+  },
+  {
+    "day": "2026-08-22",
+    "case_id": "45267b8f-28a0-4280-e1f3-380ef1538ebd",
+    "diagnosis": "Community-Acquired Pneumonia"
+  },
+  {
+    "day": "2026-08-23",
+    "case_id": "e1845c1a-d3b0-6e8f-e9e9-8be9a6efc989",
+    "diagnosis": "Mesothelioma"
+  },
+  {
+    "day": "2026-08-24",
+    "case_id": "124252f3-e844-f332-93af-4af37dc09a5e",
+    "diagnosis": "Amebiasis"
+  },
+  {
+    "day": "2026-08-25",
+    "case_id": "22c3f014-f7f8-c1cc-b0e4-a0fd8689925d",
+    "diagnosis": "Goodpasture Syndrome"
+  },
+  {
+    "day": "2026-08-26",
+    "case_id": "f3489e85-5c9f-f98b-08b2-66027dc128a1",
+    "diagnosis": "Contrast-Induced Nephropathy"
+  },
+  {
+    "day": "2026-08-27",
+    "case_id": "3d899b11-83fd-0d73-a5b5-093a02233e4e",
+    "diagnosis": "Ehlers-Danlos Syndrome"
+  },
+  {
+    "day": "2026-08-28",
+    "case_id": "3f62676e-c1b8-96d7-8619-f996a4a36103",
+    "diagnosis": "Huntington Disease"
+  },
+  {
+    "day": "2026-08-29",
+    "case_id": "badd131e-873a-c4df-ba33-bad205d8faa1",
+    "diagnosis": "Tuberous Sclerosis"
+  },
+  {
+    "day": "2026-08-30",
+    "case_id": "bce8f14c-7e97-331a-d64c-8a871b3ca21b",
+    "diagnosis": "Acute Otitis Media"
+  },
+  {
+    "day": "2026-08-31",
+    "case_id": "6dee5d61-f37e-d7f8-a46d-1839b865d984",
+    "diagnosis": "Polymyalgia Rheumatica"
+  },
+  {
+    "day": "2026-09-01",
+    "case_id": "eedac5b7-e067-c5f4-695e-18c20cba60c6",
+    "diagnosis": "Posterior Fossa Malformations - Chiari"
+  },
+  {
+    "day": "2026-09-02",
+    "case_id": "a069c38b-3092-6778-373e-c1099847e0d1",
+    "diagnosis": "Chlamydia Trachomatis"
+  },
+  {
+    "day": "2026-09-03",
+    "case_id": "647097df-59c4-5ee2-7dbf-9f5af96afa49",
+    "diagnosis": "Rocky Mountain Spotted Fever"
+  },
+  {
+    "day": "2026-09-04",
+    "case_id": "bbfae847-c362-89b6-c6ab-e4cb23e60d3f",
+    "diagnosis": "Toxoplasmosis"
+  },
+  {
+    "day": "2026-09-05",
+    "case_id": "8bfbc924-eb2c-6853-7d30-08679e28d9db",
+    "diagnosis": "Tricyclic Antidepressant Toxicity"
+  },
+  {
+    "day": "2026-09-06",
+    "case_id": "24842e8c-20d6-6ef7-62fe-2696acdcceb8",
+    "diagnosis": "Cardiac Tamponade"
+  },
+  {
+    "day": "2026-09-07",
+    "case_id": "541cc208-a8c8-2e62-516f-d42ebc7290f4",
+    "diagnosis": "Post-Traumatic Stress Disorder"
+  },
+  {
+    "day": "2026-09-08",
+    "case_id": "6f453eb2-0d40-2ae7-37af-3f85321452f6",
+    "diagnosis": "Vitamin B9 Deficiency"
+  },
+  {
+    "day": "2026-09-09",
+    "case_id": "28b16e2a-95a5-ec4c-630a-2431b97565be",
+    "diagnosis": "Hepatic Encephalopathy"
+  },
+  {
+    "day": "2026-09-10",
+    "case_id": "cceca570-2c59-1cd3-8a7b-2ac6fe78aed1",
+    "diagnosis": "Familial Adenomatous Polyposis"
+  },
+  {
+    "day": "2026-09-11",
+    "case_id": "392b9104-7e97-69f0-3a7d-76f158fb9905",
+    "diagnosis": "Cutaneous Leishmaniasis"
+  },
+  {
+    "day": "2026-09-12",
+    "case_id": "128f85ef-45b0-5398-279f-63c81960324b",
+    "diagnosis": "Diabetes Insipidus"
+  },
+  {
+    "day": "2026-09-13",
+    "case_id": "228f2127-5708-0f97-4913-5655e0da145c",
+    "diagnosis": "Klinefelter Syndrome"
+  },
+  {
+    "day": "2026-09-14",
+    "case_id": "4ccaf6ca-524f-e9ba-aeef-cfda13081a2b",
+    "diagnosis": "Testicular Non-Seminomatous Germ Cell Tumor"
+  },
+  {
+    "day": "2026-09-15",
+    "case_id": "91b14e95-6f02-3d16-4eec-b7452306c120",
+    "diagnosis": "Chronic Myeloid Leukemia"
+  },
+  {
+    "day": "2026-09-16",
+    "case_id": "951136c1-535c-0d6e-a771-29d7d4e644ad",
+    "diagnosis": "Factor V Leiden"
+  },
+  {
+    "day": "2026-09-17",
+    "case_id": "77855b30-8baf-fcf7-5097-aaed041e473e",
+    "diagnosis": "Beta-Blocker Toxicity"
+  },
+  {
+    "day": "2026-09-18",
+    "case_id": "4ca91043-cc6c-ab55-778a-c6417cfb58da",
+    "diagnosis": "Candidiasis"
+  },
+  {
+    "day": "2026-09-19",
+    "case_id": "65e43be4-f6dc-ad65-78ef-19ee610d0d0e",
+    "diagnosis": "Actinic Keratosis"
+  },
+  {
+    "day": "2026-09-20",
+    "case_id": "5fc5da56-5051-5e94-2235-6a4eac1784ff",
+    "diagnosis": "Attention-Deficit Hyperactivity Disorder"
+  },
+  {
+    "day": "2026-09-21",
+    "case_id": "ec41fd8f-6299-f439-53d2-37eb44fdb104",
+    "diagnosis": "Bipolar Disorder"
+  },
+  {
+    "day": "2026-09-22",
+    "case_id": "7c157864-72b2-5680-9a1c-b6569f788b54",
+    "diagnosis": "Developmental Dysplasia of the Hip"
+  },
+  {
+    "day": "2026-09-23",
+    "case_id": "e5eeda91-3ef7-8fcb-6874-2ae01de26426",
+    "diagnosis": "Pseudomembranous Colitis"
+  },
+  {
+    "day": "2026-09-24",
+    "case_id": "0590915f-3e29-3905-e3b3-b8d4df6bba77",
+    "diagnosis": "Small Cell Lung Cancer"
+  },
+  {
+    "day": "2026-09-25",
+    "case_id": "65bb26d5-8483-3901-aa74-65bb11403e8b",
+    "diagnosis": "Familial Hypercholesterolemia"
+  },
+  {
+    "day": "2026-09-26",
+    "case_id": "1342f70c-9ee8-3475-404f-10329df3e37a",
+    "diagnosis": "Multiple Sclerosis"
+  },
+  {
+    "day": "2026-09-27",
+    "case_id": "54f06796-c0b4-7258-e8a1-3a6e28c1e49c",
+    "diagnosis": "Conn Syndrome"
+  },
+  {
+    "day": "2026-09-28",
+    "case_id": "76619edb-61e4-b7f0-6e6f-3cf4541f5fba",
+    "diagnosis": "X-Linked Agammaglobulinemia"
+  },
+  {
+    "day": "2026-09-29",
+    "case_id": "95601b0d-8809-3c77-741e-e0f7d0797896",
+    "diagnosis": "Asthma Exacerbation"
+  },
+  {
+    "day": "2026-09-30",
+    "case_id": "8979928d-d410-8806-d1d0-61bb32edbd41",
+    "diagnosis": "Thalassemia"
+  },
+  {
+    "day": "2026-10-01",
+    "case_id": "d970f6bd-1944-b874-da36-8b1a435cb2f6",
+    "diagnosis": "Meniere Disease"
+  },
+  {
+    "day": "2026-10-02",
+    "case_id": "6aa8fe60-6cb0-4240-28c9-70c7c3d982eb",
+    "diagnosis": "Pseudogout"
+  },
+  {
+    "day": "2026-10-03",
+    "case_id": "2baaea10-acae-4f1b-8760-b736cbbb77d8",
+    "diagnosis": "Antiphospholipid Syndrome"
+  },
+  {
+    "day": "2026-10-04",
+    "case_id": "95af3a46-c93a-a41b-6a6b-c453535dcf47",
+    "diagnosis": "Fluoroquinolone Side Effects"
+  },
+  {
+    "day": "2026-10-05",
+    "case_id": "c04859b2-5c78-f658-f183-06947982cef9",
+    "diagnosis": "Retinal Detachment"
+  },
+  {
+    "day": "2026-10-06",
+    "case_id": "3bc1c3ef-545c-37ba-fa95-07ac005127d2",
+    "diagnosis": "Congenital Hypothyroidism"
+  },
+  {
+    "day": "2026-10-07",
+    "case_id": "0e9d3fee-5470-3201-feec-014c05550042",
+    "diagnosis": "Hypovolemic Shock"
+  },
+  {
+    "day": "2026-10-08",
+    "case_id": "fc0b112c-83f9-8131-478d-3fb745e566a6",
+    "diagnosis": "Atrial Septal Defect"
+  },
+  {
+    "day": "2026-10-09",
+    "case_id": "f6f0e6ac-e35f-3d28-113b-79069c54c30e",
+    "diagnosis": "Tyrosinemia Type I"
+  },
+  {
+    "day": "2026-10-10",
+    "case_id": "73b64515-2501-fb0b-672b-4ddf61a697ca",
+    "diagnosis": "Paget Disease of Bone"
+  },
+  {
+    "day": "2026-10-11",
+    "case_id": "6836d86e-dd38-ff41-0723-7800c7b937d9",
+    "diagnosis": "Wilson Disease"
+  },
+  {
+    "day": "2026-10-12",
+    "case_id": "042dd250-a1fd-6190-d562-3db12fc00f38",
+    "diagnosis": "Krabbe Disease"
+  },
+  {
+    "day": "2026-10-13",
+    "case_id": "aa115d7c-da5e-365d-594b-8b6b7a271a58",
+    "diagnosis": "Major Depressive Disorder"
+  },
+  {
+    "day": "2026-10-14",
+    "case_id": "f4657c39-cd0f-680a-a074-50edb539723d",
+    "diagnosis": "Normal Pressure Hydrocephalus"
+  },
+  {
+    "day": "2026-10-15",
+    "case_id": "9d0c95c9-5a09-01ec-403b-422aac3c01f1",
+    "diagnosis": "Ataxia-Telangiectasia"
+  },
+  {
+    "day": "2026-10-16",
+    "case_id": "ae4efefb-e64a-0740-7ee8-b493cccd725a",
+    "diagnosis": "Minimal Change Disease"
+  },
+  {
+    "day": "2026-10-17",
+    "case_id": "a3698cc9-1eb3-aceb-4c08-c207c4935d31",
+    "diagnosis": "Waldenstrom Macroglobulinemia"
+  },
+  {
+    "day": "2026-10-18",
+    "case_id": "cef36eee-f3de-fd4c-8585-3dbcd0c4685c",
+    "diagnosis": "Hepatitis D"
+  },
+  {
+    "day": "2026-10-19",
+    "case_id": "573735d3-52d8-bd57-9138-4538b0e61907",
+    "diagnosis": "Phenylketonuria"
+  },
+  {
+    "day": "2026-10-20",
+    "case_id": "32897450-70a8-6526-6e43-54f5f470b3fb",
+    "diagnosis": "Necrotizing Enterocolitis"
+  },
+  {
+    "day": "2026-10-21",
+    "case_id": "bbb717bd-4a93-4a11-bffe-d31b5a5f0a03",
+    "diagnosis": "Isoniazid Toxicity"
+  },
+  {
+    "day": "2026-10-22",
+    "case_id": "45267b8f-28a0-4280-e1f3-380ef1538ebd",
+    "diagnosis": "Community-Acquired Pneumonia"
+  },
+  {
+    "day": "2026-10-23",
+    "case_id": "e1845c1a-d3b0-6e8f-e9e9-8be9a6efc989",
+    "diagnosis": "Mesothelioma"
+  },
+  {
+    "day": "2026-10-24",
+    "case_id": "124252f3-e844-f332-93af-4af37dc09a5e",
+    "diagnosis": "Amebiasis"
+  },
+  {
+    "day": "2026-10-25",
+    "case_id": "22c3f014-f7f8-c1cc-b0e4-a0fd8689925d",
+    "diagnosis": "Goodpasture Syndrome"
+  },
+  {
+    "day": "2026-10-26",
+    "case_id": "f3489e85-5c9f-f98b-08b2-66027dc128a1",
+    "diagnosis": "Contrast-Induced Nephropathy"
+  },
+  {
+    "day": "2026-10-27",
+    "case_id": "3d899b11-83fd-0d73-a5b5-093a02233e4e",
+    "diagnosis": "Ehlers-Danlos Syndrome"
+  },
+  {
+    "day": "2026-10-28",
+    "case_id": "3f62676e-c1b8-96d7-8619-f996a4a36103",
+    "diagnosis": "Huntington Disease"
+  },
+  {
+    "day": "2026-10-29",
+    "case_id": "badd131e-873a-c4df-ba33-bad205d8faa1",
+    "diagnosis": "Tuberous Sclerosis"
+  },
+  {
+    "day": "2026-10-30",
+    "case_id": "bce8f14c-7e97-331a-d64c-8a871b3ca21b",
+    "diagnosis": "Acute Otitis Media"
+  },
+  {
+    "day": "2026-10-31",
+    "case_id": "6dee5d61-f37e-d7f8-a46d-1839b865d984",
+    "diagnosis": "Polymyalgia Rheumatica"
+  },
+  {
+    "day": "2026-11-01",
+    "case_id": "eedac5b7-e067-c5f4-695e-18c20cba60c6",
+    "diagnosis": "Posterior Fossa Malformations - Chiari"
+  },
+  {
+    "day": "2026-11-02",
+    "case_id": "a069c38b-3092-6778-373e-c1099847e0d1",
+    "diagnosis": "Chlamydia Trachomatis"
+  },
+  {
+    "day": "2026-11-03",
+    "case_id": "647097df-59c4-5ee2-7dbf-9f5af96afa49",
+    "diagnosis": "Rocky Mountain Spotted Fever"
+  },
+  {
+    "day": "2026-11-04",
+    "case_id": "bbfae847-c362-89b6-c6ab-e4cb23e60d3f",
+    "diagnosis": "Toxoplasmosis"
+  },
+  {
+    "day": "2026-11-05",
+    "case_id": "8bfbc924-eb2c-6853-7d30-08679e28d9db",
+    "diagnosis": "Tricyclic Antidepressant Toxicity"
+  },
+  {
+    "day": "2026-11-06",
+    "case_id": "24842e8c-20d6-6ef7-62fe-2696acdcceb8",
+    "diagnosis": "Cardiac Tamponade"
+  },
+  {
+    "day": "2026-11-07",
+    "case_id": "541cc208-a8c8-2e62-516f-d42ebc7290f4",
+    "diagnosis": "Post-Traumatic Stress Disorder"
+  },
+  {
+    "day": "2026-11-08",
+    "case_id": "6f453eb2-0d40-2ae7-37af-3f85321452f6",
+    "diagnosis": "Vitamin B9 Deficiency"
+  },
+  {
+    "day": "2026-11-09",
+    "case_id": "28b16e2a-95a5-ec4c-630a-2431b97565be",
+    "diagnosis": "Hepatic Encephalopathy"
+  },
+  {
+    "day": "2026-11-10",
+    "case_id": "cceca570-2c59-1cd3-8a7b-2ac6fe78aed1",
+    "diagnosis": "Familial Adenomatous Polyposis"
+  },
+  {
+    "day": "2026-11-11",
+    "case_id": "392b9104-7e97-69f0-3a7d-76f158fb9905",
+    "diagnosis": "Cutaneous Leishmaniasis"
+  },
+  {
+    "day": "2026-11-12",
+    "case_id": "128f85ef-45b0-5398-279f-63c81960324b",
+    "diagnosis": "Diabetes Insipidus"
+  },
+  {
+    "day": "2026-11-13",
+    "case_id": "228f2127-5708-0f97-4913-5655e0da145c",
+    "diagnosis": "Klinefelter Syndrome"
+  },
+  {
+    "day": "2026-11-14",
+    "case_id": "4ccaf6ca-524f-e9ba-aeef-cfda13081a2b",
+    "diagnosis": "Testicular Non-Seminomatous Germ Cell Tumor"
+  },
+  {
+    "day": "2026-11-15",
+    "case_id": "91b14e95-6f02-3d16-4eec-b7452306c120",
+    "diagnosis": "Chronic Myeloid Leukemia"
+  },
+  {
+    "day": "2026-11-16",
+    "case_id": "951136c1-535c-0d6e-a771-29d7d4e644ad",
+    "diagnosis": "Factor V Leiden"
+  },
+  {
+    "day": "2026-11-17",
+    "case_id": "77855b30-8baf-fcf7-5097-aaed041e473e",
+    "diagnosis": "Beta-Blocker Toxicity"
+  },
+  {
+    "day": "2026-11-18",
+    "case_id": "4ca91043-cc6c-ab55-778a-c6417cfb58da",
+    "diagnosis": "Candidiasis"
+  },
+  {
+    "day": "2026-11-19",
+    "case_id": "65e43be4-f6dc-ad65-78ef-19ee610d0d0e",
+    "diagnosis": "Actinic Keratosis"
+  },
+  {
+    "day": "2026-11-20",
+    "case_id": "5fc5da56-5051-5e94-2235-6a4eac1784ff",
+    "diagnosis": "Attention-Deficit Hyperactivity Disorder"
+  },
+  {
+    "day": "2026-11-21",
+    "case_id": "ec41fd8f-6299-f439-53d2-37eb44fdb104",
+    "diagnosis": "Bipolar Disorder"
+  },
+  {
+    "day": "2026-11-22",
+    "case_id": "7c157864-72b2-5680-9a1c-b6569f788b54",
+    "diagnosis": "Developmental Dysplasia of the Hip"
+  },
+  {
+    "day": "2026-11-23",
+    "case_id": "e5eeda91-3ef7-8fcb-6874-2ae01de26426",
+    "diagnosis": "Pseudomembranous Colitis"
+  },
+  {
+    "day": "2026-11-24",
+    "case_id": "0590915f-3e29-3905-e3b3-b8d4df6bba77",
+    "diagnosis": "Small Cell Lung Cancer"
+  },
+  {
+    "day": "2026-11-25",
+    "case_id": "65bb26d5-8483-3901-aa74-65bb11403e8b",
+    "diagnosis": "Familial Hypercholesterolemia"
+  },
+  {
+    "day": "2026-11-26",
+    "case_id": "1342f70c-9ee8-3475-404f-10329df3e37a",
+    "diagnosis": "Multiple Sclerosis"
+  },
+  {
+    "day": "2026-11-27",
+    "case_id": "54f06796-c0b4-7258-e8a1-3a6e28c1e49c",
+    "diagnosis": "Conn Syndrome"
+  },
+  {
+    "day": "2026-11-28",
+    "case_id": "76619edb-61e4-b7f0-6e6f-3cf4541f5fba",
+    "diagnosis": "X-Linked Agammaglobulinemia"
+  },
+  {
+    "day": "2026-11-29",
+    "case_id": "95601b0d-8809-3c77-741e-e0f7d0797896",
+    "diagnosis": "Asthma Exacerbation"
+  },
+  {
+    "day": "2026-11-30",
+    "case_id": "8979928d-d410-8806-d1d0-61bb32edbd41",
+    "diagnosis": "Thalassemia"
+  },
+  {
+    "day": "2026-12-01",
+    "case_id": "d970f6bd-1944-b874-da36-8b1a435cb2f6",
+    "diagnosis": "Meniere Disease"
+  },
+  {
+    "day": "2026-12-02",
+    "case_id": "6aa8fe60-6cb0-4240-28c9-70c7c3d982eb",
+    "diagnosis": "Pseudogout"
+  },
+  {
+    "day": "2026-12-03",
+    "case_id": "2baaea10-acae-4f1b-8760-b736cbbb77d8",
+    "diagnosis": "Antiphospholipid Syndrome"
+  },
+  {
+    "day": "2026-12-04",
+    "case_id": "95af3a46-c93a-a41b-6a6b-c453535dcf47",
+    "diagnosis": "Fluoroquinolone Side Effects"
+  },
+  {
+    "day": "2026-12-05",
+    "case_id": "c04859b2-5c78-f658-f183-06947982cef9",
+    "diagnosis": "Retinal Detachment"
+  },
+  {
+    "day": "2026-12-06",
+    "case_id": "3bc1c3ef-545c-37ba-fa95-07ac005127d2",
+    "diagnosis": "Congenital Hypothyroidism"
+  },
+  {
+    "day": "2026-12-07",
+    "case_id": "0e9d3fee-5470-3201-feec-014c05550042",
+    "diagnosis": "Hypovolemic Shock"
+  },
+  {
+    "day": "2026-12-08",
+    "case_id": "fc0b112c-83f9-8131-478d-3fb745e566a6",
+    "diagnosis": "Atrial Septal Defect"
+  },
+  {
+    "day": "2026-12-09",
+    "case_id": "f6f0e6ac-e35f-3d28-113b-79069c54c30e",
+    "diagnosis": "Tyrosinemia Type I"
+  },
+  {
+    "day": "2026-12-10",
+    "case_id": "73b64515-2501-fb0b-672b-4ddf61a697ca",
+    "diagnosis": "Paget Disease of Bone"
+  },
+  {
+    "day": "2026-12-11",
+    "case_id": "6836d86e-dd38-ff41-0723-7800c7b937d9",
+    "diagnosis": "Wilson Disease"
+  },
+  {
+    "day": "2026-12-12",
+    "case_id": "042dd250-a1fd-6190-d562-3db12fc00f38",
+    "diagnosis": "Krabbe Disease"
+  },
+  {
+    "day": "2026-12-13",
+    "case_id": "aa115d7c-da5e-365d-594b-8b6b7a271a58",
+    "diagnosis": "Major Depressive Disorder"
+  },
+  {
+    "day": "2026-12-14",
+    "case_id": "f4657c39-cd0f-680a-a074-50edb539723d",
+    "diagnosis": "Normal Pressure Hydrocephalus"
+  },
+  {
+    "day": "2026-12-15",
+    "case_id": "9d0c95c9-5a09-01ec-403b-422aac3c01f1",
+    "diagnosis": "Ataxia-Telangiectasia"
+  },
+  {
+    "day": "2026-12-16",
+    "case_id": "ae4efefb-e64a-0740-7ee8-b493cccd725a",
+    "diagnosis": "Minimal Change Disease"
+  },
+  {
+    "day": "2026-12-17",
+    "case_id": "a3698cc9-1eb3-aceb-4c08-c207c4935d31",
+    "diagnosis": "Waldenstrom Macroglobulinemia"
+  },
+  {
+    "day": "2026-12-18",
+    "case_id": "cef36eee-f3de-fd4c-8585-3dbcd0c4685c",
+    "diagnosis": "Hepatitis D"
+  },
+  {
+    "day": "2026-12-19",
+    "case_id": "573735d3-52d8-bd57-9138-4538b0e61907",
+    "diagnosis": "Phenylketonuria"
+  },
+  {
+    "day": "2026-12-20",
+    "case_id": "32897450-70a8-6526-6e43-54f5f470b3fb",
+    "diagnosis": "Necrotizing Enterocolitis"
+  },
+  {
+    "day": "2026-12-21",
+    "case_id": "bbb717bd-4a93-4a11-bffe-d31b5a5f0a03",
+    "diagnosis": "Isoniazid Toxicity"
+  },
+  {
+    "day": "2026-12-22",
+    "case_id": "45267b8f-28a0-4280-e1f3-380ef1538ebd",
+    "diagnosis": "Community-Acquired Pneumonia"
+  },
+  {
+    "day": "2026-12-23",
+    "case_id": "e1845c1a-d3b0-6e8f-e9e9-8be9a6efc989",
+    "diagnosis": "Mesothelioma"
+  },
+  {
+    "day": "2026-12-24",
+    "case_id": "124252f3-e844-f332-93af-4af37dc09a5e",
+    "diagnosis": "Amebiasis"
+  },
+  {
+    "day": "2026-12-25",
+    "case_id": "22c3f014-f7f8-c1cc-b0e4-a0fd8689925d",
+    "diagnosis": "Goodpasture Syndrome"
+  },
+  {
+    "day": "2026-12-26",
+    "case_id": "f3489e85-5c9f-f98b-08b2-66027dc128a1",
+    "diagnosis": "Contrast-Induced Nephropathy"
+  },
+  {
+    "day": "2026-12-27",
+    "case_id": "3d899b11-83fd-0d73-a5b5-093a02233e4e",
+    "diagnosis": "Ehlers-Danlos Syndrome"
+  },
+  {
+    "day": "2026-12-28",
+    "case_id": "3f62676e-c1b8-96d7-8619-f996a4a36103",
+    "diagnosis": "Huntington Disease"
+  },
+  {
+    "day": "2026-12-29",
+    "case_id": "badd131e-873a-c4df-ba33-bad205d8faa1",
+    "diagnosis": "Tuberous Sclerosis"
+  },
+  {
+    "day": "2026-12-30",
+    "case_id": "bce8f14c-7e97-331a-d64c-8a871b3ca21b",
+    "diagnosis": "Acute Otitis Media"
+  },
+  {
+    "day": "2026-12-31",
+    "case_id": "6dee5d61-f37e-d7f8-a46d-1839b865d984",
+    "diagnosis": "Polymyalgia Rheumatica"
+  },
+  {
+    "day": "2027-01-01",
+    "case_id": "8979928d-d410-8806-d1d0-61bb32edbd41",
+    "diagnosis": "Thalassemia"
+  },
+  {
+    "day": "2027-01-02",
+    "case_id": "ee60c7d9-227c-0c85-5165-8c2f59be7701",
+    "diagnosis": "Lymphogranuloma Venereum"
+  },
+  {
+    "day": "2027-01-03",
+    "case_id": "71d32a45-5e38-66cf-669c-3a84c6af6714",
+    "diagnosis": "Ankylosing Spondylitis"
+  },
+  {
+    "day": "2027-01-04",
+    "case_id": "a9192733-59e5-8135-20f6-f7ce6b5e7f7c",
+    "diagnosis": "Histoplasmosis"
+  },
+  {
+    "day": "2027-01-05",
+    "case_id": "0c607db0-ca82-8f27-5c30-310e9d049978",
+    "diagnosis": "Carbon Monoxide Poisoning"
+  },
+  {
+    "day": "2027-01-06",
+    "case_id": "8bf4f1e4-f0c0-8912-f0ce-281c7ff89a67",
+    "diagnosis": "Aortic Stenosis"
+  },
+  {
+    "day": "2027-01-07",
+    "case_id": "f03bd09e-116e-688a-7d9a-deea26645cc7",
+    "diagnosis": "Placental Abruption"
+  },
+  {
+    "day": "2027-01-08",
+    "case_id": "49741eb4-d507-6e85-76d5-8a57d6e2265e",
+    "diagnosis": "Vitamin D Deficiency"
+  },
+  {
+    "day": "2027-01-09",
+    "case_id": "27471c57-15fc-d37b-b2e3-eb36b042b46f",
+    "diagnosis": "Diverticulitis"
+  },
+  {
+    "day": "2027-01-10",
+    "case_id": "148b05f1-f082-faec-1a72-6333678d3011",
+    "diagnosis": "Ogilvie Syndrome"
+  },
+  {
+    "day": "2027-01-11",
+    "case_id": "6157a89f-579c-7b99-c70c-1c88bea64ced",
+    "diagnosis": "African Sleeping Sickness"
+  },
+  {
+    "day": "2027-01-12",
+    "case_id": "35cd3d18-0423-471f-0398-0dc0442b2be0",
+    "diagnosis": "Hyperparathyroidism"
+  },
+  {
+    "day": "2027-01-13",
+    "case_id": "0f862952-1a6c-9bf3-db0f-5cb79d4bc981",
+    "diagnosis": "Prolactinoma"
+  },
+  {
+    "day": "2027-01-14",
+    "case_id": "cd36b369-7e30-3206-17b0-1e2c91f8af3f",
+    "diagnosis": "Cervical Intraepithelial Neoplasia"
+  },
+  {
+    "day": "2027-01-15",
+    "case_id": "c421af84-794b-2759-8b93-79032986bd5d",
+    "diagnosis": "Hemophilia A"
+  },
+  {
+    "day": "2027-01-16",
+    "case_id": "e9a6ce45-e3a4-8a31-2267-75fe76a2184b",
+    "diagnosis": "Adult-Onset Still Disease"
+  },
+  {
+    "day": "2027-01-17",
+    "case_id": "72090e99-f7d9-a7e8-21e6-1e68e3d7b7fe",
+    "diagnosis": "Lithium Toxicity"
+  },
+  {
+    "day": "2027-01-18",
+    "case_id": "3d3e3687-71d8-e9ef-1ef5-b051fe11a2ba",
+    "diagnosis": "Basal Cell Carcinoma"
+  },
+  {
+    "day": "2027-01-19",
+    "case_id": "a49cc16e-5ef0-0db7-817d-8b448e5c7de9",
+    "diagnosis": "Bronchiolitis"
+  },
+  {
+    "day": "2027-01-20",
+    "case_id": "d531f7f3-023c-5a4e-1b9c-53dd4d9cbe9d",
+    "diagnosis": "Neuroleptic Malignant Syndrome"
+  },
+  {
+    "day": "2027-01-21",
+    "case_id": "ecde7d3c-e41e-d977-0518-f8c38939863f",
+    "diagnosis": "Tetanus"
+  }
+]
