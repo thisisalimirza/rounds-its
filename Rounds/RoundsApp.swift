@@ -142,6 +142,11 @@ struct RoundsApp: App {
                     // a device that is behind — see public.sync_progress.
                     ProgressSyncManager.shared.configure(modelContext: sharedModelContainer.mainContext)
 
+                    // Before anything reads or uploads the totals. Runs even
+                    // with no account, since a stale PlayerStats is wrong on
+                    // the Stats tab too, not just on the web.
+                    ProgressSyncManager.shared.repairLocalStats()
+
                     // A reinstalled device restores its session from the
                     // keychain and comes back signed in but empty; this is what
                     // puts the account's history back on screen.
