@@ -50,8 +50,21 @@ struct DiagnosisDefinition: Identifiable, Hashable, Sendable {
 /// Master registry of all diagnoses in the app
 struct DiagnosisRegistry {
 
-    /// All registered diagnoses - the single source of truth
-    static let all: [DiagnosisDefinition] = [
+    /// All registered diagnoses.
+    ///
+    /// Answer matching is content: which spellings of a diagnosis count as
+    /// correct is an editorial decision, and it was previously frozen into the
+    /// binary. Thirty-eight cases accepted only one exact spelling of their
+    /// answer, so students were being marked wrong for correct answers with no
+    /// way to fix it short of an App Store release.
+    static var all: [DiagnosisDefinition] {
+        let stored = CaseStore.shared.diagnoses
+        return stored.isEmpty ? legacyAll : stored
+    }
+
+    /// The hard-coded registry. Kept as CaseStore's final fallback for one
+    /// release, on the same reasoning as CaseLibrary.legacyCases().
+    static let legacyAll: [DiagnosisDefinition] = [
 
         // MARK: - Cardiology
 

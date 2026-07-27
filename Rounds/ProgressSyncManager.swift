@@ -37,6 +37,17 @@ final class ProgressSyncManager {
         self.modelContext = modelContext
     }
 
+    /// Recounts the local stats aggregate from case history.
+    ///
+    /// Separate from syncing on purpose. `pushIfPossible` gives up early when
+    /// there is no account yet, but a wrong PlayerStats is wrong on the phone's
+    /// own Stats tab too — offline, signed out, or never having synced. The
+    /// repair has to happen either way.
+    func repairLocalStats() {
+        guard let context = modelContext else { return }
+        PlayerStatsRepair.repair(context: context)
+    }
+
     /// Debounce window. Games finish in bursts and each one would otherwise
     /// fire a round trip; the server merge is idempotent so a slightly stale
     /// mirror costs nothing.
@@ -160,7 +171,11 @@ final class ProgressSyncManager {
         guard let context = modelContext else { return nil }
 
         do {
-            guard let stats = try context.fetch(FetchDescriptor<PlayerStats>()).first else { return nil }
+            // Recounted from history first. PlayerStats is a running total with
+            // no way to notice it is wrong, and a reinstall routinely leaves it
+            // zeroed while the history it summarises is fully restored — which
+            // is how an account with 206 games came to report one.
+            guard let stats = PlayerStatsRepair.repair(context: context) else { return nil }
 
             // Completed cases come from CaseHistoryEntry, not GameSession.
             //

@@ -14,13 +14,16 @@ Rounds is an **iOS game for medical students** (USMLE Step 1 prep). It's a Wordl
 - 5 hints per case (each wrong guess reveals next hint)
 - 5 guesses max
 - Score: 500 − 100/guess − 50/extra hint (first hint free)
-- **Daily Case** (date-seeded, same for all), **Random Case**, **Browse Cases**
+- **Daily Case** — from `public.daily_cases`, looked up on the **device's local date** (not the server's; Postgres `current_date` is UTC). Falls back to the legacy seeded pick for unscheduled days.
+- **Random Case**, **Browse Cases**
 
 ## Key Files
 
 | File | Role |
 |------|------|
-| `Rounds/CaseLibrary.swift` | ALL cases — hard-coded, 308KB, source of truth |
+| `Rounds/CaseStore.swift` | Case library loader — Supabase, cached to disk, bundled JSON seed |
+| `Rounds/Content/*.json` | Bundled library seed, exported by `tools/export_case_library.py` |
+| `Rounds/CaseLibrary.swift` | `legacyCases()` — the old hard-coded array, now only a last-resort fallback |
 | `Rounds/GameModels.swift` | MedicalCase, GameSession, PlayerStats SwiftData models |
 | `Rounds/DiagnosisRegistry.swift` | Alternative diagnosis name matching via slugs |
 | `Rounds/ContentView.swift` | Home screen (Play / Progress / More tabs) |
@@ -30,8 +33,8 @@ Rounds is an **iOS game for medical students** (USMLE Step 1 prep). It's a Wordl
 
 ## Critical Nuances
 
-1. **Cases are hard-coded in CaseLibrary.swift** — not fetched from a server. Add/edit there only.
-2. **MedicalCase UUIDs are deterministic** (SHA256 of diagnosis name) — stable across reinstalls.
+1. **Cases live in Supabase** (`public.cases`, `public.diagnoses`). Edit there, not in Swift. `CaseStore` loads disk cache → bundled JSON → `legacyCases()`. Re-export with `tools/export_case_library.py` only when refreshing the bundled seed.
+2. **MedicalCase UUIDs are deterministic** (SHA256 of diagnosis name) — stable across reinstalls, and identical in Supabase. This makes a case's **diagnosis name its permanent identity**: renaming one orphans every `CaseHistoryEntry` pointing at it.
 3. **`gameStateRaw` is a String** on GameSession (not an enum) — required for CloudKit compat. Use the `gameState` computed property.
 4. **TestFlight + DEBUG builds auto-grant Pro** — no sandbox purchase needed for beta.
 5. **Streak freeze** only works if the user missed exactly 1 day (gap of 2 calendar days).

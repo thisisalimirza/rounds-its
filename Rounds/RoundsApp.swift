@@ -140,7 +140,17 @@ struct RoundsApp: App {
                     // Mirror on-device progress to the account. The server
                     // merges rather than overwrites, so this is safe even from
                     // a device that is behind — see public.sync_progress.
+                    // Content refresh is fire-and-forget and never blocks play:
+                    // the library is already loaded from disk or the bundle by
+                    // the time this runs.
+                    CaseStore.shared.refresh()
+
                     ProgressSyncManager.shared.configure(modelContext: sharedModelContainer.mainContext)
+
+                    // Before anything reads or uploads the totals. Runs even
+                    // with no account, since a stale PlayerStats is wrong on
+                    // the Stats tab too, not just on the web.
+                    ProgressSyncManager.shared.repairLocalStats()
 
                     // A reinstalled device restores its session from the
                     // keychain and comes back signed in but empty; this is what
