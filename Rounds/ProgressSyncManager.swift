@@ -310,12 +310,32 @@ final class ProgressSyncManager {
 
         for chunk in stride(from: 0, to: missing.count, by: Self.uploadChunkSize) {
             let slice = Array(missing[chunk ..< min(chunk + Self.uploadChunkSize, missing.count)])
-            try await upsert(table: table, conflict: "id", rows: slice)
+            // ignoreDuplicates because these rows are immutable once written
+            // and their ids are global, not per-user.
+            //
+            // A history row's id comes from the device and CloudKit preserves
+            // it, so the same id can legitimately arrive under two different
+            // Supabase accounts — a student who moves to a new phone gets
+            // their cases restored by CloudKit but a fresh anonymous account,
+            // and tries to upload rows another account already owns. As a
+            // plain upsert that is an RLS violation on the conflicting UPDATE,
+            // which fails the whole 200-row batch and blocks the sync
+            // entirely. Skipping the conflict costs those few rows and lets
+            // the rest through.
+            try await insertIgnoringDuplicates(table: table, rows: slice)
         }
 
         // Recorded only on success — a thrown error above leaves the count
         // unchanged so the next push retries instead of assuming it landed.
         reconciledCounts[table] = rows.count
+    }
+
+    /// Inserts rows the server may already hold under a *different* owner.
+    private func insertIgnoringDuplicates(table: String, rows: [some Encodable & Sendable]) async throws {
+        try await AccountManager.shared.supabase
+            .from(table)
+            .upsert(rows, onConflict: "id", returning: .minimal, ignoreDuplicates: true)
+            .execute()
     }
 
     private func upsert(table: String, conflict: String, rows: [some Encodable & Sendable]) async throws {
