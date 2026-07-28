@@ -38,7 +38,7 @@ public struct DiagnosisLexicon {
         var covered = Set<String>()
 
         func add(_ name: String, canonical: String) {
-            let key = "\(DiagnosisRegistry.normalize(canonical))|\(DiagnosisRegistry.normalize(name))"
+            let key = "\(DiagnosisDefinition.normalize(canonical))|\(DiagnosisDefinition.normalize(name))"
             guard !seen.contains(key) else { return }
             seen.insert(key)
             built.append(LexiconEntry(name: name, canonical: canonical))
@@ -48,7 +48,7 @@ public struct DiagnosisLexicon {
         // abbreviations and eponyms are suggestable and not just matchable.
         for definition in DiagnosisRegistry.all {
             add(definition.canonicalName, canonical: definition.canonicalName)
-            covered.insert(DiagnosisRegistry.normalize(definition.canonicalName))
+            covered.insert(DiagnosisDefinition.normalize(definition.canonicalName))
             for alternative in definition.alternativeNames {
                 add(alternative, canonical: definition.canonicalName)
             }
@@ -57,7 +57,7 @@ public struct DiagnosisLexicon {
         // Then any case whose diagnosis has no registry entry, so a newly
         // imported case is playable before anyone writes its synonyms.
         for medicalCase in CaseLibrary.getSampleCases()
-        where !covered.contains(DiagnosisRegistry.normalize(medicalCase.diagnosis))
+        where !covered.contains(DiagnosisDefinition.normalize(medicalCase.diagnosis))
             && DiagnosisRegistry.find(byName: medicalCase.diagnosis) == nil {
             add(medicalCase.diagnosis, canonical: medicalCase.diagnosis)
         }
@@ -82,7 +82,7 @@ public struct DiagnosisLexicon {
     /// Returns canonical names, so picking any row submits something the
     /// checker accepts.
     public static func suggestions(matching query: String) -> [String] {
-        let needle = DiagnosisRegistry.normalize(query)
+        let needle = DiagnosisDefinition.normalize(query)
         guard !needle.isEmpty else { return [] }
 
         var exactStarts: [String] = []
@@ -91,12 +91,12 @@ public struct DiagnosisLexicon {
         var claimed = Set<String>()
 
         for entry in entries {
-            let key = DiagnosisRegistry.normalize(entry.canonical)
+            let key = DiagnosisDefinition.normalize(entry.canonical)
             guard !claimed.contains(key) else { continue }
 
             // Normalized on both sides, so an accented name is reachable by
             // typing it plainly — which is how anyone actually types Behçet.
-            let name = DiagnosisRegistry.normalize(entry.name)
+            let name = DiagnosisDefinition.normalize(entry.name)
 
             if name.hasPrefix(needle) {
                 exactStarts.append(entry.canonical)
