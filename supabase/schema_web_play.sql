@@ -153,25 +153,40 @@ begin
         end if;
     end if;
 
+    -- Every accumulating column is qualified on the right-hand side.
+    --
+    -- `returns table (games_played integer, ...)` declares OUT *variables* with
+    -- those exact names, so a bare `games_played + 1` here is ambiguous between
+    -- the variable and the column, and Postgres refuses it at runtime rather
+    -- than at creation: "column reference games_played is ambiguous". The
+    -- function created cleanly and then failed on the first real play.
+    --
+    -- The whole call is one transaction, so the history insert above rolled
+    -- back with it — a failed play left nothing behind, it simply did not
+    -- count.
     update public.player_progress
-       set games_played  = games_played + 1,
-           games_won     = games_won + (case when p_was_correct then 1 else 0 end),
-           total_score   = total_score + (case when p_was_correct then p_score else 0 end),
+       set games_played  = player_progress.games_played + 1,
+           games_won     = player_progress.games_won + (case when p_was_correct then 1 else 0 end),
+           total_score   = player_progress.total_score + (case when p_was_correct then p_score else 0 end),
            current_streak = v_new_streak,
            max_streak     = greatest(v_new_max, v_new_streak),
            guess_distribution = v_dist,
            -- A set, kept as text[] to match what the device uploads.
+           -- These three are not OUT-parameter names today, so they are not
+           -- ambiguous — qualified anyway, so that adding a column to the
+           -- return table later cannot silently reintroduce the same failure.
            completed_case_ids = (
                select array(
                    select distinct e from unnest(
-                       completed_case_ids || array[p_case_id::text]
+                       player_progress.completed_case_ids || array[p_case_id::text]
                    ) as e
                )
            ),
-           last_played_date = greatest(coalesce(last_played_date, p_local_day), p_local_day),
+           last_played_date = greatest(
+               coalesce(player_progress.last_played_date, p_local_day), p_local_day),
            last_daily_case_played = case
                when p_was_daily then to_char(p_local_day, 'YYYY-MM-DD')
-               else last_daily_case_played
+               else player_progress.last_daily_case_played
            end,
            updated_at = now()
      where user_id = v_uid
