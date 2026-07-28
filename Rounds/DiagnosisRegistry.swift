@@ -2342,9 +2342,21 @@ struct DiagnosisRegistry {
         }
     }
 
-    /// All canonical names for autocomplete (deduplicated by design)
+    /// Every name a student may type, for autocomplete.
+    ///
+    /// Canonical names *and* alternatives, deliberately. These used to be
+    /// canonical only, which put the suggestion list and the answer checker out
+    /// of step: `matches()` has always accepted alternatives, but the filter
+    /// that decides what to suggest never saw them.
+    ///
+    /// The effect was invisible and bad. Suggestions are matched by prefix and
+    /// substring against the name text, so typing "GPA" was compared against
+    /// "Granulomatosis with Polyangiitis" — which contains no such substring —
+    /// and the student got an empty list. Same for "Wegener", "DKA", "SLE",
+    /// "TTP": every abbreviation and eponym people actually use. They knew the
+    /// answer and the game gave them no way to enter it.
     static var autocompleteNames: [String] {
-        all.map { $0.canonicalName }.sorted()
+        all.flatMap { $0.allNames }.sorted()
     }
 
     /// Generate a slug from a diagnosis string (for migration/debugging)

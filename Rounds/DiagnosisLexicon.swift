@@ -1,25 +1,41 @@
 import Foundation
 
+/// Explicitly MainActor, matching CaseStore, which the cache below now reads.
+/// The project builds with `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` so this
+/// was already the effective isolation — stating it keeps the mutable cache
+/// from looking like shared state that anything could touch.
+@MainActor
 public struct DiagnosisLexicon {
-    // Build lexicon from DiagnosisRegistry canonical names (deduplicated by design)
-    // Falls back to CaseLibrary for any diagnoses not yet in registry
-    public static let all: [String] = {
-        // Primary source: Registry canonical names (already deduplicated)
-        var allDiagnoses = Set(DiagnosisRegistry.autocompleteNames)
+    private static var cached: [String] = []
+    private static var cachedGeneration = -1
 
-        // Secondary: Add any diagnoses from CaseLibrary not covered by registry
-        // This ensures gradual migration - new cases work even if not in registry yet
-        let cases = CaseLibrary.getSampleCases()
-        for medicalCase in cases {
-            // Only add if not already covered by registry lookup
-            if DiagnosisRegistry.find(byName: medicalCase.diagnosis) == nil {
-                allDiagnoses.insert(medicalCase.diagnosis)
-            }
+    /// Every string a student can be offered while typing a guess.
+    ///
+    /// Cached rather than recomputed, because `suggestions(matching:)` walks
+    /// this on every keystroke — but keyed on the store's generation rather
+    /// than computed once. It was a `static let`, which meant it was built at
+    /// the first keystroke of the session and then frozen: once the library
+    /// moved to Supabase, a case pulled down mid-session stayed untypeable
+    /// until the app was relaunched.
+    public static var all: [String] {
+        let generation = CaseStore.shared.generation
+        if generation == cachedGeneration { return cached }
+
+        // Registry first — canonical names plus every accepted alternative, so
+        // abbreviations and eponyms are suggestable and not just matchable.
+        var names = Set(DiagnosisRegistry.autocompleteNames)
+
+        // Then any case whose diagnosis has no registry entry, so a newly
+        // imported case is playable before anyone writes its synonyms.
+        for medicalCase in CaseLibrary.getSampleCases()
+        where DiagnosisRegistry.find(byName: medicalCase.diagnosis) == nil {
+            names.insert(medicalCase.diagnosis)
         }
 
-        // Return sorted array for consistent ordering
-        return Array(allDiagnoses).sorted()
-    }()
+        cached = names.sorted()
+        cachedGeneration = generation
+        return cached
+    }
     public static func suggestions(matching query: String) -> [String] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }

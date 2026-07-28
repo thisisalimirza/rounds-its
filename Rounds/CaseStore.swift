@@ -43,6 +43,17 @@ final class CaseStore {
     private(set) var lastRefreshedAt: Date?
     private(set) var source: Source = .bundled
 
+    /// Bumped every time `cases` or `diagnoses` is rebuilt.
+    ///
+    /// Exists so derived structures can cache without going stale. Anything
+    /// built from the library — the autocomplete lexicon is the one that
+    /// matters — holds the generation it was built at and rebuilds when this
+    /// moves. Before this, `DiagnosisLexicon.all` was a `static let`: computed
+    /// once at first keystroke and frozen for the rest of the process, so
+    /// content pulled from Supabase mid-session never became typeable until
+    /// the app was killed and relaunched.
+    private(set) var generation: Int = 0
+
     enum Source: String {
         case disk       // synced from the server at some point
         case bundled    // shipped with this build
@@ -115,6 +126,7 @@ final class CaseStore {
     private func rebuild() {
         cases = caseRecords.map { $0.makeCase() }
         diagnoses = diagnosisRecords.map { $0.makeDefinition() }
+        generation &+= 1
     }
 
     private func decode<T: Decodable>(_ type: T.Type, at url: URL) -> T? {
