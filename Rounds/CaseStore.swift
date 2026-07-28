@@ -48,7 +48,7 @@ final class CaseStore {
     /// Exists so derived structures can cache without going stale. Anything
     /// built from the library — the autocomplete lexicon is the one that
     /// matters — holds the generation it was built at and rebuilds when this
-    /// moves. Before this, `DiagnosisLexicon.all` was a `static let`: computed
+    /// moves. Before this the lexicon was a `static let`: computed
     /// once at first keystroke and frozen for the rest of the process, so
     /// content pulled from Supabase mid-session never became typeable until
     /// the app was killed and relaunched.

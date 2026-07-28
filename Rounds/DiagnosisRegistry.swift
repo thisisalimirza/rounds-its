@@ -37,9 +37,25 @@ struct DiagnosisDefinition: Identifiable, Hashable, Sendable {
         return allNames.contains { Self.normalize($0) == normalizedGuess }
     }
 
-    /// Normalize text for comparison
+    /// Normalize text for comparison.
+    ///
+    /// Folds diacritics, which is not cosmetic. Half the eponyms in medicine
+    /// carry an accent that the people typing them do not — Guillain-Barré,
+    /// Behçet, Henoch-Schönlein, Legg-Calvé-Perthes — and the registry spells
+    /// all four *without* accents while the case titles spell them *with*. So a
+    /// case could not find its own diagnosis entry, and quietly fell back to
+    /// its shorter private list of alternatives.
+    ///
+    /// The visible symptom was worse than a missing synonym: those cases'
+    /// registry alternatives were still offered by autocomplete, so the game
+    /// suggested "HSP" for Henoch-Schönlein Purpura and then marked it wrong.
+    ///
+    /// `folding(options: .diacriticInsensitive)` with a fixed locale rather
+    /// than `.current`: normalisation must not depend on the device's region,
+    /// or two phones disagree about whether a guess was right.
     static func normalize(_ text: String) -> String {
-        text.lowercased()
+        text.folding(options: .diacriticInsensitive, locale: Locale(identifier: "en_US_POSIX"))
+            .lowercased()
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
     }
@@ -2340,23 +2356,6 @@ struct DiagnosisRegistry {
         return all.first { definition in
             definition.allNames.contains { DiagnosisDefinition.normalize($0) == normalized }
         }
-    }
-
-    /// Every name a student may type, for autocomplete.
-    ///
-    /// Canonical names *and* alternatives, deliberately. These used to be
-    /// canonical only, which put the suggestion list and the answer checker out
-    /// of step: `matches()` has always accepted alternatives, but the filter
-    /// that decides what to suggest never saw them.
-    ///
-    /// The effect was invisible and bad. Suggestions are matched by prefix and
-    /// substring against the name text, so typing "GPA" was compared against
-    /// "Granulomatosis with Polyangiitis" — which contains no such substring —
-    /// and the student got an empty list. Same for "Wegener", "DKA", "SLE",
-    /// "TTP": every abbreviation and eponym people actually use. They knew the
-    /// answer and the game gave them no way to enter it.
-    static var autocompleteNames: [String] {
-        all.flatMap { $0.allNames }.sorted()
     }
 
     /// Generate a slug from a diagnosis string (for migration/debugging)
