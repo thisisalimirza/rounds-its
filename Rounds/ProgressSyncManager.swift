@@ -330,11 +330,26 @@ final class ProgressSyncManager {
         reconciledCounts[table] = rows.count
     }
 
-    /// Inserts rows the server may already hold under a *different* owner.
+    /// Inserts rows this account may already hold.
+    ///
+    /// The conflict target is `user_id,id` and must stay matched to the primary
+    /// key in schema_identity.sql. It was `id` alone, which was not merely
+    /// redundant — it was the data-loss bug.
+    ///
+    /// One person routinely has two accounts here: the app makes an anonymous
+    /// one at first launch, so a reinstall creates a second while CloudKit
+    /// restores the same rows, carrying the same client-generated ids, onto it.
+    /// Conflicting on `id` alone made those rows look like duplicates of the
+    /// *first* account's, and ignoreDuplicates then discarded them without
+    /// error. The device kept re-offering history the server kept quietly
+    /// refusing, and sync looked healthy throughout.
+    ///
+    /// Scoped by account, the same id under a different owner is what it
+    /// actually is: a different row.
     private func insertIgnoringDuplicates(table: String, rows: [some Encodable & Sendable]) async throws {
         try await AccountManager.shared.supabase
             .from(table)
-            .upsert(rows, onConflict: "id", returning: .minimal, ignoreDuplicates: true)
+            .upsert(rows, onConflict: "user_id,id", returning: .minimal, ignoreDuplicates: true)
             .execute()
     }
 

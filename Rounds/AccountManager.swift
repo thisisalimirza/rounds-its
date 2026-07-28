@@ -59,19 +59,88 @@ final class AccountManager {
     /// Whether this account is still anonymous (no email/Apple linked yet).
     var isAnonymousAccount: Bool { accountEmail == nil }
 
-    // MARK: - "Secure your account" nudge (one-time)
+    // MARK: - "Secure your account" nudge
 
-    private static let securePromptedKey = "hasPromptedSecureAccount"
+    private static let securePromptedKey = "hasPromptedSecureAccount"   // legacy one-shot
+    private static let promptCountKey    = "secureAccountPromptCount"
+    private static let lastPromptKey     = "secureAccountLastPromptedAt"
+    private static let lastReasonKey     = "secureAccountLastReason"
 
-    /// True when we should gently nudge the user to link email/Apple: they're
-    /// still anonymous and we haven't nudged them before.
-    var shouldOfferAccountSecuring: Bool {
-        isAnonymousAccount && !UserDefaults.standard.bool(forKey: Self.securePromptedKey)
+    /// Why we are asking. Carried into the sheet so the copy can name the thing
+    /// the user is about to lose, and into analytics so we can see which moment
+    /// actually converts rather than guessing.
+    enum SecurePromptReason: String {
+        case bestStreak      // just set a personal record
+        case milestone       // crossed 25 / 50 / 100 cases
+        case leaderboard     // appeared on their school's board
+        case proUnlocked     // has Pro, which is the most expensive thing to lose
+        case generic
     }
 
-    /// Records that we've shown the secure-account nudge (so it never nags again).
-    func markAccountSecuringPrompted() {
-        UserDefaults.standard.set(true, forKey: Self.securePromptedKey)
+    /// At most four asks, never closer than a fortnight apart.
+    ///
+    /// The old policy was one prompt, ever, spent after the user's first game —
+    /// their least invested moment, when the honest answer to "protect your
+    /// progress" is "what progress?". Once spent, someone on a forty-day streak
+    /// could never be asked again. Meanwhile the home banner said the same
+    /// sentence on every launch forever, which is how a banner becomes
+    /// furniture.
+    ///
+    /// Four and fourteen are a judgement, not a finding. They are here to be
+    /// moved once `identity_health` says whether any of this works.
+    private static let maxPrompts = 4
+    private static let cooldown: TimeInterval = 14 * 24 * 60 * 60
+
+    var securePromptCount: Int {
+        // Anyone carrying the old one-shot flag has been asked exactly once.
+        let stored = UserDefaults.standard.integer(forKey: Self.promptCountKey)
+        if stored == 0, UserDefaults.standard.bool(forKey: Self.securePromptedKey) { return 1 }
+        return stored
+    }
+
+    /// Whether this is a reasonable moment to ask at all.
+    ///
+    /// Deliberately does not consider *what* is at stake — that is the caller's
+    /// job, because only the caller knows a record was just set. This answers
+    /// the narrower question of whether asking would be rude.
+    var canOfferAccountSecuring: Bool {
+        guard isAnonymousAccount else { return false }
+        guard securePromptCount < Self.maxPrompts else { return false }
+
+        guard let last = UserDefaults.standard.object(forKey: Self.lastPromptKey) as? Date else {
+            return true
+        }
+        return Date().timeIntervalSince(last) >= Self.cooldown
+    }
+
+    /// Records that a nudge was actually seen.
+    ///
+    /// Called on dismissal rather than on presentation, for the reason the
+    /// original code documented: ContentView stacks nineteen sheet modifiers
+    /// and only one can be up at a time, so a prompt marked before presenting
+    /// can be spent without ever appearing.
+    func markAccountSecuringPrompted(reason: SecurePromptReason = .generic) {
+        let defaults = UserDefaults.standard
+        defaults.set(securePromptCount + 1, forKey: Self.promptCountKey)
+        defaults.set(Date(), forKey: Self.lastPromptKey)
+        defaults.set(reason.rawValue, forKey: Self.lastReasonKey)
+        defaults.set(true, forKey: Self.securePromptedKey)
+
+        AnalyticsManager.shared.track("secure_account_prompt_dismissed", properties: [
+            "reason": reason.rawValue,
+            "prompt_number": securePromptCount,
+        ])
+    }
+
+    /// The moment a link actually succeeds, attributed to whatever prompted it.
+    /// Without this we can count prompts and count linked accounts but never
+    /// join the two, which is the only question worth asking.
+    func trackAccountLinked(method: String) {
+        AnalyticsManager.shared.track("account_linked", properties: [
+            "method": method,
+            "prompts_seen": securePromptCount,
+            "last_reason": UserDefaults.standard.string(forKey: Self.lastReasonKey) ?? "none",
+        ])
     }
 
     private init() {}
@@ -124,8 +193,9 @@ final class AccountManager {
     ///
     ///   * Settings → Account showed "Synced & signed in" — with a blank line
     ///     where the address should be — to users who had never signed in.
-    ///   * `shouldOfferAccountSecuring` was false for everyone, so the
-    ///     secure-your-account nudge could never fire regardless of timing.
+    ///   * the securing nudge's gate was false for everyone, so it could never
+    ///     fire regardless of timing. (That gate is now
+    ///     `canOfferAccountSecuring`.)
     ///
     /// Together with the ContentView `.task` race, that is why all 28 production
     /// accounts were anonymous. Fixing the race alone would not have been enough.

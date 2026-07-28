@@ -13,6 +13,9 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var playerStats: [PlayerStats]
     @Query private var achievementProgressList: [AchievementProgress]
+    /// Only read to name the user's school in the securing prompt — "your place
+    /// at Downstate" is a stake; "your leaderboard rank" is a feature name.
+    @Query private var leaderboardProfiles: [LeaderboardProfile]
     @Query(filter: #Predicate<CaseHistoryEntry> { entry in entry.wasCorrect == false })
     private var missedCaseEntries: [CaseHistoryEntry]
     @State private var currentCase: MedicalCase?
@@ -40,6 +43,7 @@ struct ContentView: View {
     @State private var showingInviteRedeem = false
     @State private var inviteCodeToRedeem: String?
     @State private var showingSecureAccount = false
+    @State private var securePromptReasonValue: AccountManager.SecurePromptReason = .generic
     @State private var selectedTab: HomeTab = .play
     @State private var showingFreezeSaved = false
     @State private var freezeSavedDays = 0
@@ -170,6 +174,15 @@ struct ContentView: View {
                        AccountManager.shared.isAnonymousAccount {
                         Button {
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            // Tapping the banner is a deliberate choice, so the
+                            // sheet should still open on the strongest true
+                            // stake rather than the generic copy.
+                            if let stats = playerStats.first,
+                               let reason = securePromptReason(for: stats) {
+                                securePromptReasonValue = reason
+                            } else {
+                                securePromptReasonValue = .generic
+                            }
                             showingSecureAccount = true
                         } label: {
                             HStack(spacing: 10) {
@@ -290,9 +303,15 @@ struct ContentView: View {
                 // present — plausible here, since this view stacks 19 .sheet
                 // modifiers and only one can be up at a time — the user was
                 // permanently recorded as prompted without ever seeing it.
-                AccountManager.shared.markAccountSecuringPrompted()
+                AccountManager.shared.markAccountSecuringPrompted(reason: securePromptReasonValue)
             }) {
-                SecureAccountPromptView()
+                SecureAccountPromptView(
+                    reason: securePromptReasonValue,
+                    currentStreak: playerStats.first?.currentStreak ?? 0,
+                    casesPlayed: playerStats.first?.gamesPlayed ?? 0,
+                    hasPro: SubscriptionManager.shared.hasProAccess(),
+                    schoolName: leaderboardProfiles.first?.schoolName
+                )
             }
             .onChange(of: DeepLinkManager.shared.pendingInviteCode) { _, newValue in
                 if let code = newValue {
@@ -418,11 +437,20 @@ struct ContentView: View {
                     // joins the launch-time call rather than starting a second.
                     await AccountManager.shared.bootstrap()
 
-                    // Gate on having played at all, not on a 3-day streak.
-                    // Requiring streak >= 3 meant almost nobody qualified before
-                    // the one-shot flag was spent. Tune this if it feels early.
-                    if AccountManager.shared.shouldOfferAccountSecuring,
-                       stats.gamesPlayed >= 1 {
+                    // Ask when there is something to point at, not on a timer.
+                    //
+                    // This used to fire on `gamesPlayed >= 1` and then never
+                    // again, because the flag behind it was one-shot. So the
+                    // single ask anyone ever got arrived at their least
+                    // invested moment — one game in, when "protect your
+                    // progress" honestly means "protect this one thing you did
+                    // once". Someone forty days deep could not be asked at all.
+                    //
+                    // Now the moment picks itself, in descending order of what
+                    // the user would actually mind losing.
+                    if AccountManager.shared.canOfferAccountSecuring,
+                       let reason = securePromptReason(for: stats) {
+                        securePromptReasonValue = reason
                         try? await Task.sleep(nanoseconds: 700_000_000)
                         showingSecureAccount = true
                     }
@@ -834,6 +862,33 @@ struct ContentView: View {
             isDailyCase = false
             showingGame = true
         }
+    }
+
+    /// The most compelling true thing we can say to this user right now.
+    ///
+    /// Ordered by what someone would actually mind losing, not by what is
+    /// easiest to detect. Returns nil when the honest answer is "nothing much
+    /// yet" — asking someone two games in to protect their progress invites the
+    /// obvious reply, and burns one of only four asks doing it.
+    private func securePromptReason(for stats: PlayerStats) -> AccountManager.SecurePromptReason? {
+        // Three games is the floor for having anything worth a sentence about.
+        guard stats.gamesPlayed >= 3 else { return nil }
+
+        // Money first. Pro is the one thing here the user has actually paid
+        // for, and the only loss that is measurable in currency.
+        if SubscriptionManager.shared.hasProAccess() { return .proUnlocked }
+
+        // A streak that is also the personal best was, near enough, just set —
+        // and a streak is the thing daily-habit players care most about.
+        if stats.currentStreak >= 3, stats.currentStreak == stats.maxStreak { return .bestStreak }
+
+        // A place on a board is public and comparative, which makes it feel
+        // owned in a way a private stat does not.
+        if let school = leaderboardProfiles.first?.schoolName, !school.isEmpty { return .leaderboard }
+
+        if stats.gamesPlayed >= 25 { return .milestone }
+
+        return .generic
     }
 
     private func checkForDeepLinkedCase() {
