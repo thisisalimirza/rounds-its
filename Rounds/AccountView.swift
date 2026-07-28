@@ -8,11 +8,20 @@
 //
 
 import SwiftUI
+import SwiftData
 import AuthenticationServices
 import UIKit
 
 struct AccountView: View {
     @Environment(\.dismiss) private var dismiss
+
+    /// Read purely so the stakes block can quote this user's real figures
+    /// rather than the generic copy. Named for that single use so nobody
+    /// mistakes them for the screen's data.
+    @Query private var stakesStatsList: [PlayerStats]
+    @Query private var stakesSchool: [LeaderboardProfile]
+
+    private var stakesStats: PlayerStats? { stakesStatsList.first }
 
     /// Optional code to pre-fill (e.g. from a shared rounds://invite/CODE link).
     var initialCode: String? = nil
@@ -66,7 +75,12 @@ struct AccountView: View {
                 // The nudge reads well precisely because it names the three
                 // concrete consequences instead of saying "sync across
                 // devices", and there's no reason this screen should be worse.
-                AccountSyncStakes()
+                AccountSyncStakes(
+                    currentStreak: stakesStats?.currentStreak ?? 0,
+                    casesPlayed: stakesStats?.gamesPlayed ?? 0,
+                    hasPro: SubscriptionManager.shared.hasProAccess(),
+                    schoolName: stakesSchool.first?.schoolName
+                )
                     .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                     .listRowBackground(Color.clear)
 
@@ -616,6 +630,11 @@ struct AccountLinkingControls: View {
                 ? "Signed in. Your streak, stats and Pro access are saved to your account."
                 : "Signed in. Your progress is backed up from now on."
             UINotificationFeedbackGenerator().notificationOccurred(.success)
+
+            // Attributed to whatever prompted it. Without this we can count
+            // prompts and count linked accounts, but never join the two — which
+            // is the only question that tells us whether any of this worked.
+            account.trackAccountLinked(method: "email")
         case .invalidCode, .error:
             errorMessage = outcome.message
         }
