@@ -154,6 +154,15 @@ final class ProgressSyncManager {
                 stats.lastPlayedDate = max(stats.lastPlayedDate ?? .distantPast, remoteLast)
             }
 
+            // Later of the two wins. These are "yyyy-MM-dd", so a string
+            // comparison is a date comparison — and taking the max means a
+            // device that is behind can never un-complete a daily that another
+            // one finished, which is the same max/union rule as everything
+            // above.
+            if let remoteDaily = remote.lastDailyCasePlayed {
+                stats.lastDailyCasePlayed = max(stats.lastDailyCasePlayed ?? "", remoteDaily)
+            }
+
             try context.save()
             lastSyncedAt = Date()
         } catch {
@@ -820,6 +829,17 @@ struct RemoteProgress: Decodable {
     let completedCaseIDs: [String]
     let lastPlayedDate: Date?
 
+    /// The day the daily case was last completed, "yyyy-MM-dd".
+    ///
+    /// Was missing here entirely — the snapshot pushed it up and nothing
+    /// brought it back. Harmless while the phone was the only thing that could
+    /// play, because the device set it locally. The moment the web could finish
+    /// a daily, it stopped being harmless: streak, totals and case history all
+    /// synced, so the phone knew the case had been played, and still offered
+    /// the Daily Case button because `hasPlayedDailyCaseToday()` reads this one
+    /// field and this one field alone.
+    let lastDailyCasePlayed: String?
+
     enum CodingKeys: String, CodingKey {
         case gamesPlayed = "games_played"
         case gamesWon = "games_won"
@@ -829,5 +849,6 @@ struct RemoteProgress: Decodable {
         case guessDistribution = "guess_distribution"
         case completedCaseIDs = "completed_case_ids"
         case lastPlayedDate = "last_played_date"
+        case lastDailyCasePlayed = "last_daily_case_played"
     }
 }
