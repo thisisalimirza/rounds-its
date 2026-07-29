@@ -217,9 +217,20 @@ begin
 
         last_played_date = greatest(v_row.last_played_date, p_last_played_date),
 
-        last_daily_case_played = case when v_newer and p_last_daily_case is not null
-                                      then p_last_daily_case
-                                      else v_row.last_daily_case_played end,
+        -- Later of the two, not last-writer-wins.
+        --
+        -- These are "yyyy-MM-dd" strings, so greatest() is a date comparison,
+        -- and it ignores nulls. The old rule handed the field to whichever
+        -- device reported most recently, which was survivable only while the
+        -- phone was the only thing that could play a daily.
+        --
+        -- Once the web could finish one, this actively undid it: the web sets
+        -- today, the phone opens later and pushes *its* copy — still yesterday
+        -- — with a newer device_updated_at, and overwrites. And because
+        -- ProgressSyncManager.sync() pushes before it pulls, the phone then
+        -- read back the stale value it had just written and went on offering
+        -- the Daily Case button for a case already played.
+        last_daily_case_played = greatest(v_row.last_daily_case_played, p_last_daily_case),
 
         device_updated_at = greatest(v_row.device_updated_at, p_device_updated_at),
         updated_at = now()
