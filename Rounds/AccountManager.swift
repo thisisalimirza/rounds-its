@@ -661,9 +661,21 @@ final class AccountManager {
     /// Reads this user's mirrored progress, or nil when they've never synced.
     func fetchProgress() async throws -> RemoteProgress? {
         guard let userID = supabase.auth.currentSession?.user.id else { return nil }
+        // Every column, deliberately, rather than a hand-maintained list.
+        //
+        // The list was the bug. `last_daily_case_played` was added to
+        // RemoteProgress, to its CodingKeys, and to the merge in pullAndMerge —
+        // and none of it did anything, because the query never asked Postgres
+        // for the column. A missing key decodes to nil on an Optional without
+        // raising, so the merge simply saw nil and skipped, silently, on every
+        // sync. The phone kept offering a daily the account had already played.
+        //
+        // This is one row. The saving from naming columns is a few dozen bytes;
+        // the cost is a failure that is invisible in the type system, at the
+        // call site, and at runtime. Not worth it.
         let rows: [RemoteProgress] = try await supabase
             .from("player_progress")
-            .select("games_played, games_won, total_score, current_streak, max_streak, guess_distribution, completed_case_ids, last_played_date")
+            .select()
             .eq("user_id", value: userID.uuidString)
             .limit(1)
             .execute()
