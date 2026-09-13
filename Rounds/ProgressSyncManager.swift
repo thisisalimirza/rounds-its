@@ -85,6 +85,9 @@ final class ProgressSyncManager {
         guard let context = modelContext else { return }
         let count = (try? context.fetchCount(FetchDescriptor<CaseHistoryEntry>())) ?? 0
         guard count != lastPushedCaseCount else { return }
+
+        RoundsApp.backfillMissedItemsFromHistory(context: context, force: true)
+
         await pushIfPossible(force: true)
         lastPushedCaseCount = count
     }
