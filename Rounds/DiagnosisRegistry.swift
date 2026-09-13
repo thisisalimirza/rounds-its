@@ -67,7 +67,7 @@ struct DiagnosisDefinition: Identifiable, Hashable, Sendable {
 @MainActor
 struct DiagnosisRegistry {
 
-    /// All registered diagnoses.
+    /// All registered diagnoses (MainActor access).
     ///
     /// Answer matching is content: which spellings of a diagnosis count as
     /// correct is an editorial decision, and it was previously frozen into the
@@ -77,6 +77,19 @@ struct DiagnosisRegistry {
     static var all: [DiagnosisDefinition] {
         let stored = CaseStore.shared.diagnoses
         return stored.isEmpty ? legacyAll : stored
+    }
+
+    /// All registered diagnoses for nonisolated contexts.
+    ///
+    /// Uses the dynamic CaseStore data when on MainActor, otherwise falls back
+    /// to the static legacyAll. This allows answer matching from MedicalCase
+    /// (a SwiftData @Model that can't be @MainActor) while still preferring
+    /// dynamic data when available.
+    nonisolated static var allForMatching: [DiagnosisDefinition] {
+        if Thread.isMainThread {
+            return MainActor.assumeIsolated { all }
+        }
+        return legacyAll
     }
 
     /// The hard-coded registry. Kept as CaseStore's final fallback for one
@@ -2346,21 +2359,30 @@ struct DiagnosisRegistry {
 
     // MARK: - Lookup Methods
 
-    /// Lookup diagnosis by slug ID
-    static func find(bySlug slug: String) -> DiagnosisDefinition? {
-        all.first { $0.id == slug }
+    /// Lookup diagnosis by slug ID.
+    ///
+    /// Nonisolated so it can be called from MedicalCase.isCorrectDiagnosis
+    /// (which is on a SwiftData @Model that can't be @MainActor). Uses
+    /// allForMatching which prefers dynamic data when on MainActor.
+    nonisolated static func find(bySlug slug: String) -> DiagnosisDefinition? {
+        allForMatching.first { $0.id == slug }
     }
 
-    /// Lookup diagnosis by any name (case-insensitive)
-    static func find(byName name: String) -> DiagnosisDefinition? {
+    /// Lookup diagnosis by any name (case-insensitive).
+    ///
+    /// Nonisolated so it can be called from MedicalCase.isCorrectDiagnosis
+    /// (which is on a SwiftData @Model that can't be @MainActor). Uses
+    /// allForMatching which prefers dynamic data when on MainActor.
+    nonisolated static func find(byName name: String) -> DiagnosisDefinition? {
         let normalized = DiagnosisDefinition.normalize(name)
-        return all.first { definition in
+        return allForMatching.first { definition in
             definition.allNames.contains { DiagnosisDefinition.normalize($0) == normalized }
         }
     }
 
-    /// Generate a slug from a diagnosis string (for migration/debugging)
-    static func generateSlug(from diagnosis: String) -> String {
+    /// Generate a slug from a diagnosis string (for migration/debugging).
+    /// Pure function, no actor isolation needed.
+    nonisolated static func generateSlug(from diagnosis: String) -> String {
         diagnosis.lowercased()
             .replacingOccurrences(of: " ", with: "-")
             .replacingOccurrences(of: "'", with: "")
