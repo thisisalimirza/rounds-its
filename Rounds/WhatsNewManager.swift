@@ -160,7 +160,9 @@ final class WhatsNewManager: ObservableObject {
     // MARK: - Version compare
 
     /// True when `v1` is strictly older than `v2` (dot-separated numeric).
-    static func compareVersions(_ v1: String, isLessThan v2: String) -> Bool {
+    /// This is a pure function with no actor-isolated state, so it can be
+    /// called from any context (e.g. AppChangelog.latest).
+    nonisolated static func compareVersions(_ v1: String, isLessThan v2: String) -> Bool {
         let a = v1.split(separator: ".").compactMap { Int($0) }
         let b = v2.split(separator: ".").compactMap { Int($0) }
         let n = max(a.count, b.count)

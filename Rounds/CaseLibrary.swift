@@ -8,6 +8,7 @@
 import Foundation
 import SwiftData
 
+@MainActor
 class CaseLibrary {
 
     /// The playable library.

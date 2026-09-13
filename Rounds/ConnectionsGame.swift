@@ -187,6 +187,7 @@ final class ConnectionsGame {
 // MARK: - Daily-free access gate
 
 /// Free players get one Case Connections puzzle per day; Pro is unlimited.
+@MainActor
 enum ConnectionsAccess {
     private static let lastPlayKey = "connectionsLastPlayDate"
 
