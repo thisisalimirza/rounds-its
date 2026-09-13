@@ -64,6 +64,7 @@ struct DiagnosisDefinition: Identifiable, Hashable, Sendable {
 // MARK: - Diagnosis Registry
 
 /// Master registry of all diagnoses in the app
+@MainActor
 struct DiagnosisRegistry {
 
     /// All registered diagnoses.
