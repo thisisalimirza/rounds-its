@@ -7,6 +7,12 @@
 // Idempotent: checks founder_email_sends table before sending, records after.
 // A user who receives the paid email will NOT receive the free email later.
 //
+// Anonymous buyers: someone who subscribes before linking an email gets no
+// paid email at purchase time (no address; nothing is recorded). When they
+// later link an email, the auth.users trigger asks for the "free" email. If
+// the user is a paying Pro subscriber at that point, we send the standard
+// paid email instead (recorded as "paid"), or skip if they already got one.
+//
 // Deploy:  supabase functions deploy founder-email --no-verify-jwt
 //   (--no-verify-jwt because this is called from revenuecat-webhook and
 //    database triggers/webhooks with service role, not user JWTs)
@@ -137,6 +143,33 @@ if you'd rather not hear from me, just reply "stop" and i won't email you again.
 // Response helpers
 // =========================================================================
 
+/**
+ * "Paying Pro" for founder-email purposes: an unexpired, paid subscription
+ * mirrored onto profiles by revenuecat-webhook. Deliberately narrower than
+ * public.profile_has_pro(): free trials, RevenueCat promotional grants and
+ * code-redeemed Pro (pro_source) are Pro but have not paid, and the paid
+ * email thanks them for paying.
+ */
+type SubscriptionMirror = {
+  subscription_status: string | null;
+  subscription_period_type: string | null;
+  subscription_store: string | null;
+  subscription_expires_at: string | null;
+};
+
+function isPayingPro(p: SubscriptionMirror | null): boolean {
+  if (!p) return false;
+  const status = (p.subscription_status ?? "").toLowerCase();
+  const period = (p.subscription_period_type ?? "").toLowerCase();
+  const store = (p.subscription_store ?? "").toLowerCase();
+  if (status !== "active" && status !== "grace_period") return false;
+  if (period === "trial" || period === "promotional" || store === "promotional") return false;
+  if (p.subscription_expires_at && new Date(p.subscription_expires_at).getTime() <= Date.now()) {
+    return false;
+  }
+  return true;
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -261,6 +294,7 @@ Deno.serve(async (req) => {
   if (email_type !== "paid" && email_type !== "free") {
     return json({ error: "invalid_email_type", valid: ["paid", "free"] }, 400);
   }
+  const requestedType: "paid" | "free" = email_type;
 
   // Skip sandbox/TestFlight events by default; only send if explicitly opted in
   if (is_sandbox && !FOUNDER_EMAIL_SEND_SANDBOX) {
@@ -351,11 +385,31 @@ Deno.serve(async (req) => {
       console.log(`founder-email: user ${user_id} already got paid email, skipping free`);
       return json({ status: "skipped", reason: "already_paid_user" });
     }
+
+    // Anonymous buyer linking an email: they already pay, so asking "what
+    // would make it worth paying for?" is wrong. Send the standard paid email
+    // instead. hasPaidEmail is false here, so this is their first paid email.
+    // Fail closed: if we can't read their status, don't guess.
+    const { data: profile, error: profileErr } = await admin
+      .from("profiles")
+      .select("subscription_status, subscription_period_type, subscription_store, subscription_expires_at")
+      .eq("id", user_id)
+      .maybeSingle();
+    if (profileErr) {
+      console.error(`founder-email: pro status lookup failed for user ${user_id}:`, profileErr.message);
+      return json({ status: "error", reason: "pro_status_check_failed" }, 500);
+    }
+
+    if (isPayingPro(profile as SubscriptionMirror | null)) {
+      console.log(`founder-email: user ${user_id} is paying Pro, sending paid email instead of free`);
+      email_type = "paid";
+    }
   }
 
-  // For paid emails: check if user already got free email
-  // If so, use the shorter upgrade variant instead of full intro
-  if (email_type === "paid") {
+  // For paid emails requested directly (purchase webhook): if the user
+  // already got the free email, use the shorter upgrade variant. A free
+  // request converted to paid above never takes this path (standard variant).
+  if (email_type === "paid" && requestedType === "paid") {
     const hasFreeEmail = await hasReceived("free");
     if (hasFreeEmail === null) {
       return json({ status: "error", reason: "idempotency_check_failed" }, 500);
@@ -402,6 +456,8 @@ Deno.serve(async (req) => {
     return json({
       status: "dry_run",
       email_type,
+      requested_email_type: requestedType,
+      variant,
       would_send_to: verifiedEmail,
     });
   }
@@ -458,6 +514,7 @@ Deno.serve(async (req) => {
   return json({
     status: "sent",
     email_type,
+    requested_email_type: requestedType,
     variant: variant,
     resend_id: resendId,
   });

@@ -167,14 +167,15 @@ matters and the value exchange justifies the tap.
 ## Founder Emails
 
 Personal emails from Ali sent automatically to:
-1. **Paid users** — on first purchase (INITIAL_PURCHASE or NON_RENEWING_PURCHASE from RevenueCat)
+1. **Paid users** — on first *real* payment from RevenueCat (INITIAL_PURCHASE that is not a free trial, RENEWAL with `is_trial_conversion: true`, or NON_RENEWING_PURCHASE). Trial starts and sandbox events are skipped.
 2. **Free users** — when they link an email address to their account
 
 **Email logic:**
-- Each user receives at most one email of each type, ever.
+- Each user receives at most one email of each type, ever. Skips (no_email, sandbox, dry-run) are not recorded, so they never block a later real send.
 - If a user already got the **paid** email, they will NOT receive the free email.
 - If a user already got the **free** email and later upgrades, they get a shorter
   "thanks for upgrading" variant of the paid email (same gift card offer).
+- If a paying Pro user (subscription_status `active`/`grace_period`, not trial/promotional) links an email for the first time, they get the standard **paid** email instead of the free one. Anonymous buyers who subscribed before linking an email land here.
 
 ### Setup Checklist
 

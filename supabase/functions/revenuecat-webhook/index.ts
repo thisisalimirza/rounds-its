@@ -12,8 +12,13 @@
 // current by events, and read through public.profile_has_pro() which also
 // accounts for code-redeemed Pro.
 //
-// On INITIAL_PURCHASE and NON_RENEWING_PURCHASE (first payment), this also
-// triggers the founder email via the founder-email edge function.
+// On the first real payment, this also triggers the founder email via the
+// founder-email edge function. "First real payment" means money changed hands:
+//   * INITIAL_PURCHASE that is not a free trial (period_type != TRIAL)
+//   * RENEWAL with is_trial_conversion: true (the trial just converted)
+//   * NON_RENEWING_PURCHASE (lifetime / one-off)
+// Trial starts and RevenueCat-granted promotional entitlements are skipped:
+// the paid email thanks them for paying. founder-email enforces once-per-user.
 //
 // Deploy:  supabase functions deploy revenuecat-webhook --no-verify-jwt
 //   (--no-verify-jwt is required: RevenueCat is not a Supabase user and sends
@@ -37,6 +42,7 @@ type RCEvent = {
   original_app_user_id?: string;
   product_id?: string;
   period_type?: string;
+  is_trial_conversion?: boolean | null;
   store?: string;
   environment?: string;
   expiration_at_ms?: number | null;
@@ -55,6 +61,31 @@ function json(body: unknown, status = 200) {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+/**
+ * True when this event is the customer's first real payment (see header).
+ * Repeats are harmless: founder-email records each send and never re-sends.
+ */
+function isFirstPaidEvent(event: RCEvent): boolean {
+  const type = (event.type ?? "").toUpperCase();
+  const periodType = (event.period_type ?? "").toUpperCase();
+  const store = (event.store ?? "").toUpperCase();
+
+  // Granted by RevenueCat (support comps, etc.), not paid for.
+  if (store === "PROMOTIONAL" || periodType === "PROMOTIONAL") return false;
+
+  switch (type) {
+    case "INITIAL_PURCHASE":
+      // A free trial starting is not a payment; the conversion RENEWAL is.
+      return periodType !== "TRIAL";
+    case "RENEWAL":
+      return event.is_trial_conversion === true;
+    case "NON_RENEWING_PURCHASE":
+      return true;
+    default:
+      return false;
+  }
 }
 
 /** Supabase user ids are UUIDs. RevenueCat sends `$RCAnonymousID:...` for a
@@ -176,9 +207,8 @@ Deno.serve(async (req) => {
     return json({ status: "unknown_profile", user_id: userId });
   }
 
-  // Check if this is a first-purchase event that should trigger founder email
-  const eventType = (event.type ?? "").toUpperCase();
-  const isFirstPurchase = eventType === "INITIAL_PURCHASE" || eventType === "NON_RENEWING_PURCHASE";
+  // First real payment (not a trial start) triggers the founder email
+  const isFirstPurchase = isFirstPaidEvent(event);
   const isSandbox = (event.environment ?? "").toUpperCase() === "SANDBOX";
 
   // RevenueCat retries on non-2xx and may deliver the same event more than
@@ -213,7 +243,7 @@ Deno.serve(async (req) => {
   }
 
   // -------------------------------------------------------------------------
-  // Founder email: send once on first purchase
+  // Founder email: send once on first real payment (trial starts excluded)
   //
   // Triggers asynchronously and never fails the webhook — the subscription
   // state update above is the critical path; the email is a nice-to-have.
