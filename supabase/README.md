@@ -161,3 +161,124 @@ on-device). So Pro granted to an anon-only user isn't permanent until they link 
 identity. Recommendation: allow browsing anonymously, but prompt "Sign in to keep your
 Pro on all your devices" **at the moment they redeem/invite** — that's where durability
 matters and the value exchange justifies the tap.
+
+---
+
+## Founder Emails
+
+Personal emails from Ali sent automatically to:
+1. **Paid users** — on first purchase (INITIAL_PURCHASE or NON_RENEWING_PURCHASE from RevenueCat)
+2. **Free users** — when they link an email address to their account
+
+Each user receives at most one email of each type, ever. A user who gets the paid
+email will NOT also receive the free email (they're already engaged).
+
+### Setup Checklist
+
+#### 1. Create a Resend account and verify your domain
+
+1. Sign up at [resend.com](https://resend.com)
+2. Go to **Domains** → **Add Domain** → add `getrounds.app`
+3. Add the DNS records Resend provides (SPF, DKIM, DMARC)
+4. Wait for verification (usually a few minutes)
+5. Go to **API Keys** → **Create API Key** → copy the key (`re_...`)
+
+#### 2. Apply the database migration
+
+```bash
+# In Supabase SQL Editor, run:
+# supabase/schema_founder_emails.sql
+```
+
+This creates:
+- `founder_email_sends` table (idempotency tracking)
+- Helper functions for the edge function
+
+#### 3. Deploy the edge functions
+
+```bash
+supabase functions deploy founder-email --no-verify-jwt
+supabase functions deploy revenuecat-webhook --no-verify-jwt
+```
+
+#### 4. Set the secrets
+
+```bash
+# Required
+supabase secrets set RESEND_API_KEY=re_XXXXXXXXXXXXXXXX
+
+# Optional (have sensible defaults)
+supabase secrets set FOUNDER_EMAIL_FROM="Ali Mirza <ali@getrounds.app>"
+supabase secrets set FOUNDER_EMAIL_REPLY_TO="ali@getrounds.app"
+
+# Control switches
+supabase secrets set FOUNDER_EMAIL_ENABLED=true      # set to "true" to actually send
+supabase secrets set FOUNDER_EMAIL_SANDBOX=true      # set to "true" to skip sandbox events
+```
+
+**Important:** Set `FOUNDER_EMAIL_ENABLED=true` only when you're ready to send real
+emails. Without it, the function logs what it would send but doesn't actually send.
+
+#### 5. Set up the free-user email trigger (Database Webhook)
+
+The paid email is triggered automatically by the RevenueCat webhook. For the free
+email (when a user links their email), you have two options:
+
+**Option A: Supabase Database Webhook (Recommended)**
+
+1. Go to Supabase Dashboard → Database → Webhooks
+2. Create a new webhook:
+   - **Name:** `founder-email-on-link`
+   - **Table:** `auth.users`
+   - **Events:** `UPDATE`
+   - **URL:** `https://<your-project>.supabase.co/functions/v1/founder-email`
+   - **Headers:** `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`
+   - **Payload:** Include all columns
+
+3. The edge function will check if the email changed from null to a real address
+   and send the free email if so.
+
+**Option B: Database Trigger with pg_net**
+
+Uncomment the trigger in `schema_founder_emails.sql`. This requires the `pg_net`
+extension and proper configuration of `app.settings.supabase_url` and
+`app.settings.service_role_key` in the database.
+
+#### 6. Test
+
+```bash
+# Test the founder-email function directly (dry run by default):
+curl -X POST "https://<project>.supabase.co/functions/v1/founder-email" \
+  -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id":"<uuid>","email_type":"paid","email":"test@example.com","first_name":"Test"}'
+
+# Check sends:
+# SELECT * FROM founder_email_sends;
+# SELECT * FROM founder_email_stats;
+```
+
+### Secrets Reference
+
+| Secret | Required | Default | Description |
+|--------|----------|---------|-------------|
+| `RESEND_API_KEY` | Yes | — | Resend API key (`re_...`) |
+| `FOUNDER_EMAIL_FROM` | No | `Ali Mirza <ali@getrounds.app>` | From address |
+| `FOUNDER_EMAIL_REPLY_TO` | No | `ali@getrounds.app` | Reply-to (Ali's inbox) |
+| `FOUNDER_EMAIL_ENABLED` | No | `false` | Set to `"true"` to send |
+| `FOUNDER_EMAIL_SANDBOX` | No | `false` | Set to `"true"` to skip sandbox/TestFlight |
+
+### Monitoring
+
+```sql
+-- See all sends
+SELECT * FROM founder_email_sends ORDER BY sent_at DESC;
+
+-- Stats by type
+SELECT * FROM founder_email_stats;
+
+-- Recent sends
+SELECT * FROM founder_email_sends 
+WHERE sent_at > now() - interval '7 days'
+ORDER BY sent_at DESC;
+```
