@@ -394,6 +394,12 @@ verify_jwt = false
 [functions.founder-email]
 verify_jwt = false
 
+# RevenueCat webhook: RevenueCat is not a Supabase user and sends its own
+# Authorization header (checked against RC_WEBHOOK_SECRET in the function).
+# Must stay false, or RevenueCat gets 401s and subscription state goes stale.
+[functions.revenuecat-webhook]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

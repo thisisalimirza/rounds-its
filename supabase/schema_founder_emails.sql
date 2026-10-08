@@ -245,6 +245,12 @@ grant execute on function public.has_received_founder_email(uuid, text) to servi
 revoke all on function public.record_founder_email_sent(uuid, text, text, text, text, text) from public, anon, authenticated;
 grant execute on function public.record_founder_email_sent(uuid, text, text, text, text, text) to service_role;
 
+-- Trigger function: fired by on_founder_email_link, never called directly.
+-- Without this, anon/authenticated could invoke it via /rest/v1/rpc (advisor
+-- lint 0028/0029). Triggers still fire: EXECUTE is only checked at CREATE TRIGGER.
+revoke execute on function public.notify_founder_email_on_link() from public, anon, authenticated;
+grant execute on function public.notify_founder_email_on_link() to service_role;
+
 -- =========================================================================
 -- Admin view: see all founder emails sent
 -- =========================================================================
