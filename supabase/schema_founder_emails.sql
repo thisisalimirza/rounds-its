@@ -39,9 +39,10 @@ create table if not exists public.founder_email_sends (
 create index if not exists founder_email_sends_user_idx on public.founder_email_sends(user_id);
 create index if not exists founder_email_sends_type_idx on public.founder_email_sends(email_type, sent_at);
 
--- No RLS needed: this table is only written by the service role from edge
--- functions. Clients never touch it.
+-- RLS on with no policies: only the service role (which bypasses RLS) can
+-- read or write. Clients never touch it, so also drop the default grants.
 alter table public.founder_email_sends enable row level security;
+revoke all on public.founder_email_sends from anon, authenticated;
 
 -- =========================================================================
 -- request_founder_email: callable from triggers or other functions
@@ -144,12 +145,20 @@ begin
         -- Queue the email request (non-blocking)
         -- The edge function will check idempotency and whether they already
         -- got a paid email (in which case the free email is skipped).
-        perform public.request_founder_email(
-            NEW.id,
-            'free',
-            v_new_email,
-            v_first_name
-        );
+        --
+        -- Wrapped in its own exception block: a Vault/pg_net problem must
+        -- never roll back or block the auth.users update that fired us.
+        begin
+            perform public.request_founder_email(
+                NEW.id,
+                'free',
+                v_new_email,
+                v_first_name
+            );
+        exception when others then
+            raise warning 'founder_email: request failed for user %, skipping: % (%)',
+                NEW.id, sqlerrm, sqlstate;
+        end;
     end if;
 
     return NEW;

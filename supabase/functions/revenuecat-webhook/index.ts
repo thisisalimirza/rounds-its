@@ -248,6 +248,8 @@ Deno.serve(async (req) => {
               first_name: firstName,
               is_sandbox: isSandbox,
             }),
+            // Never let a slow email send hold up RevenueCat's response.
+            signal: AbortSignal.timeout(10_000),
           });
 
           const emailResult = await emailRes.json();

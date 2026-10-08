@@ -313,10 +313,23 @@ Deno.serve(async (req) => {
   // Idempotency check (excludes dry-run sends)
   // -----------------------------------------------------------------------
   // Check if this specific email was already sent (real sends only)
-  const { data: alreadySent } = await admin.rpc("has_received_founder_email", {
-    p_user_id: user_id,
-    p_email_type: email_type,
-  });
+  // Fail closed: if we can't confirm the send history, don't risk a duplicate.
+  const hasReceived = async (type: "paid" | "free"): Promise<boolean | null> => {
+    const { data, error } = await admin.rpc("has_received_founder_email", {
+      p_user_id: user_id,
+      p_email_type: type,
+    });
+    if (error) {
+      console.error(`founder-email: idempotency check failed for user ${user_id}:`, error.message);
+      return null;
+    }
+    return data === true;
+  };
+
+  const alreadySent = await hasReceived(email_type);
+  if (alreadySent === null) {
+    return json({ status: "error", reason: "idempotency_check_failed" }, 500);
+  }
 
   if (alreadySent) {
     console.log(`founder-email: already sent ${email_type} email to user ${user_id}`);
@@ -329,10 +342,10 @@ Deno.serve(async (req) => {
   // For free emails: skip if user already received paid email
   // (they're already engaged, no need to ask them to upgrade)
   if (email_type === "free") {
-    const { data: hasPaidEmail } = await admin.rpc("has_received_founder_email", {
-      p_user_id: user_id,
-      p_email_type: "paid",
-    });
+    const hasPaidEmail = await hasReceived("paid");
+    if (hasPaidEmail === null) {
+      return json({ status: "error", reason: "idempotency_check_failed" }, 500);
+    }
 
     if (hasPaidEmail) {
       console.log(`founder-email: user ${user_id} already got paid email, skipping free`);
@@ -343,10 +356,10 @@ Deno.serve(async (req) => {
   // For paid emails: check if user already got free email
   // If so, use the shorter upgrade variant instead of full intro
   if (email_type === "paid") {
-    const { data: hasFreeEmail } = await admin.rpc("has_received_founder_email", {
-      p_user_id: user_id,
-      p_email_type: "free",
-    });
+    const hasFreeEmail = await hasReceived("free");
+    if (hasFreeEmail === null) {
+      return json({ status: "error", reason: "idempotency_check_failed" }, 500);
+    }
 
     if (hasFreeEmail) {
       useUpgradeVariant = true;
