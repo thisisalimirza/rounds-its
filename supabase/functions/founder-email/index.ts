@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
   // -----------------------------------------------------------------------
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   const FOUNDER_EMAIL_FROM = Deno.env.get("FOUNDER_EMAIL_FROM") ?? "Ali Mirza <ali@getrounds.app>";
-  const FOUNDER_EMAIL_REPLY_TO = Deno.env.get("FOUNDER_EMAIL_REPLY_TO") ?? "ali@getrounds.app";
+  const FOUNDER_EMAIL_REPLY_TO = Deno.env.get("FOUNDER_EMAIL_REPLY_TO") ?? "ali@braskgroup.com";
   const FOUNDER_EMAIL_ENABLED = Deno.env.get("FOUNDER_EMAIL_ENABLED") === "true";
   const FOUNDER_EMAIL_SANDBOX = Deno.env.get("FOUNDER_EMAIL_SANDBOX") === "true";
 

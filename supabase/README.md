@@ -209,7 +209,7 @@ supabase secrets set RESEND_API_KEY=re_XXXXXXXXXXXXXXXX
 
 # Optional (have sensible defaults)
 supabase secrets set FOUNDER_EMAIL_FROM="Ali Mirza <ali@getrounds.app>"
-supabase secrets set FOUNDER_EMAIL_REPLY_TO="ali@getrounds.app"
+supabase secrets set FOUNDER_EMAIL_REPLY_TO="ali@braskgroup.com"
 
 # Control switches
 supabase secrets set FOUNDER_EMAIL_ENABLED=true      # set to "true" to actually send
@@ -264,7 +264,7 @@ curl -X POST "https://<project>.supabase.co/functions/v1/founder-email" \
 |--------|----------|---------|-------------|
 | `RESEND_API_KEY` | Yes | — | Resend API key (`re_...`) |
 | `FOUNDER_EMAIL_FROM` | No | `Ali Mirza <ali@getrounds.app>` | From address |
-| `FOUNDER_EMAIL_REPLY_TO` | No | `ali@getrounds.app` | Reply-to (Ali's inbox) |
+| `FOUNDER_EMAIL_REPLY_TO` | No | `ali@braskgroup.com` | Reply-to (Ali's inbox) |
 | `FOUNDER_EMAIL_ENABLED` | No | `false` | Set to `"true"` to send |
 | `FOUNDER_EMAIL_SANDBOX` | No | `false` | Set to `"true"` to skip sandbox/TestFlight |
 
