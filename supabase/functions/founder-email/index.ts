@@ -41,8 +41,9 @@ function constantTimeEqual(a: string, b: string): boolean {
 const GIFT_CARD_AMOUNT = "$25";
 
 const PAID_EMAIL_SUBJECT = "thanks for subscribing to rounds";
+const PAID_UPGRADE_EMAIL_SUBJECT = "thanks for upgrading to pro";
 
-// Template function for paid users
+// Template function for paid users (first contact)
 function paidEmailBody(firstName: string | null): string {
   const greeting = firstName ? `hi ${firstName.toLowerCase()}.` : "hi.";
 
@@ -73,6 +74,31 @@ ali
 
 ---
 you're receiving this because you subscribed to rounds pro.
+if you'd rather not hear from me, just reply "stop" and i won't email you again.`;
+}
+
+// Template for users who already got the free email and then upgraded
+function paidUpgradeEmailBody(firstName: string | null): string {
+  const greeting = firstName ? `hi ${firstName.toLowerCase()}.` : "hi.";
+
+  return `${greeting}
+
+just saw you upgraded to pro — thanks for that, seriously.
+
+i'm still curious what pushed you over the edge. when you linked your email you were trying it out, and now you're paying. what changed?
+
+- was there a specific feature that made it worth it?
+- something you wish it did better?
+- or just figured you'd use it enough to justify it?
+
+would love to know. same offer as before: if you'd rather hop on a quick call, i'll send you a ${GIFT_CARD_AMOUNT} visa gift card for your time. just reply and i'll send my calendar.
+
+thanks again.
+
+ali
+
+---
+you're receiving this because you upgraded to rounds pro.
 if you'd rather not hear from me, just reply "stop" and i won't email you again.`;
 }
 
@@ -297,6 +323,9 @@ Deno.serve(async (req) => {
     return json({ status: "skipped", reason: "already_sent" });
   }
 
+  // Track whether to use upgrade variant for paid emails
+  let useUpgradeVariant = false;
+
   // For free emails: skip if user already received paid email
   // (they're already engaged, no need to ask them to upgrade)
   if (email_type === "free") {
@@ -311,13 +340,39 @@ Deno.serve(async (req) => {
     }
   }
 
+  // For paid emails: check if user already got free email
+  // If so, use the shorter upgrade variant instead of full intro
+  if (email_type === "paid") {
+    const { data: hasFreeEmail } = await admin.rpc("has_received_founder_email", {
+      p_user_id: user_id,
+      p_email_type: "free",
+    });
+
+    if (hasFreeEmail) {
+      useUpgradeVariant = true;
+      console.log(`founder-email: user ${user_id} already got free email, using upgrade variant`);
+    }
+  }
+
   // -----------------------------------------------------------------------
   // Build email content (using verified email and name)
   // -----------------------------------------------------------------------
-  const subject = email_type === "paid" ? PAID_EMAIL_SUBJECT : FREE_EMAIL_SUBJECT;
-  const textBody = email_type === "paid"
-    ? paidEmailBody(verifiedFirstName ?? null)
-    : freeEmailBody(verifiedFirstName ?? null);
+  let subject: string;
+  let textBody: string;
+  const variant = useUpgradeVariant ? "upgrade" : null;
+
+  if (email_type === "paid") {
+    if (useUpgradeVariant) {
+      subject = PAID_UPGRADE_EMAIL_SUBJECT;
+      textBody = paidUpgradeEmailBody(verifiedFirstName ?? null);
+    } else {
+      subject = PAID_EMAIL_SUBJECT;
+      textBody = paidEmailBody(verifiedFirstName ?? null);
+    }
+  } else {
+    subject = FREE_EMAIL_SUBJECT;
+    textBody = freeEmailBody(verifiedFirstName ?? null);
+  }
 
   // -----------------------------------------------------------------------
   // Send via Resend (or dry-run)
@@ -379,6 +434,7 @@ Deno.serve(async (req) => {
     p_recipient_email: verifiedEmail,
     p_first_name: verifiedFirstName ?? null,
     p_resend_id: resendId,
+    p_variant: variant,
   });
 
   if (recordErr) {
@@ -389,6 +445,7 @@ Deno.serve(async (req) => {
   return json({
     status: "sent",
     email_type,
+    variant: variant,
     resend_id: resendId,
   });
 });

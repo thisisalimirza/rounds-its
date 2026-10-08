@@ -170,12 +170,17 @@ Personal emails from Ali sent automatically to:
 1. **Paid users** — on first purchase (INITIAL_PURCHASE or NON_RENEWING_PURCHASE from RevenueCat)
 2. **Free users** — when they link an email address to their account
 
-Each user receives at most one email of each type, ever. A user who gets the paid
-email will NOT also receive the free email (they're already engaged).
+**Email logic:**
+- Each user receives at most one email of each type, ever.
+- If a user already got the **paid** email, they will NOT receive the free email.
+- If a user already got the **free** email and later upgrades, they get a shorter
+  "thanks for upgrading" variant of the paid email (same gift card offer).
 
 ### Setup Checklist
 
-#### 1. Create a Resend account and verify your domain
+Follow these steps in order:
+
+#### Step 1: Resend domain verification
 
 1. Sign up at [resend.com](https://resend.com)
 2. Go to **Domains** → **Add Domain** → add `getrounds.app`
@@ -183,94 +188,85 @@ email will NOT also receive the free email (they're already engaged).
 4. Wait for verification (usually a few minutes)
 5. Go to **API Keys** → **Create API Key** → copy the key (`re_...`)
 
-#### 2. Apply the database migration
+#### Step 2: Set Supabase edge function secrets
+
+Generate a random secret for `FOUNDER_EMAIL_SECRET` (e.g., `openssl rand -hex 32`).
 
 ```bash
-# In Supabase SQL Editor, run:
-# supabase/schema_founder_emails.sql
+supabase secrets set RESEND_API_KEY=re_XXXXXXXXXXXXXXXX
+supabase secrets set FOUNDER_EMAIL_SECRET=<your-random-secret>
+supabase secrets set FOUNDER_EMAIL_FROM="Ali Mirza <ali@getrounds.app>"
+supabase secrets set FOUNDER_EMAIL_REPLY_TO="ali@braskgroup.com"
+```
+
+**Leave `FOUNDER_EMAIL_ENABLED` unset for dry-run mode.** The function will log
+what it would send but won't actually send or record the send. Users will still
+receive the real email after you set `FOUNDER_EMAIL_ENABLED=true`.
+
+#### Step 3: Insert Vault secrets for the database trigger
+
+The free-user email trigger runs via a database trigger that calls the edge function
+using pg_net. It reads secrets from Supabase Vault.
+
+Run this in the **SQL Editor** (replace `<project-ref>` and `<secret>`):
+
+```sql
+-- Insert the edge function URL
+INSERT INTO vault.secrets (name, secret)
+VALUES ('founder_email_url', 'https://<project-ref>.supabase.co/functions/v1/founder-email')
+ON CONFLICT (name) DO UPDATE SET secret = EXCLUDED.secret;
+
+-- Insert the shared auth secret (same value as FOUNDER_EMAIL_SECRET)
+INSERT INTO vault.secrets (name, secret)
+VALUES ('founder_email_secret', '<your-random-secret>')
+ON CONFLICT (name) DO UPDATE SET secret = EXCLUDED.secret;
+```
+
+#### Step 4: Apply the database migration
+
+Run the migration in the **SQL Editor**:
+
+```sql
+-- Paste contents of: supabase/schema_founder_emails.sql
 ```
 
 This creates:
 - `founder_email_sends` table (idempotency tracking)
-- Helper functions for the edge function
+- `request_founder_email()` function (reads Vault secrets, calls pg_net)
+- `on_founder_email_link` trigger on `auth.users` (fires when email is linked)
 
-#### 3. Deploy the edge functions
+#### Step 5: Deploy edge functions
 
 ```bash
 supabase functions deploy founder-email --no-verify-jwt
 supabase functions deploy revenuecat-webhook --no-verify-jwt
 ```
 
-#### 4. Set the secrets
+#### Step 6: Smoke test (dry-run)
+
+Test the founder-email function directly. It will log but not send (dry-run mode):
 
 ```bash
-# Required — both are needed for emails to send
-supabase secrets set RESEND_API_KEY=re_XXXXXXXXXXXXXXXX
-supabase secrets set FOUNDER_EMAIL_SECRET=your-secret-here  # shared auth secret
-
-# Optional (have sensible defaults)
-supabase secrets set FOUNDER_EMAIL_FROM="Ali Mirza <ali@getrounds.app>"
-supabase secrets set FOUNDER_EMAIL_REPLY_TO="ali@braskgroup.com"
-
-# Control switches
-supabase secrets set FOUNDER_EMAIL_ENABLED=true           # set to "true" to actually send
-supabase secrets set FOUNDER_EMAIL_SEND_SANDBOX=true      # set to "true" to send for TestFlight/sandbox (default: skip)
-```
-
-**Important:**
-- `FOUNDER_EMAIL_SECRET` is required — requests without it are rejected with 401.
-- Set `FOUNDER_EMAIL_ENABLED=true` only when you're ready to send real emails.
-  Without it, the function logs what it would send but doesn't record the send,
-  so users will still get the real email after launch.
-- Sandbox/TestFlight events are **skipped by default**. Set `FOUNDER_EMAIL_SEND_SANDBOX=true`
-  only if you want to test with real emails in TestFlight.
-
-#### 5. Set up the free-user email trigger (Database Webhook)
-
-The paid email is triggered automatically by the RevenueCat webhook. For the free
-email (when a user links their email), you have two options:
-
-**Option A: Supabase Database Webhook (Recommended)**
-
-1. Go to Supabase Dashboard → Database → Webhooks
-2. Create a new webhook:
-   - **Name:** `founder-email-on-link`
-   - **Table:** `auth.users`
-   - **Events:** `UPDATE`
-   - **URL:** `https://<your-project>.supabase.co/functions/v1/founder-email`
-   - **Headers:**
-     - `Authorization: Bearer <FOUNDER_EMAIL_SECRET>` (the same secret you set above)
-     - `Content-Type: application/json`
-   - **Payload:** Include all columns
-
-3. The edge function will check if the email changed from null to a real address
-   and send the free email if so.
-
-**Option B: Database Trigger with pg_net**
-
-Uncomment the trigger in `schema_founder_emails.sql`. This requires the `pg_net`
-extension and proper configuration. You'll also need to pass the `FOUNDER_EMAIL_SECRET`
-in the request headers.
-
-#### 6. Test
-
-```bash
-# Test the founder-email function directly (dry run by default):
 curl -X POST "https://<project>.supabase.co/functions/v1/founder-email" \
   -H "Authorization: Bearer <FOUNDER_EMAIL_SECRET>" \
   -H "Content-Type: application/json" \
-  -d '{"user_id":"<uuid>","email_type":"paid","email":"test@example.com","first_name":"Test"}'
+  -d '{"user_id":"<real-user-uuid>","email_type":"paid"}'
+```
 
-# Note: The function verifies the email belongs to user_id via auth.users,
-# so use a real user_id from your database. The email in the request is
-# ignored in favor of the verified email from auth.users.
+**Note:** The function looks up the user's email from `auth.users`, so you must
+use a real user_id. The `email` field in the request is ignored.
 
-# Check sends:
-# SELECT * FROM founder_email_sends;
-# SELECT * FROM founder_email_stats;
+Check the function logs in Supabase Dashboard → Edge Functions → founder-email → Logs.
+
+#### Step 7: Enable real sends (when ready)
+
+```bash
+supabase secrets set FOUNDER_EMAIL_ENABLED=true
 ```
 
 ### Secrets Reference
+
+#### Edge Function Secrets (via `supabase secrets set`)
 
 | Secret | Required | Default | Description |
 |--------|----------|---------|-------------|
@@ -281,11 +277,29 @@ curl -X POST "https://<project>.supabase.co/functions/v1/founder-email" \
 | `FOUNDER_EMAIL_ENABLED` | No | `false` | Set to `"true"` to send |
 | `FOUNDER_EMAIL_SEND_SANDBOX` | No | `false` | Set to `"true"` to send for sandbox/TestFlight |
 
+#### Vault Secrets (via SQL `INSERT INTO vault.secrets`)
+
+| Name | Description |
+|------|-------------|
+| `founder_email_url` | Full URL to founder-email edge function |
+| `founder_email_secret` | Same value as `FOUNDER_EMAIL_SECRET` |
+
+### Alternative: Database Webhook (not recommended)
+
+Instead of the pg_net trigger, you can use a Supabase Database Webhook. However,
+this requires manual dashboard configuration and the trigger approach is preferred
+since it's fully version-controlled in SQL.
+
+If you do use a Database Webhook:
+1. **Disable the trigger first** to avoid double-sends: `DROP TRIGGER on_founder_email_link ON auth.users;`
+2. Configure the webhook in Dashboard → Database → Webhooks with the same auth header.
+
 ### Monitoring
 
 ```sql
--- See all sends
-SELECT * FROM founder_email_sends ORDER BY sent_at DESC;
+-- See all sends (including variant)
+SELECT user_id, email_type, variant, recipient_email, sent_at
+FROM founder_email_sends ORDER BY sent_at DESC;
 
 -- Stats by type
 SELECT * FROM founder_email_stats;

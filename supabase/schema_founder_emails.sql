@@ -2,7 +2,11 @@
 -- Personal emails from Ali (founder) sent once to paying users and once to
 -- users who link an email address to their account.
 --
--- Safe to re-run.
+-- Safe to re-run (idempotent).
+--
+-- Requires Vault secrets (insert via SQL Editor or Supabase Dashboard):
+--   - founder_email_url:    https://<project>.supabase.co/functions/v1/founder-email
+--   - founder_email_secret: <same value as FOUNDER_EMAIL_SECRET edge function secret>
 
 -- =========================================================================
 -- pg_net: required for HTTP calls from database triggers to edge functions.
@@ -22,6 +26,7 @@ create table if not exists public.founder_email_sends (
     id              uuid primary key default gen_random_uuid(),
     user_id         uuid not null references public.profiles(id) on delete cascade,
     email_type      text not null check (email_type in ('paid', 'free')),
+    variant         text,          -- null for standard, 'upgrade' for follow-up variant
     recipient_email text not null,
     first_name      text,
     resend_id       text,          -- Resend's message id for debugging
@@ -44,6 +49,10 @@ alter table public.founder_email_sends enable row level security;
 -- Queues an HTTP request to the founder-email edge function via pg_net.
 -- The edge function handles idempotency checking and actual sending.
 --
+-- Reads secrets from Supabase Vault (vault.decrypted_secrets):
+--   - founder_email_url:    full URL to the edge function
+--   - founder_email_secret: shared auth secret
+--
 -- Returns immediately (non-blocking). The email send is asynchronous.
 -- =========================================================================
 create or replace function public.request_founder_email(
@@ -58,18 +67,24 @@ security definer
 set search_path = public
 as $$
 declare
-    v_supabase_url    text;
+    v_function_url    text;
     v_founder_secret  text;
     v_payload         jsonb;
 begin
-    -- Read runtime config (these must be set in Supabase dashboard or via ALTER DATABASE)
-    v_supabase_url   := current_setting('app.settings.supabase_url', true);
-    v_founder_secret := current_setting('app.settings.founder_email_secret', true);
+    -- Read secrets from Supabase Vault
+    select decrypted_secret into v_function_url
+    from vault.decrypted_secrets
+    where name = 'founder_email_url'
+    limit 1;
 
-    -- Fallback: if settings aren't available, skip the call.
-    -- For pure DB triggers, use Database Webhooks instead (see README).
-    if v_supabase_url is null or v_founder_secret is null then
-        raise notice 'founder_email: settings not available, skipping pg_net call';
+    select decrypted_secret into v_founder_secret
+    from vault.decrypted_secrets
+    where name = 'founder_email_secret'
+    limit 1;
+
+    -- Skip silently if Vault secrets are not configured
+    if v_function_url is null or v_founder_secret is null then
+        raise notice 'founder_email: Vault secrets not configured, skipping pg_net call';
         return;
     end if;
 
@@ -80,13 +95,17 @@ begin
         'first_name', p_first_name
     );
 
-    perform extensions.http_post(
-        url     := v_supabase_url || '/functions/v1/founder-email',
-        body    := v_payload::text,
-        headers := jsonb_build_object(
+    -- Queue the HTTP request via pg_net (non-blocking)
+    -- Signature: net.http_post(url, body jsonb, params jsonb, headers jsonb, timeout_milliseconds int)
+    perform net.http_post(
+        url                  := v_function_url,
+        body                 := v_payload,
+        params               := '{}'::jsonb,
+        headers              := jsonb_build_object(
             'Content-Type',  'application/json',
             'Authorization', 'Bearer ' || v_founder_secret
-        )
+        ),
+        timeout_milliseconds := 5000
     );
 end;
 $$;
@@ -97,7 +116,6 @@ $$;
 -- Fires when a user's email changes from null/empty to a real address.
 -- This handles the "free user links their email" case.
 --
--- Note: This trigger runs on auth.users, which requires careful permissions.
 -- The actual email send check (hasn't already been sent, hasn't received
 -- paid email) happens in the edge function for robustness.
 -- =========================================================================
@@ -138,22 +156,22 @@ begin
 end;
 $$;
 
--- The trigger on auth.users requires superuser. On Supabase hosted, this is
--- handled automatically. For local dev, you may need to run as postgres user.
+-- =========================================================================
+-- Trigger on auth.users for email linking
 --
--- IMPORTANT: In production Supabase, you likely want to use Database Webhooks
--- (dashboard → Database → Webhooks) instead of this trigger, pointing to the
--- founder-email edge function. Database Webhooks are more reliable for calling
--- edge functions because they use Supabase's internal infrastructure.
+-- Fires after UPDATE when email changes. Uses pg_net to call the edge
+-- function asynchronously. Safe to re-run (idempotent).
 --
--- Uncomment the trigger below if using the pg_net approach:
---
--- drop trigger if exists on_email_linked on auth.users;
--- create trigger on_email_linked
---     after update of email on auth.users
---     for each row
---     when (OLD.email is distinct from NEW.email)
---     execute function public.notify_founder_email_on_link();
+-- Named distinctly from existing triggers:
+--   - on_auth_user_created (creates profile row)
+--   - on_auth_user_team_sync (team sync)
+-- =========================================================================
+drop trigger if exists on_founder_email_link on auth.users;
+create trigger on_founder_email_link
+    after update of email on auth.users
+    for each row
+    when (OLD.email is distinct from NEW.email)
+    execute function public.notify_founder_email_on_link();
 
 -- =========================================================================
 -- has_received_founder_email: helper for checking email status
@@ -187,7 +205,8 @@ create or replace function public.record_founder_email_sent(
     p_email_type     text,
     p_recipient_email text,
     p_first_name     text,
-    p_resend_id      text
+    p_resend_id      text,
+    p_variant        text default null
 )
 returns boolean
 language plpgsql
@@ -196,9 +215,9 @@ set search_path = public
 as $$
 begin
     insert into public.founder_email_sends (
-        user_id, email_type, recipient_email, first_name, resend_id
+        user_id, email_type, variant, recipient_email, first_name, resend_id
     ) values (
-        p_user_id, p_email_type, p_recipient_email, p_first_name, p_resend_id
+        p_user_id, p_email_type, p_variant, p_recipient_email, p_first_name, p_resend_id
     )
     on conflict (user_id, email_type) do nothing;
 
@@ -214,13 +233,15 @@ grant execute on function public.request_founder_email(uuid, text, text, text) t
 revoke all on function public.has_received_founder_email(uuid, text) from public, anon, authenticated;
 grant execute on function public.has_received_founder_email(uuid, text) to service_role;
 
-revoke all on function public.record_founder_email_sent(uuid, text, text, text, text) from public, anon, authenticated;
-grant execute on function public.record_founder_email_sent(uuid, text, text, text, text) to service_role;
+revoke all on function public.record_founder_email_sent(uuid, text, text, text, text, text) from public, anon, authenticated;
+grant execute on function public.record_founder_email_sent(uuid, text, text, text, text, text) to service_role;
 
 -- =========================================================================
 -- Admin view: see all founder emails sent
 -- =========================================================================
-create or replace view public.founder_email_stats as
+create or replace view public.founder_email_stats
+with (security_invoker = true)
+as
 select
     email_type,
     count(*) as total_sent,
