@@ -229,26 +229,31 @@ Deno.serve(async (req) => {
 
       if (userEmail) {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const founderEmailSecret = Deno.env.get("FOUNDER_EMAIL_SECRET");
 
-        const emailRes = await fetch(`${supabaseUrl}/functions/v1/founder-email`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${serviceKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            email_type: "paid",
-            email: userEmail,
-            first_name: firstName,
-            is_sandbox: isSandbox,
-          }),
-        });
+        if (!founderEmailSecret) {
+          console.warn("founder-email: FOUNDER_EMAIL_SECRET not set, skipping email");
+          founderEmailStatus = "no_secret";
+        } else {
+          const emailRes = await fetch(`${supabaseUrl}/functions/v1/founder-email`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${founderEmailSecret}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              user_id: userId,
+              email_type: "paid",
+              email: userEmail,
+              first_name: firstName,
+              is_sandbox: isSandbox,
+            }),
+          });
 
-        const emailResult = await emailRes.json();
-        founderEmailStatus = emailResult.status ?? "unknown";
-        console.log(`founder-email: ${founderEmailStatus} for user ${userId}`);
+          const emailResult = await emailRes.json();
+          founderEmailStatus = emailResult.status ?? "unknown";
+          console.log(`founder-email: ${founderEmailStatus} for user ${userId}`);
+        }
       } else {
         founderEmailStatus = "no_email";
         console.log(`founder-email: user ${userId} has no email address`);

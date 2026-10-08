@@ -12,13 +12,26 @@
 //    database triggers/webhooks with service role, not user JWTs)
 //
 // Secrets (supabase secrets set ...):
+//   FOUNDER_EMAIL_SECRET    Shared secret for authenticating callers (required)
 //   RESEND_API_KEY          Resend API key (re_...)
 //   FOUNDER_EMAIL_FROM      From address (default: "Ali Mirza <ali@getrounds.app>")
 //   FOUNDER_EMAIL_REPLY_TO  Reply-to address (Ali's real inbox)
 //   FOUNDER_EMAIL_ENABLED   "true" to send, anything else to dry-run (logs only)
-//   FOUNDER_EMAIL_SANDBOX   "true" to skip sends for sandbox/TestFlight events
+//   FOUNDER_EMAIL_SEND_SANDBOX  "true" to send for sandbox/TestFlight (default: skip)
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
+
+// Constant-time string comparison to prevent timing attacks
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
 
 // =========================================================================
 // Email templates
@@ -115,13 +128,41 @@ Deno.serve(async (req) => {
   }
 
   // -----------------------------------------------------------------------
+  // Authentication — require shared secret before doing anything else
+  // -----------------------------------------------------------------------
+  const FOUNDER_EMAIL_SECRET = Deno.env.get("FOUNDER_EMAIL_SECRET");
+  if (!FOUNDER_EMAIL_SECRET) {
+    console.error("founder-email: FOUNDER_EMAIL_SECRET not set — refusing all requests");
+    return json({ error: "not_configured" }, 500);
+  }
+
+  // Accept secret via Authorization header (Bearer token) or X-Founder-Email-Secret header
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const secretHeader = req.headers.get("X-Founder-Email-Secret") ?? "";
+  
+  let authenticated = false;
+  if (authHeader.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    authenticated = constantTimeEqual(token, FOUNDER_EMAIL_SECRET);
+  }
+  if (!authenticated && secretHeader) {
+    authenticated = constantTimeEqual(secretHeader, FOUNDER_EMAIL_SECRET);
+  }
+
+  if (!authenticated) {
+    console.warn("founder-email: unauthorized request rejected");
+    return json({ error: "unauthorized" }, 401);
+  }
+
+  // -----------------------------------------------------------------------
   // Config
   // -----------------------------------------------------------------------
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   const FOUNDER_EMAIL_FROM = Deno.env.get("FOUNDER_EMAIL_FROM") ?? "Ali Mirza <ali@getrounds.app>";
   const FOUNDER_EMAIL_REPLY_TO = Deno.env.get("FOUNDER_EMAIL_REPLY_TO") ?? "ali@braskgroup.com";
   const FOUNDER_EMAIL_ENABLED = Deno.env.get("FOUNDER_EMAIL_ENABLED") === "true";
-  const FOUNDER_EMAIL_SANDBOX = Deno.env.get("FOUNDER_EMAIL_SANDBOX") === "true";
+  // Sandbox events are SKIPPED by default; only send if explicitly opted in
+  const FOUNDER_EMAIL_SEND_SANDBOX = Deno.env.get("FOUNDER_EMAIL_SEND_SANDBOX") === "true";
 
   if (!RESEND_API_KEY) {
     console.log("founder-email: RESEND_API_KEY not set, skipping send");
@@ -195,21 +236,57 @@ Deno.serve(async (req) => {
     return json({ error: "invalid_email_type", valid: ["paid", "free"] }, 400);
   }
 
-  // Skip sandbox/TestFlight events unless explicitly allowed
-  if (is_sandbox && FOUNDER_EMAIL_SANDBOX) {
+  // Skip sandbox/TestFlight events by default; only send if explicitly opted in
+  if (is_sandbox && !FOUNDER_EMAIL_SEND_SANDBOX) {
     console.log(`founder-email: skipping sandbox event for user ${user_id}`);
     return json({ status: "skipped", reason: "sandbox_event" });
   }
 
   // -----------------------------------------------------------------------
-  // Idempotency check
+  // Supabase admin client
   // -----------------------------------------------------------------------
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // Check if this specific email was already sent
+  // -----------------------------------------------------------------------
+  // Verify email belongs to user (don't trust caller blindly)
+  // For direct calls, look up the user and confirm the email matches.
+  // For webhook calls (where we extracted from record), this is a no-op.
+  // -----------------------------------------------------------------------
+  let verifiedEmail = email;
+  let verifiedFirstName = first_name;
+
+  try {
+    const { data: authUser, error: authErr } = await admin.auth.admin.getUserById(user_id);
+    if (authErr || !authUser?.user) {
+      console.warn(`founder-email: user ${user_id} not found in auth.users`);
+      return json({ status: "skipped", reason: "user_not_found" }, 404);
+    }
+
+    // Use the verified email from auth.users, not the caller's claim
+    const userEmail = authUser.user.email?.trim();
+    if (!userEmail) {
+      console.log(`founder-email: user ${user_id} has no email address`);
+      return json({ status: "skipped", reason: "no_email" });
+    }
+    verifiedEmail = userEmail;
+
+    // Also get first name from user metadata if available
+    const fullName = authUser.user.user_metadata?.full_name;
+    if (fullName && typeof fullName === "string") {
+      verifiedFirstName = fullName.split(" ")[0];
+    }
+  } catch (err) {
+    console.error(`founder-email: failed to verify user ${user_id}:`, err);
+    return json({ status: "error", reason: "user_lookup_failed" }, 500);
+  }
+
+  // -----------------------------------------------------------------------
+  // Idempotency check (excludes dry-run sends)
+  // -----------------------------------------------------------------------
+  // Check if this specific email was already sent (real sends only)
   const { data: alreadySent } = await admin.rpc("has_received_founder_email", {
     p_user_id: user_id,
     p_email_type: email_type,
@@ -235,66 +312,72 @@ Deno.serve(async (req) => {
   }
 
   // -----------------------------------------------------------------------
-  // Build email content
+  // Build email content (using verified email and name)
   // -----------------------------------------------------------------------
   const subject = email_type === "paid" ? PAID_EMAIL_SUBJECT : FREE_EMAIL_SUBJECT;
   const textBody = email_type === "paid"
-    ? paidEmailBody(first_name ?? null)
-    : freeEmailBody(first_name ?? null);
+    ? paidEmailBody(verifiedFirstName ?? null)
+    : freeEmailBody(verifiedFirstName ?? null);
 
   // -----------------------------------------------------------------------
   // Send via Resend (or dry-run)
   // -----------------------------------------------------------------------
   let resendId: string | null = null;
+  const isDryRun = !FOUNDER_EMAIL_ENABLED;
 
-  if (!FOUNDER_EMAIL_ENABLED) {
+  if (isDryRun) {
     console.log(`founder-email: DRY RUN (FOUNDER_EMAIL_ENABLED != true)`);
-    console.log(`  To: ${email}`);
+    console.log(`  To: ${verifiedEmail}`);
     console.log(`  Subject: ${subject}`);
     console.log(`  Body preview: ${textBody.substring(0, 200)}...`);
-    resendId = `dry-run-${Date.now()}`;
-  } else {
-    try {
-      const resendRes = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: FOUNDER_EMAIL_FROM,
-          reply_to: FOUNDER_EMAIL_REPLY_TO,
-          to: [email],
-          subject: subject,
-          text: textBody,
-        }),
-      });
+    // Don't record dry-run sends — user should still get the real email later
+    return json({
+      status: "dry_run",
+      email_type,
+      would_send_to: verifiedEmail,
+    });
+  }
 
-      if (!resendRes.ok) {
-        const errText = await resendRes.text();
-        console.error(`founder-email: Resend API error: ${errText}`);
-        // Don't fail the whole request — log and continue
-        // The webhook that called us should succeed even if email fails
-        return json({ status: "error", reason: "resend_api_error", detail: errText }, 502);
-      }
+  try {
+    const resendRes = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: FOUNDER_EMAIL_FROM,
+        reply_to: FOUNDER_EMAIL_REPLY_TO,
+        to: [verifiedEmail],
+        subject: subject,
+        text: textBody,
+      }),
+    });
 
-      const resendData = await resendRes.json();
-      resendId = resendData.id ?? null;
-      console.log(`founder-email: sent ${email_type} email to ${email}, resend_id=${resendId}`);
-    } catch (err) {
-      console.error(`founder-email: send failed:`, err);
-      return json({ status: "error", reason: "send_exception" }, 502);
+    if (!resendRes.ok) {
+      const errText = await resendRes.text();
+      console.error(`founder-email: Resend API error: ${errText}`);
+      // Don't fail the whole request — log and continue
+      // The webhook that called us should succeed even if email fails
+      return json({ status: "error", reason: "resend_api_error", detail: errText }, 502);
     }
+
+    const resendData = await resendRes.json();
+    resendId = resendData.id ?? null;
+    console.log(`founder-email: sent ${email_type} email to ${verifiedEmail}, resend_id=${resendId}`);
+  } catch (err) {
+    console.error(`founder-email: send failed:`, err);
+    return json({ status: "error", reason: "send_exception" }, 502);
   }
 
   // -----------------------------------------------------------------------
-  // Record the send for idempotency
+  // Record the send for idempotency (only for real sends, not dry-run)
   // -----------------------------------------------------------------------
   const { error: recordErr } = await admin.rpc("record_founder_email_sent", {
     p_user_id: user_id,
     p_email_type: email_type,
-    p_recipient_email: email,
-    p_first_name: first_name ?? null,
+    p_recipient_email: verifiedEmail,
+    p_first_name: verifiedFirstName ?? null,
     p_resend_id: resendId,
   });
 

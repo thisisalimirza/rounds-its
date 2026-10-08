@@ -58,20 +58,17 @@ security definer
 set search_path = public
 as $$
 declare
-    v_supabase_url text;
-    v_service_key  text;
-    v_payload      jsonb;
+    v_supabase_url    text;
+    v_founder_secret  text;
+    v_payload         jsonb;
 begin
-    -- Read runtime config (these are set automatically by Supabase)
-    v_supabase_url := current_setting('app.settings.supabase_url', true);
-    v_service_key  := current_setting('app.settings.service_role_key', true);
+    -- Read runtime config (these must be set in Supabase dashboard or via ALTER DATABASE)
+    v_supabase_url   := current_setting('app.settings.supabase_url', true);
+    v_founder_secret := current_setting('app.settings.founder_email_secret', true);
 
-    -- Fallback: if settings aren't available, try environment-style approach
-    -- In production Supabase, these would be injected. For safety, we also
-    -- support a manual fallback via a config table if needed.
-    if v_supabase_url is null or v_service_key is null then
-        -- This will work in edge function context but not pure DB triggers.
-        -- For pure DB triggers, use Database Webhooks instead (see README).
+    -- Fallback: if settings aren't available, skip the call.
+    -- For pure DB triggers, use Database Webhooks instead (see README).
+    if v_supabase_url is null or v_founder_secret is null then
         raise notice 'founder_email: settings not available, skipping pg_net call';
         return;
     end if;
@@ -88,7 +85,7 @@ begin
         body    := v_payload::text,
         headers := jsonb_build_object(
             'Content-Type',  'application/json',
-            'Authorization', 'Bearer ' || v_service_key
+            'Authorization', 'Bearer ' || v_founder_secret
         )
     );
 end;
