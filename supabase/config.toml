@@ -389,6 +389,11 @@ deno_version = 2
 [functions.seed-illness-scripts]
 verify_jwt = false
 
+# Founder email: called from revenuecat-webhook and database webhooks with
+# service role key, not user JWTs.
+[functions.founder-email]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
