@@ -12,6 +12,9 @@
 // current by events, and read through public.profile_has_pro() which also
 // accounts for code-redeemed Pro.
 //
+// On INITIAL_PURCHASE and NON_RENEWING_PURCHASE (first payment), this also
+// triggers the founder email via the founder-email edge function.
+//
 // Deploy:  supabase functions deploy revenuecat-webhook --no-verify-jwt
 //   (--no-verify-jwt is required: RevenueCat is not a Supabase user and sends
 //    its own Authorization header, which we check below.)
@@ -173,6 +176,11 @@ Deno.serve(async (req) => {
     return json({ status: "unknown_profile", user_id: userId });
   }
 
+  // Check if this is a first-purchase event that should trigger founder email
+  const eventType = (event.type ?? "").toUpperCase();
+  const isFirstPurchase = eventType === "INITIAL_PURCHASE" || eventType === "NON_RENEWING_PURCHASE";
+  const isSandbox = (event.environment ?? "").toUpperCase() === "SANDBOX";
+
   // RevenueCat retries on non-2xx and may deliver the same event more than
   // once. Replaying an EXPIRATION after a RENEWAL would wrongly downgrade a
   // paying user, so drop exact repeats.
@@ -204,10 +212,59 @@ Deno.serve(async (req) => {
     return json({ error: "update_failed", detail: error.message }, 500);
   }
 
+  // -------------------------------------------------------------------------
+  // Founder email: send once on first purchase
+  //
+  // Triggers asynchronously and never fails the webhook — the subscription
+  // state update above is the critical path; the email is a nice-to-have.
+  // -------------------------------------------------------------------------
+  let founderEmailStatus: string | null = null;
+
+  if (isFirstPurchase) {
+    try {
+      // Fetch user's email from auth.users
+      const { data: authUser } = await admin.auth.admin.getUserById(userId);
+      const userEmail = authUser?.user?.email;
+      const firstName = authUser?.user?.user_metadata?.full_name?.split(" ")[0] ?? null;
+
+      if (userEmail) {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+        const emailRes = await fetch(`${supabaseUrl}/functions/v1/founder-email`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${serviceKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            email_type: "paid",
+            email: userEmail,
+            first_name: firstName,
+            is_sandbox: isSandbox,
+          }),
+        });
+
+        const emailResult = await emailRes.json();
+        founderEmailStatus = emailResult.status ?? "unknown";
+        console.log(`founder-email: ${founderEmailStatus} for user ${userId}`);
+      } else {
+        founderEmailStatus = "no_email";
+        console.log(`founder-email: user ${userId} has no email address`);
+      }
+    } catch (emailErr) {
+      // Log but don't fail — email is non-critical
+      founderEmailStatus = "error";
+      console.error("founder-email trigger failed (non-fatal):", emailErr);
+    }
+  }
+
   return json({
     status: "ok",
     user_id: userId,
     type: event.type,
     subscription_status: mapped.status,
+    founder_email: founderEmailStatus,
   });
 });
