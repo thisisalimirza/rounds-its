@@ -588,6 +588,8 @@ nonisolated struct CaseHistorySyncRow: Codable, SyncableRow {
     let guesses: [String]
     let was_daily_case: Bool
     let played_at: String
+    /// Same values as web: "daily" or "random". Optional so older rows decode.
+    var play_mode: String? = nil
 
     @MainActor init(_ entry: CaseHistoryEntry, userID: String) {
         id = entry.id.uuidString
@@ -603,6 +605,7 @@ nonisolated struct CaseHistorySyncRow: Codable, SyncableRow {
         guesses = entry.guesses
         was_daily_case = entry.wasDailyCase
         played_at = SyncTime.string(from: entry.playedAt)
+        play_mode = entry.wasDailyCase ? "daily" : "random"
     }
 
     /// Rebuilds the local record, preserving the server's id and timestamp —

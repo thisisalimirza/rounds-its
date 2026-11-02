@@ -61,6 +61,11 @@ class AnalyticsManager {
     func identifyUser(userId: String, properties: [String: Any]? = nil) {
         PostHogSDK.shared.identify(userId, userProperties: properties)
     }
+
+    /// Forget the identified user (sign-out / account deletion).
+    func resetUser() {
+        PostHogSDK.shared.reset()
+    }
     
     /// Update user properties without changing user ID
     func setUserProperties(_ properties: [String: Any]) {

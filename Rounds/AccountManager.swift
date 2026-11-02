@@ -207,8 +207,21 @@ final class AccountManager {
 
     private func handleSignedIn(user: User) async {
         let id = user.id.uuidString.lowercased()
+        // Moving off one signed-in account onto another (the app has no
+        // sign-out button, so this is its sign-out): forget the old person in
+        // PostHog first, so the next account's events never merge into it.
+        if let previous = self.userID, previous != id, self.accountEmail != nil {
+            AnalyticsManager.shared.resetUser()
+        }
         self.userID = id
         self.accountEmail = Self.normalizedEmail(user.email)
+
+        // PostHog: tie this device's anonymous id to the account (identify
+        // aliases it). Email is the only personal property sent.
+        var personProps: [String: Any] = ["is_anonymous": user.isAnonymous, "platform": "ios"]
+        if let email = Self.normalizedEmail(user.email), !user.isAnonymous { personProps["email"] = email }
+        AnalyticsManager.shared.identifyUser(userId: id, properties: personProps)
+        Task { await PlayTelemetry.shared.flush() }
 
         // Tie RevenueCat identity to this account so Pro syncs everywhere.
         do {
