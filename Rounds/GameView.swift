@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import Supabase
 
 // MARK: - iPad Layout Support
 extension View {
