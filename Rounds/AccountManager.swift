@@ -207,6 +207,12 @@ final class AccountManager {
 
     private func handleSignedIn(user: User) async {
         let id = user.id.uuidString.lowercased()
+        // Moving off one signed-in account onto another (the app has no
+        // sign-out button, so this is its sign-out): forget the old person in
+        // PostHog first, so the next account's events never merge into it.
+        if let previous = self.userID, previous != id, self.accountEmail != nil {
+            AnalyticsManager.shared.resetUser()
+        }
         self.userID = id
         self.accountEmail = Self.normalizedEmail(user.email)
 

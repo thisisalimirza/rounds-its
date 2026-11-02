@@ -163,11 +163,9 @@ final class PlayTelemetry {
         flushing = true
         defer { flushing = false }
         do {
-            try await AccountManager.shared.supabase
-                .from("play_events")
-                .upsert(batch, onConflict: "id", ignoreDuplicates: true)
-                .execute()
-            let sent = Set(batch.map(\.id))
+            // Plain insert: the table grants INSERT only, and an upsert's
+            // ON CONFLICT needs SELECT too, so it was rejected with a 403.
+            let sent = try await insertBatch(batch)
             pending.removeAll { sent.contains($0.id) }
             persist()
             if pending.contains(where: { $0.user_id == uid }) { flushSoon(delay: 0.5) }
@@ -176,6 +174,28 @@ final class PlayTelemetry {
             print("📊 play_events flush failed: \(error.localizedDescription)")
             #endif
             flushSoon(delay: 30)
+        }
+    }
+
+    /// Returns the ids now on the server. A duplicate id (23505) means an
+    /// earlier attempt already landed, so it counts as delivered; then the
+    /// rows go one by one so a single duplicate never blocks the rest.
+    private func insertBatch(_ batch: [Row]) async throws -> Set<UUID> {
+        let db = AccountManager.shared.supabase
+        do {
+            try await db.from("play_events").insert(batch, returning: .minimal).execute()
+            return Set(batch.map(\.id))
+        } catch let error as PostgrestError where error.code == "23505" {
+            var sent = Set<UUID>()
+            for row in batch {
+                do {
+                    try await db.from("play_events").insert([row], returning: .minimal).execute()
+                } catch let e as PostgrestError where e.code == "23505" {
+                    // Already delivered.
+                }
+                sent.insert(row.id)
+            }
+            return sent
         }
     }
 
