@@ -166,6 +166,7 @@ struct RoundsApp: App {
                     // trip for every case played.
                     if phase == .background {
                         Task { await ProgressSyncManager.shared.pushIfPossible(force: true) }
+                        Task { await PlayTelemetry.shared.flush() }
                     }
                     if phase == .active {
                         // Coming back is when another device's games are most
@@ -173,6 +174,7 @@ struct RoundsApp: App {
                         // have delivered whatever it fetched while suspended.
                         Task { await ProgressSyncManager.shared.sync() }
                         ProgressSyncManager.shared.startBackfillWatch()
+                        Task { await PlayTelemetry.shared.flush() }
                     }
                 }
                 .sheet(isPresented: $showOnboarding) {

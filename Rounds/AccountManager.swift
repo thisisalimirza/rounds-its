@@ -210,6 +210,13 @@ final class AccountManager {
         self.userID = id
         self.accountEmail = Self.normalizedEmail(user.email)
 
+        // PostHog: tie this device's anonymous id to the account (identify
+        // aliases it). Email is the only personal property sent.
+        var personProps: [String: Any] = ["is_anonymous": user.isAnonymous, "platform": "ios"]
+        if let email = Self.normalizedEmail(user.email), !user.isAnonymous { personProps["email"] = email }
+        AnalyticsManager.shared.identifyUser(userId: id, properties: personProps)
+        Task { await PlayTelemetry.shared.flush() }
+
         // Tie RevenueCat identity to this account so Pro syncs everywhere.
         do {
             _ = try await Purchases.shared.logIn(id)
