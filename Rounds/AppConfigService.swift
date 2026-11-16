@@ -18,8 +18,9 @@ nonisolated struct AppConfigSnapshot: Equatable, Sendable, Codable {
     var maintenanceMode: Bool
     var maintenanceMessage: String
     var signupsPaused: Bool
-    var paywallEnabled: Bool
-    var checkoutEnabled: Bool
+    /// App Store purchases. Missing `ios_purchases_enabled` stays on.
+    /// `paywall_enabled` and `checkout_enabled` are web-only and are not read.
+    var iosPurchasesEnabled: Bool
     var minSupportedVersionIOS: String?
     var recommendedVersionIOS: String?
     var accountGateEnabled: Bool
@@ -34,8 +35,7 @@ nonisolated struct AppConfigSnapshot: Equatable, Sendable, Codable {
         maintenanceMode: false,
         maintenanceMessage: "Rounds is down for a short update. Your cases are safe on this phone.",
         signupsPaused: false,
-        paywallEnabled: true,
-        checkoutEnabled: true,
+        iosPurchasesEnabled: true,
         minSupportedVersionIOS: nil,
         recommendedVersionIOS: nil,
         accountGateEnabled: true,
@@ -122,9 +122,11 @@ nonisolated enum AppConfigParser {
                 snapshot.maintenanceMessage = message
             }
         }
+        if let message = byKey["maintenance_message"]?.string, !message.isEmpty {
+            snapshot.maintenanceMessage = message
+        }
         if let value = byKey["signups_paused"]?.bool { snapshot.signupsPaused = value }
-        if let value = byKey["paywall_enabled"]?.bool { snapshot.paywallEnabled = value }
-        if let value = byKey["checkout_enabled"]?.bool { snapshot.checkoutEnabled = value }
+        if let value = byKey["ios_purchases_enabled"]?.bool { snapshot.iosPurchasesEnabled = value }
         if let version = iosVersion(byKey["min_supported_version"]) {
             snapshot.minSupportedVersionIOS = version
         }

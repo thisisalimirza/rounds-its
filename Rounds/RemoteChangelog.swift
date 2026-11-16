@@ -48,11 +48,16 @@ final class RemoteChangelog {
 
     /// Newest server entry, or the disk cache. Nil means "use the compiled notes".
     func latest() async -> WhatsNewData? {
+        // A failed select (the public read exists only after web PR 200) falls
+        // through to the disk cache, then the compiled notes.
         if let fresh = try? await fetch() {
-            if let data = try? JSONEncoder().encode(fresh) {
-                try? data.write(to: cacheURL, options: [.atomic])
+            let rows = Self.publishable(fresh)
+            if !rows.isEmpty {
+                if let data = try? JSONEncoder().encode(rows) {
+                    try? data.write(to: cacheURL, options: [.atomic])
+                }
+                return Self.notes(from: rows)
             }
-            return Self.notes(from: fresh)
         }
         if let data = try? Data(contentsOf: cacheURL),
            let cached = try? JSONDecoder().decode([RemoteChangelogEntry].self, from: data),
@@ -72,9 +77,20 @@ final class RemoteChangelog {
             .value
     }
 
+    /// Drops blank versions. `version` is `text not null default ''` on the server.
+    nonisolated static func publishable(_ entries: [RemoteChangelogEntry]) -> [RemoteChangelogEntry] {
+        entries.filter { !$0.version.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+
     nonisolated static func notes(from entries: [RemoteChangelogEntry]) -> WhatsNewData? {
-        guard let newest = entries.max(by: {
-            WhatsNewManager.compareVersions($0.version, isLessThan: $1.version)
+        let rows = publishable(entries)
+        guard let newest = rows.max(by: { older, newer in
+            switch (older.publishedAt, newer.publishedAt) {
+            case let (left?, right?) where !left.isEmpty && !right.isEmpty:
+                return left < right
+            default:
+                return WhatsNewManager.compareVersions(older.version, isLessThan: newer.version)
+            }
         }) else { return nil }
         let description = newest.body?.trimmingCharacters(in: .whitespacesAndNewlines)
         let feature = WhatsNewFeature(

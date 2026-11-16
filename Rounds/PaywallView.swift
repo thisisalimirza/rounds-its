@@ -45,7 +45,7 @@ struct RoundsPaywallView: View {
     }
 
     var body: some View {
-        if AppConfigService.shared.snapshot.paywallEnabled && AppConfigService.shared.snapshot.checkoutEnabled {
+        if AppConfigService.shared.snapshot.iosPurchasesEnabled {
             purchaseFlow
         } else {
             NavigationStack {

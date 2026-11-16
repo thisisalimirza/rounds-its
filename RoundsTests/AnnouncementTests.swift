@@ -41,6 +41,31 @@ struct AnnouncementTests {
         #expect(notes?.features.first?.description == "A new case format.")
     }
 
+    @Test func changelogSkipsAnEmptyVersion() {
+        let entries = [
+            RemoteChangelogEntry(version: "", title: "Blank", body: "Skip", publishedAt: "2026-11-16T00:00:00Z"),
+            RemoteChangelogEntry(version: "1.5", title: "Kept", body: "Shown", publishedAt: "2026-11-01T00:00:00Z"),
+        ]
+        #expect(RemoteChangelog.notes(from: entries)?.version == "1.5")
+    }
+
+    @Test func purchasesStayOnUnlessTheIosKeySaysOtherwise() {
+        let open = AppConfigParser.parse([])
+        #expect(open.iosPurchasesEnabled)
+        let paused = AppConfigParser.parse([
+            AppConfigRow(key: "ios_purchases_enabled", value: .bool(false)),
+            AppConfigRow(key: "checkout_enabled", value: .bool(false)),
+            AppConfigRow(key: "paywall_enabled", value: .bool(false)),
+        ])
+        #expect(!paused.iosPurchasesEnabled)
+        let message = AppConfigParser.parse([
+            AppConfigRow(key: "maintenance_mode", value: .bool(true)),
+            AppConfigRow(key: "maintenance_message", value: .string("Back soon")),
+        ])
+        #expect(message.maintenanceMode)
+        #expect(message.maintenanceMessage == "Back soon")
+    }
+
     @Test func versionGateBlocksOnlyBelowTheMinimum() {
         #expect(VersionGate.decide(current: "1.4", minimum: "1.5", recommended: "1.6") == .hard("1.5"))
         #expect(VersionGate.decide(current: "1.5", minimum: "1.5", recommended: "1.6") == .soft("1.6"))

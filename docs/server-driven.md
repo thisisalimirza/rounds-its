@@ -43,10 +43,11 @@ Dismissals are remembered on the device and inserted into
 
 Keys the app reads:
 
-- `maintenance_mode` — bool, or `{ "enabled": true, "message": "..." }`
+- `maintenance_mode` — boolean. An object `{ "enabled", "message" }` is still accepted.
+- `maintenance_message` — string, shown with the boolean. A non-empty string wins over a message inside the object.
 - `signups_paused` — bool
-- `paywall_enabled` — bool
-- `checkout_enabled` — bool
+- `ios_purchases_enabled` — bool. Missing means App Store purchases stay on.
+- `paywall_enabled` and `checkout_enabled` are web-only. iOS does not read them. `checkout_enabled = false` is how the web sends players to the iOS app.
 - `min_supported_version` — `{ "ios": "1.5", "android": "..." }` or a bare string
 - `recommended_version` — same shape
 - `enable_*` / `flag_*` — bool feature flags
@@ -66,7 +67,7 @@ Missing table: the app keeps compiled defaults and the last disk cache.
 
 ## `changelog_entries`
 
-Not found in this repo. The adapter assumes `version`, `title`, `body`,
-`published_at`. Confirm against the web `/whats-new` query and edit
-`RemoteChangelog.swift` only. Offline with no cache uses the compiled
-`AppChangelog`.
+`version` is `text not null default ''`, plus `title`, `body`, and
+`published_at`. Public read exists only after web PR 200. A failed select
+falls back to the disk cache, then the compiled `AppChangelog`. Empty
+versions are skipped. The query is `order by published_at desc`.
