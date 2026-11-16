@@ -45,7 +45,9 @@ enum CaseContext: Equatable {
 
 struct GameView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @Query private var leaderboardProfiles: [LeaderboardProfile]
+    @Query private var playerStats: [PlayerStats]
     @State private var currentCase: MedicalCase
     @State private var gameSession: GameSession
     @State private var currentGuess = ""
@@ -717,8 +719,33 @@ struct GameView: View {
             }
     }
 
+    private func accountGateBlocksAnotherCase() -> Bool {
+        let config = AppConfigService.shared.snapshot
+        let context = AccountGateContext(
+            isAnonymous: AccountManager.shared.isAnonymousAccount,
+            isOnline: NetworkMonitor.shared.isOnline,
+            hasSession: AccountManager.shared.authUserID != nil,
+            backfillConfirmed: MigrationCoordinator.shared.isConfirmed,
+            cohort: AccountCohortStore.cohort,
+            casesCompleted: playerStats.first?.gamesPlayed ?? 0,
+            gateEnabled: config.accountGateEnabled,
+            grandfatheredEnabled: config.grandfatheredGateEnabled,
+            freeCases: config.anonFreeCases,
+            playingCase: false,
+            nudgeAlreadyShown: AccountCohortStore.nudgeShown
+        )
+        let decision = AccountGatePolicy.decision(context)
+        return decision == .grandfathered || decision == .trialLimit
+    }
+
     // MARK: - Swipe Transition
     private func completeSwipeTransition() {
+        // The Nth finished case ends the trial. Leave the results on screen
+        // by returning home, where the gate is waiting. Don't start another case.
+        if accountGateBlocksAnotherCase() {
+            dismiss()
+            return
+        }
         guard let nextCaseProvider = onRequestNextCase,
               let nextCase = nextCaseProvider(caseContext, currentCase.id) else {
             snapBack()

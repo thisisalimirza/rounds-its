@@ -135,7 +135,14 @@ struct RoundsApp: App {
                 .task {
                     // Ensure a (silent, anonymous) account exists and tie it to
                     // RevenueCat so Pro syncs across devices; loads referral status.
+                    NetworkMonitor.shared.start()
                     await AccountManager.shared.bootstrap()
+                    AppConfigService.shared.refresh()
+                    let context = sharedModelContainer.mainContext
+                    let games = (try? context.fetch(FetchDescriptor<PlayerStats>()))?.first?.gamesPlayed ?? 0
+                    let history = (try? context.fetchCount(FetchDescriptor<CaseHistoryEntry>())) ?? 0
+                    AccountCohortStore.establishIfNeeded(hasPriorProgress: games > 0 || history > 0)
+                    MigrationCoordinator.shared.noteSession(userID: AccountManager.shared.authUserID)
 
                     // Mirror on-device progress to the account. The server
                     // merges rather than overwrites, so this is safe even from
@@ -155,6 +162,9 @@ struct RoundsApp: App {
                     // Both directions. Pushing alone left a second device
                     // uploading forever and never receiving.
                     await ProgressSyncManager.shared.sync()
+                    if let profile = try? context.fetch(FetchDescriptor<LeaderboardProfile>()).first {
+                        await LeaderboardManager.shared.backfillOwnCloudKitScoreIfNeeded(profile: profile)
+                    }
 
                     // CloudKit restores history asynchronously after launch, so
                     // the push above can only see what has arrived so far.
@@ -171,6 +181,8 @@ struct RoundsApp: App {
                         // Coming back is when another device's games are most
                         // likely to be waiting, and also when CloudKit tends to
                         // have delivered whatever it fetched while suspended.
+                        NetworkMonitor.shared.start()
+                        AppConfigService.shared.refresh()
                         Task { await ProgressSyncManager.shared.sync() }
                         ProgressSyncManager.shared.startBackfillWatch()
                     }
@@ -227,6 +239,10 @@ struct RoundsApp: App {
             context.insert(newStats)
             try? context.save()
         }
+
+        let gamesPlayed = (try? context.fetch(FetchDescriptor<PlayerStats>()))?.first?.gamesPlayed ?? 0
+        let historyCount = (try? context.fetchCount(FetchDescriptor<CaseHistoryEntry>())) ?? 0
+        AccountCohortStore.establishIfNeeded(hasPriorProgress: gamesPlayed > 0 || historyCount > 0)
 
         // One-time: seed the universal miss log from historical missed cases so
         // existing users' Weak Spots, Study Plan, and Illness Scripts pick up

@@ -147,23 +147,39 @@ final class ProgressSyncManager {
             stats.gamesWon    = max(stats.gamesWon,    remote.gamesWon)
             stats.totalScore  = max(stats.totalScore,  remote.totalScore)
             stats.maxStreak   = max(stats.maxStreak,   remote.maxStreak)
-            stats.currentStreak = max(stats.currentStreak, remote.currentStreak)
+
+            // The streak belongs to the later day of play. This has to run
+            // before lastPlayedDate is replaced, or both sides look like the
+            // same day and the smaller streak wins.
+            stats.currentStreak = ProgressMerge.currentStreak(
+                localDay: stats.lastPlayedDate,
+                localStreak: stats.currentStreak,
+                remoteDay: remote.lastPlayedDate,
+                remoteStreak: remote.currentStreak
+            )
 
             if remote.guessDistribution.count == stats.guessDistribution.count {
                 stats.guessDistribution = zip(stats.guessDistribution, remote.guessDistribution).map(max)
             }
 
             if let remoteLast = remote.lastPlayedDate {
-                stats.lastPlayedDate = max(stats.lastPlayedDate ?? .distantPast, remoteLast)
+                let remoteDay = ProgressMerge.dayString(from: remoteLast)
+                let localDay = stats.lastPlayedDate.map { ProgressMerge.dayString(from: $0) }
+                if localDay == nil || remoteDay > localDay! {
+                    stats.lastPlayedDate = remoteLast
+                }
             }
 
-            // Later of the two wins. These are "yyyy-MM-dd", so a string
-            // comparison is a date comparison — and taking the max means a
-            // device that is behind can never un-complete a daily that another
-            // one finished, which is the same max/union rule as everything
-            // above.
-            if let remoteDaily = remote.lastDailyCasePlayed {
-                stats.lastDailyCasePlayed = max(stats.lastDailyCasePlayed ?? "", remoteDaily)
+            stats.lastDailyCasePlayed = ProgressMerge.laterDayString(
+                stats.lastDailyCasePlayed,
+                remote.lastDailyCasePlayed
+            )
+
+            if let available = remote.streakFreezesAvailable {
+                stats.streakFreezesAvailable = available
+            }
+            if let usedOn = remote.streakFreezeUsedOn {
+                stats.streakFreezeUsedToday = usedOn == ProgressMerge.dayString(from: Date())
             }
 
             try context.save()
@@ -255,8 +271,8 @@ final class ProgressSyncManager {
                                 rows: history.map { CaseHistorySyncRow($0, userID: uid) })
 
             let misses = try context.fetch(FetchDescriptor<MissedItem>())
-            try await reconcile(table: "missed_items", userID: uid,
-                                rows: misses.map { MissedItemSyncRow($0, userID: uid) })
+            try await reconcileMissedItems(userID: uid,
+                                           rows: misses.map { MissedItemSyncRow($0, userID: uid) })
 
             let ddx = try context.fetch(FetchDescriptor<DDxSession>())
             try await reconcile(table: "ddx_sessions", userID: uid,
@@ -358,6 +374,33 @@ final class ProgressSyncManager {
     ///
     /// Scoped by account, the same id under a different owner is what it
     /// actually is: a different row.
+    /// Misses are not immutable: `reviewed` is a one-way flag. New rows are
+    /// inserted; a miss already on the server is updated only to turn reviewed
+    /// on. A reviewed miss is never sent back to unreviewed.
+    private func reconcileMissedItems(userID: String, rows: [MissedItemSyncRow]) async throws {
+        guard !rows.isEmpty else { return }
+        let client = AccountManager.shared.supabase
+        let existing: [MissedReviewRow] = try await client
+            .from("missed_items")
+            .select("id,reviewed")
+            .eq("user_id", value: userID)
+            .execute()
+            .value
+        let known = Dictionary(existing.map { ($0.id.lowercased(), $0.reviewed) }, uniquingKeysWith: { $0 || $1 })
+        let missing = rows.filter { known[$0.id.lowercased()] == nil }
+        let newlyReviewed = rows.filter { row in
+            row.reviewed && known[row.id.lowercased()] == false
+        }
+
+        for chunk in stride(from: 0, to: missing.count, by: Self.uploadChunkSize) {
+            let slice = Array(missing[chunk ..< min(chunk + Self.uploadChunkSize, missing.count)])
+            try await insertIgnoringDuplicates(table: "missed_items", rows: slice)
+        }
+        if !newlyReviewed.isEmpty {
+            try await upsert(table: "missed_items", conflict: "user_id,id", rows: newlyReviewed)
+        }
+    }
+
     private func insertIgnoringDuplicates(table: String, rows: [some Encodable & Sendable]) async throws {
         try await AccountManager.shared.supabase
             .from(table)
@@ -374,7 +417,33 @@ final class ProgressSyncManager {
             .execute()
     }
 
-    /// A full round trip: send what the server lacks, take what this device lacks.
+    /// True only when the progress snapshot and the record upload both ran
+    /// without throwing. Callers that tell the user they are "backed up" must
+    /// use this rather than `pushIfPossible`, which swallows errors.
+    @discardableResult
+    func pushAndReport() async -> Bool {
+        guard AccountManager.shared.isReady else { return false }
+        guard let snapshot = currentSnapshot() else { return false }
+        do {
+            _ = try await AccountManager.shared.syncProgress(snapshot)
+            lastSyncedAt = Date()
+        } catch {
+            print("⚠️ progress push failed: \(error.localizedDescription)")
+            return false
+        }
+        await pushRecords()
+        return true
+    }
+
+    /// A full round trip: pull first, then push.
+    ///
+    /// Pull-then-push means a phone that is behind adopts the later streak
+    /// before it uploads, so it cannot overwrite that streak with an older day.
+    /// The one exception is email verification, which pushes under the
+    /// anonymous id *before* the session changes — see `verifyEmailCode`.
+    ///
+    /// TODO: `play_events` is owned by the web app and its shape is not in this
+    /// repo. iOS does not create, alter, or write that table.
     ///
     /// Sync used to be one-directional in practice. Push ran on launch, after
     /// every game, on backgrounding and on the CloudKit backfill watch, while
@@ -388,8 +457,34 @@ final class ProgressSyncManager {
     /// rows, so running them together converges and never fights: neither side
     /// can overwrite the other, only add what the other is missing.
     func sync() async {
-        await pushIfPossible(force: true)
+        await reconcileStreakFreeze()
         await pullAndMerge()
+        await pushIfPossible(force: true)
+        if let context = modelContext {
+            await MigrationCoordinator.shared.confirmIfNeeded(context: context)
+        }
+    }
+
+    /// One account-level freeze. A pending local spend is sent once; the
+    /// server's count is what the phone keeps afterwards.
+    private func reconcileStreakFreeze() async {
+        guard let context = modelContext,
+              let stats = try? context.fetch(FetchDescriptor<PlayerStats>()).first else { return }
+        let spend = StreakFreezeSync.isPending
+        do {
+            let result = try await AccountManager.shared.syncStreakFreeze(
+                localDay: ProgressMerge.dayString(from: Date()),
+                isPro: SubscriptionManager.shared.hasProAccess(),
+                spend: spend
+            )
+            stats.streakFreezesAvailable = result.available
+            if spend {
+                StreakFreezeSync.clearPending()
+            }
+            try? context.save()
+        } catch {
+            print("⚠️ streak freeze sync failed: \(error.localizedDescription)")
+        }
     }
 
     /// Downloads only the rows this device is actually missing.
@@ -458,6 +553,20 @@ final class ProgressSyncManager {
             for row in try await missingRows(MissedItemSyncRow.self,
                                              table: "missed_items", userID: uid, local: localMisses) {
                 if let item = row.makeItem() { context.insert(item) }
+            }
+            let remoteReviewed: [MissedReviewRow] = try await client
+                .from("missed_items")
+                .select("id,reviewed")
+                .eq("user_id", value: uid)
+                .eq("reviewed", value: true)
+                .execute()
+                .value
+            if !remoteReviewed.isEmpty {
+                let reviewedIDs = Set(remoteReviewed.map { $0.id.lowercased() })
+                let localItems = try context.fetch(FetchDescriptor<MissedItem>())
+                for item in localItems where !item.reviewed && reviewedIDs.contains(item.id.uuidString.lowercased()) {
+                    item.reviewed = true
+                }
             }
 
             let localDDx = Set(try context.fetch(FetchDescriptor<DDxSession>())
@@ -843,6 +952,11 @@ struct RemoteProgress: Decodable {
     /// field and this one field alone.
     let lastDailyCasePlayed: String?
 
+    /// Present once schema_sync_v2.sql is applied. Older servers omit them
+    /// and the phone keeps its local freeze count.
+    let streakFreezesAvailable: Int?
+    let streakFreezeUsedOn: String?
+
     enum CodingKeys: String, CodingKey {
         case gamesPlayed = "games_played"
         case gamesWon = "games_won"
@@ -853,5 +967,33 @@ struct RemoteProgress: Decodable {
         case completedCaseIDs = "completed_case_ids"
         case lastPlayedDate = "last_played_date"
         case lastDailyCasePlayed = "last_daily_case_played"
+        case streakFreezesAvailable = "streak_freezes_available"
+        case streakFreezeUsedOn = "streak_freeze_used_on"
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        gamesPlayed = try container.decode(Int.self, forKey: .gamesPlayed)
+        gamesWon = try container.decode(Int.self, forKey: .gamesWon)
+        totalScore = try container.decode(Int.self, forKey: .totalScore)
+        currentStreak = try container.decode(Int.self, forKey: .currentStreak)
+        maxStreak = try container.decode(Int.self, forKey: .maxStreak)
+        guessDistribution = try container.decodeIfPresent([Int].self, forKey: .guessDistribution) ?? []
+        completedCaseIDs = try container.decodeIfPresent([String].self, forKey: .completedCaseIDs) ?? []
+        // Postgres `date` arrives as "yyyy-MM-dd". Decoding it as a timestamp
+        // at UTC midnight shifts the day for anyone west of Greenwich.
+        if let raw = try container.decodeIfPresent(String.self, forKey: .lastPlayedDate) {
+            lastPlayedDate = ProgressMerge.date(fromDayString: raw)
+        } else {
+            lastPlayedDate = nil
+        }
+        lastDailyCasePlayed = try container.decodeIfPresent(String.self, forKey: .lastDailyCasePlayed)
+        streakFreezesAvailable = try container.decodeIfPresent(Int.self, forKey: .streakFreezesAvailable)
+        streakFreezeUsedOn = try container.decodeIfPresent(String.self, forKey: .streakFreezeUsedOn)
+    }
+}
+
+nonisolated struct MissedReviewRow: Decodable, Sendable {
+    let id: String
+    let reviewed: Bool
 }

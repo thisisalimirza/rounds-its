@@ -35,6 +35,9 @@ struct AccountView: View {
     @State private var copiedID = false
     @State private var showingPaywall = false
     @State private var isRestoring = false
+    @State private var showingDeleteConfirm = false
+    @State private var isDeletingAccount = false
+    @State private var deleteError: String?
 
     var body: some View {
         NavigationStack {
@@ -56,6 +59,22 @@ struct AccountView: View {
             }
             .sheet(isPresented: $showingPaywall) {
                 RoundsPaywallView()
+            }
+            .alert("Delete account?", isPresented: $showingDeleteConfirm) {
+                Button("Delete account", role: .destructive) {
+                    Task { await deleteAccount() }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Your server backup is removed. The cases you've played stay on this phone.")
+            }
+            .alert("Couldn't delete the account", isPresented: Binding(
+                get: { deleteError != nil },
+                set: { if !$0 { deleteError = nil } }
+            )) {
+                Button("OK", role: .cancel) { deleteError = nil }
+            } message: {
+                Text(deleteError ?? "")
             }
             .task {
                 if let initialCode, codeEntry.isEmpty { codeEntry = initialCode }
@@ -109,6 +128,26 @@ struct AccountView: View {
             } footer: {
                 Text("Your Pro access and progress are tied to this account and will follow you to new devices.")
             }
+
+            Section {
+                Button("Delete account", role: .destructive) {
+                    showingDeleteConfirm = true
+                }
+                .disabled(isDeletingAccount)
+            } footer: {
+                Text("This removes the backup on the server. The cases on this phone stay here.")
+            }
+        }
+    }
+
+    private func deleteAccount() async {
+        isDeletingAccount = true
+        defer { isDeletingAccount = false }
+        do {
+            try await account.deleteAccount()
+            dismiss()
+        } catch {
+            deleteError = "We couldn't delete the account. Your cases are still on this phone. Try again when you're online."
         }
     }
 
@@ -620,15 +659,13 @@ struct AccountLinkingControls: View {
 
         let outcome = await account.verifyEmailCode(emailEntry, code: codeEntry)
         switch outcome {
-        case .linked(let merged):
+        case .linked:
             // Success previously showed nothing at all. The sheet stayed put
             // with the code still in the box, so the only way to find out it
             // had worked was to submit again and be told the code was already
             // used. Confirm it explicitly, then let the parent dismiss.
             didLink = true
-            successMessage = merged
-                ? "Signed in. Your streak, stats and Pro access are saved to your account."
-                : "Signed in. Your progress is backed up from now on."
+            successMessage = outcome.message
             UINotificationFeedbackGenerator().notificationOccurred(.success)
 
             // Attributed to whatever prompted it. Without this we can count

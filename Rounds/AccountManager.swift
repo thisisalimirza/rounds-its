@@ -77,20 +77,6 @@ final class AccountManager {
         case generic
     }
 
-    /// At most four asks, never closer than a fortnight apart.
-    ///
-    /// The old policy was one prompt, ever, spent after the user's first game —
-    /// their least invested moment, when the honest answer to "protect your
-    /// progress" is "what progress?". Once spent, someone on a forty-day streak
-    /// could never be asked again. Meanwhile the home banner said the same
-    /// sentence on every launch forever, which is how a banner becomes
-    /// furniture.
-    ///
-    /// Four and fourteen are a judgement, not a finding. They are here to be
-    /// moved once `identity_health` says whether any of this works.
-    private static let maxPrompts = 4
-    private static let cooldown: TimeInterval = 14 * 24 * 60 * 60
-
     var securePromptCount: Int {
         // Anyone carrying the old one-shot flag has been asked exactly once.
         let stored = UserDefaults.standard.integer(forKey: Self.promptCountKey)
@@ -98,19 +84,14 @@ final class AccountManager {
         return stored
     }
 
-    /// Whether this is a reasonable moment to ask at all.
+    /// A single dismissible nudge for someone still inside the free-case trial.
     ///
-    /// Deliberately does not consider *what* is at stake — that is the caller's
-    /// job, because only the caller knows a record was just set. This answers
-    /// the narrower question of whether asking would be rude.
+    /// The required gate (after a few cases, or on first launch for anyone who
+    /// already has progress) is separate and is not counted here. The old
+    /// four-asks-a-fortnight policy is gone: once the nudge has been seen, or
+    /// the gate has been completed, we don't ask again in a sheet.
     var canOfferAccountSecuring: Bool {
-        guard isAnonymousAccount else { return false }
-        guard securePromptCount < Self.maxPrompts else { return false }
-
-        guard let last = UserDefaults.standard.object(forKey: Self.lastPromptKey) as? Date else {
-            return true
-        }
-        return Date().timeIntervalSince(last) >= Self.cooldown
+        isAnonymousAccount && !AccountCohortStore.nudgeShown
     }
 
     /// Records that a nudge was actually seen.
@@ -120,6 +101,7 @@ final class AccountManager {
     /// and only one can be up at a time, so a prompt marked before presenting
     /// can be spent without ever appearing.
     func markAccountSecuringPrompted(reason: SecurePromptReason = .generic) {
+        AccountCohortStore.markNudgeShown()
         let defaults = UserDefaults.standard
         defaults.set(securePromptCount + 1, forKey: Self.promptCountKey)
         defaults.set(Date(), forKey: Self.lastPromptKey)
@@ -497,16 +479,28 @@ final class AccountManager {
 
     enum LinkOutcome {
         /// Signed in and any anonymous progress was carried across.
-        case linked(mergedProgress: Bool)
+        /// `backedUp` is true only after a push under the new id succeeded.
+        /// `mergedIntoExisting` is true when the email already had an account.
+        /// `claimFailed` means the server did not move the old rows.
+        case linked(backedUp: Bool, mergedIntoExisting: Bool, claimFailed: Bool)
         case invalidCode
         case error(String)
 
         var message: String {
             switch self {
-            case .linked(let merged):
-                return merged
-                    ? "You're signed in. Your progress has been saved to your account."
-                    : "You're signed in. Your progress is now backed up."
+            case .linked(let backedUp, let merged, let claimFailed):
+                if claimFailed {
+                    return "You're signed in. We couldn't move everything from this phone yet — we'll keep trying."
+                }
+                if !backedUp {
+                    return merged
+                        ? "You're signed in and your accounts were combined. The latest save didn't finish; we'll retry."
+                        : "You're signed in. The backup didn't finish just now; we'll retry."
+                }
+                if merged {
+                    return "You're signed in. This phone's progress was combined with the account that already used this email."
+                }
+                return "You're all set. Your progress is saved."
             case .invalidCode:
                 return "That code is incorrect or has expired. Check the latest email or request a new code."
             case .error(let detail):
@@ -588,7 +582,8 @@ final class AccountManager {
             return .error("Signed in, but the session didn't stick. Please reopen the app.")
         }
 
-        var mergedProgress = false
+        var mergedIntoExisting = false
+        var claimFailed = false
 
         // Step 4: only meaningful when the account we landed on differs from
         // the anonymous one. If Supabase converted the same user, there's
@@ -599,10 +594,11 @@ final class AccountManager {
                     .rpc("claim_anonymous_account", params: ["p_anonymous_id": anonymousID.uuidString])
                     .execute()
                     .value
-                mergedProgress = result.status == "claimed"
+                mergedIntoExisting = result.status == "claimed"
             } catch {
                 // The account is still usable; only the old device's history
-                // failed to carry over.
+                // failed to carry over. Say so — don't claim the backup worked.
+                claimFailed = true
                 print("⚠️ claim_anonymous_account failed: \(error.localizedDescription)")
             }
         }
@@ -611,16 +607,36 @@ final class AccountManager {
         await handleSignedIn(user: user)
         Purchases.shared.attribution.setEmail(trimmedEmail)
 
-        // Pull the merged server state back down so the device reflects the
-        // combined history rather than only what it played locally.
+        // Pull the merged server state, then push once under the new id.
+        // "Backed up" is only true when that push succeeds.
         await ProgressSyncManager.shared.pullAndMerge()
+        let backedUp = await ProgressSyncManager.shared.pushAndReport()
 
-        return .linked(mergedProgress: mergedProgress)
+        return .linked(backedUp: backedUp, mergedIntoExisting: mergedIntoExisting, claimFailed: claimFailed)
     }
 
-    private struct ClaimResult: Decodable {
-        let status: String
+private struct ClaimResult: Decodable {
+    let status: String
+}
+
+struct MigrationConfirmResult: Decodable, Sendable {
+    let confirmed: Bool
+    let serverHistory: Int
+    let serverMisses: Int
+    let serverDDx: Int
+
+    enum CodingKeys: String, CodingKey {
+        case confirmed
+        case serverHistory = "server_case_history"
+        case serverMisses = "server_missed_items"
+        case serverDDx = "server_ddx_sessions"
     }
+}
+
+struct StreakFreezeServerState: Decodable, Sendable {
+    let available: Int
+    let spent: Bool
+}
 
     // MARK: - Progress mirror
 
@@ -631,15 +647,57 @@ final class AccountManager {
     /// as a uuid and RLS checks it against `auth.uid()`.
     var authUserID: UUID? { supabase.auth.currentSession?.user.id }
 
+    /// Asks the server whether it already holds at least as many rows as this
+    /// phone. The local "migrated" flag is set only when `confirmed` is true.
+    func confirmMigration(caseHistory: Int, missedItems: Int, ddxSessions: Int, hasAchievements: Bool) async throws -> MigrationConfirmResult {
+        try await supabase
+            .rpc("confirm_migration_v2", params: [
+                "p_case_history_count": AnyJSON.integer(caseHistory),
+                "p_missed_items_count": AnyJSON.integer(missedItems),
+                "p_ddx_sessions_count": AnyJSON.integer(ddxSessions),
+                "p_has_achievements": .bool(hasAchievements),
+            ])
+            .execute()
+            .value
+    }
+
+    /// Weekly streak-freeze grant and a single spend, stored on the account.
+    func syncStreakFreeze(localDay: String, isPro: Bool, spend: Bool) async throws -> StreakFreezeServerState {
+        try await supabase
+            .rpc("sync_streak_freeze", params: [
+                "p_local_day": AnyJSON.string(localDay),
+                "p_is_pro": .bool(isPro),
+                "p_spend": .bool(spend),
+            ])
+            .execute()
+            .value
+    }
+
+    /// Deletes the server account. Local cases stay on this phone.
+    ///
+    /// RevenueCat is logged out only for an email account. An anonymous
+    /// customer is the receipt's current owner; logging it out would orphan
+    /// the purchase.
+    func deleteAccount() async throws {
+        let wasAnonymous = isAnonymousAccount
+        try await supabase.rpc("delete_own_account").execute()
+        if !wasAnonymous {
+            _ = try? await Purchases.shared.logOut()
+        }
+        try? await supabase.auth.signOut(scope: .local)
+        userID = nil
+        accountEmail = nil
+        isReady = false
+        await bootstrap()
+    }
+
     /// Uploads a progress snapshot. The server merges rather than overwrites,
     /// so this is safe to call from any device at any time.
     @discardableResult
     func syncProgress(_ snapshot: ProgressSnapshot) async throws -> RemoteProgress {
-        let dayFormatter = DateFormatter()
-        dayFormatter.calendar = Calendar(identifier: .gregorian)
-        dayFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dayFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        dayFormatter.dateFormat = "yyyy-MM-dd"
+        // The day is the device's calendar day. UTC shifted evening play in
+        // the US onto the next date and made a streak look broken.
+        let lastPlayed = snapshot.lastPlayedDate.map { AnyJSON.string(ProgressMerge.dayString(from: $0)) } ?? .null
 
         return try await supabase
             .rpc("sync_progress", params: [
@@ -650,7 +708,7 @@ final class AccountManager {
                 "p_max_streak":         AnyJSON.integer(snapshot.maxStreak),
                 "p_guess_distribution": AnyJSON.array(snapshot.guessDistribution.map { AnyJSON.integer($0) }),
                 "p_completed_case_ids": AnyJSON.array(snapshot.completedCaseIDs.map { AnyJSON.string($0) }),
-                "p_last_played_date":   snapshot.lastPlayedDate.map { AnyJSON.string(dayFormatter.string(from: $0)) } ?? .null,
+                "p_last_played_date":   lastPlayed,
                 "p_last_daily_case":    snapshot.lastDailyCasePlayed.map { AnyJSON.string($0) } ?? .null,
                 "p_device_updated_at":  AnyJSON.string(ISO8601DateFormatter().string(from: snapshot.deviceUpdatedAt)),
             ])

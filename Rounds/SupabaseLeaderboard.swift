@@ -2,24 +2,11 @@
 //  SupabaseLeaderboard.swift
 //  Rounds
 //
-//  The leaderboard's second source, during the move off CloudKit.
+//  The leaderboard read path. Standings come from `public.leaderboard_entries`.
 //
-//  The public CloudKit database has been the only home for standings. It has
-//  two problems that are not fixable in place: a failed record fetch falls back
-//  to creating a record with an auto-generated id, so one player can hold
-//  several rows (see LeaderboardManager.syncProfile), and every device fetches
-//  the whole table and sorts it itself, so "your rank" is really "your rank
-//  according to your phone".
-//
-//  `public.leaderboard_entries` fixes both by construction: the primary key is
-//  the account, so duplicates are impossible, and Postgres ranks once.
-//
-//  Both stores are read for now. A player only appears in Supabase after they
-//  install a build that writes it, so reading Supabase alone would empty the
-//  standings on release day. Entries are merged on identity — a Supabase row
-//  carries `legacy_player_id`, which is exactly the CloudKit `playerID` — and
-//  ranked over the union. Once adoption is high enough, the CloudKit half comes
-//  out and ranking moves to the `leaderboard_ranked` view.
+//  CloudKit is no longer read for the board. A one-time copy of this player's
+//  own CloudKit score, when Supabase has no row yet, lives in
+//  LeaderboardManager.backfillOwnCloudKitScoreIfNeeded.
 //
 
 import Foundation

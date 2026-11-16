@@ -265,12 +265,13 @@ final class PlayerStats {
     
     // MARK: - Streak Freeze Logic
     
-    /// Check and reset weekly streak freeze for Pro users
+    /// Check and reset weekly streak freeze for Pro users.
+    ///
+    /// A non-Pro reading must not wipe a freeze the account already holds.
+    /// The server grant is the source of truth once a sync has run; this only
+    /// covers a Pro player who is offline.
     func checkWeeklyStreakFreezeReset(isPro: Bool) {
-        guard isPro else {
-            streakFreezesAvailable = 0
-            return
-        }
+        guard isPro else { return }
         
         let calendar = Calendar.current
         let today = Date()
@@ -297,21 +298,13 @@ final class PlayerStats {
     /// Check if user can save their streak with a freeze
     /// Returns true if: they have a streak, missed a day, have freezes available, and are Pro
     func canSaveStreak(isPro: Bool) -> Bool {
-        guard isPro,
-              currentStreak > 0,
-              streakFreezesAvailable > 0,
-              !streakFreezeUsedToday,
-              let lastPlayed = lastPlayedDate else {
-            return false
-        }
-
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
-        let daysSinceLastPlayed = calendar.dateComponents([.day], from: lastPlayedDay, to: today).day ?? 0
-
-        // Can only save if missed exactly 1 day (gap of 2 days)
-        return daysSinceLastPlayed == 2
+        StreakFreezeRules.canSpend(
+            isPro: isPro,
+            currentStreak: currentStreak,
+            freezesAvailable: streakFreezesAvailable,
+            usedToday: streakFreezeUsedToday,
+            lastPlayed: lastPlayedDate
+        )
     }
 
     /// Manually use a streak freeze to save the streak
@@ -324,6 +317,7 @@ final class PlayerStats {
 
         streakFreezesAvailable -= 1
         streakFreezeUsedToday = true
+        StreakFreezeSync.markPending()
         // Update lastPlayedDate to yesterday so streak continues normally
         let calendar = Calendar.current
         if let yesterday = calendar.date(byAdding: .day, value: -1, to: Date()) {
@@ -332,29 +326,19 @@ final class PlayerStats {
         return true
     }
 
-    /// Automatically spends streak freezes to cover missed days so the streak
-    /// survives — no manual tap required. Returns the number of freezes consumed.
-    /// Call on app launch and at the start of recordGame(...).
+    /// Spends one freeze when exactly one day was missed. Returns 1 if a freeze
+    /// was used, otherwise 0. A longer gap is a broken streak, not several freezes.
     @discardableResult
     func applyStreakFreezeIfNeeded(isPro: Bool) -> Int {
-        guard isPro, currentStreak > 0, let lastPlayed = lastPlayedDate else { return 0 }
+        guard canSaveStreak(isPro: isPro) else { return 0 }
 
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
-        let gap = calendar.dateComponents([.day], from: lastPlayedDay, to: today).day ?? 0
-        let missedDays = gap - 1 // days with no play between last play and today
-
-        // Only bridge if we have enough freezes to cover every missed day.
-        guard missedDays >= 1, streakFreezesAvailable >= missedDays else { return 0 }
-
-        streakFreezesAvailable -= missedDays
+        streakFreezesAvailable -= 1
         streakFreezeUsedToday = true
-        // Pretend the last play was yesterday so the streak continues normally.
-        if let yesterday = calendar.date(byAdding: .day, value: -1, to: Date()) {
+        StreakFreezeSync.markPending()
+        if let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date()) {
             lastPlayedDate = yesterday
         }
-        return missedDays
+        return 1
     }
 
     /// Check if streak is about to be lost (missed a day but no freeze used yet)
@@ -380,11 +364,13 @@ final class PlayerStats {
         // Check and reset weekly streak freeze for Pro users
         checkWeeklyStreakFreezeReset(isPro: isPro)
 
-        // Auto-spend freezes to bridge any missed days before computing the streak.
-        applyStreakFreezeIfNeeded(isPro: isPro)
+        // Auto-spend one freeze when exactly one day was missed.
+        let freezesSpent = applyStreakFreezeIfNeeded(isPro: isPro)
 
-        // Reset streakFreezeUsedToday if it's a new day
-        if let lastPlayed = lastPlayedDate {
+        // A freeze just moved lastPlayedDate to yesterday, which is a different
+        // day from today. Clearing the flag here would let a second freeze
+        // spend on the same launch.
+        if freezesSpent == 0, let lastPlayed = lastPlayedDate {
             let lastPlayedDay = calendar.startOfDay(for: lastPlayed)
             if todayDay != lastPlayedDay {
                 streakFreezeUsedToday = false
