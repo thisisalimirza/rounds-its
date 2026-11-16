@@ -6,11 +6,16 @@
 -- Backward compatible with the shipping 1.5 app and the web:
 --   * no columns or tables are dropped or renamed
 --   * sync_progress keeps its argument list, so 1.5 clients keep calling it
---   * no RLS policy on profiles, player_progress, or play_events is replaced
+--   * no RLS policy is created, dropped, or replaced. "update own profile"
+--     stays. The privileged-column trigger is extended so that policy cannot
+--     write profiles.migrated_v2_at (see the trigger section and Rollback).
 --
 -- Do NOT re-apply supabase/schema_sync.sql or supabase/schema_claim_full_data.sql
--- after this file. Both define older copies of the two functions replaced here,
--- and running them later would put the streak bug and the partial claim back.
+-- after this file. Both define older copies of functions replaced here.
+-- schema_sync.sql's claim does not move case history. Live production matches
+-- schema_claim_full_data.sql, and the replacement below keeps every move in
+-- that body. Running either older file later would put the streak bug and the
+-- partial claim back.
 --
 -- play_events is intentionally not created or altered, and no policy on it is
 -- replaced. The web migration (roundsapp-landing#164) owns the table. iOS only
@@ -36,6 +41,7 @@
 --   REPLACE public.sync_progress(integer, integer, integer, integer, integer,
 --           integer[], text[], date, text, timestamptz)
 --   REPLACE public.claim_anonymous_account(uuid)
+--   REPLACE public.protect_profiles_privileged_columns()
 --   CREATE  public.sync_streak_freeze(date, boolean, boolean)
 --   CREATE  public.confirm_migration_v2(integer, integer, integer, boolean)
 --   CREATE  public.delete_own_account()
@@ -49,6 +55,143 @@
 -- =========================================================================
 alter table public.profiles
     add column if not exists migrated_v2_at timestamptz;
+
+-- =========================================================================
+-- "update own profile" is FOR UPDATE USING (auth.uid() = id) with no column
+-- check, so a signed-in player can write migrated_v2_at unless the
+-- privileged-column trigger strips it. This is the live function from
+-- roundsapp-landing
+-- supabase/migrations/20261008211720_profiles_lockdown_privileged_columns.sql,
+-- plus that one column.
+--
+-- pro_source, the subscription mirror, role, and attribution stay as they
+-- are: service_role, postgres, and supabase_admin may write them, and every
+-- other role keeps the old values. migrated_v2_at is tighter. Only
+-- service_role, or confirm_migration_v2 (which sets rounds.migrated_v2_writer
+-- for this transaction), may set or change it. postgres is not enough, so a
+-- SQL-editor update and every other security-definer function leave the
+-- marker alone. A player insert stores null. A player update keeps the
+-- previous value. The policy itself is not replaced.
+--
+-- The trigger trg_protect_profiles_privileged already calls this function.
+-- It is dropped and recreated so a database missing it gets the same
+-- BEFORE INSERT OR UPDATE trigger. Table grants are not revoked here; the
+-- live lockdown migration already did that, and repeating the revoke would
+-- not change who can write the marker.
+-- =========================================================================
+create or replace function public.protect_profiles_privileged_columns()
+returns trigger
+language plpgsql
+set search_path to 'public'
+as $function$
+declare
+  jwt_claims text;
+  jwt_role   text := '';
+  trusted    boolean := false;
+  marker_ok  boolean := false;
+begin
+  begin
+    jwt_claims := current_setting('request.jwt.claims', true);
+  exception when others then
+    jwt_claims := null;
+  end;
+
+  if jwt_claims is not null and jwt_claims <> '' then
+    begin
+      jwt_role := coalesce(jwt_claims::jsonb->>'role', '');
+    exception when others then
+      jwt_role := '';
+    end;
+  end if;
+
+  trusted :=
+    jwt_role = 'service_role'
+    or current_user in ('postgres', 'supabase_admin', 'service_role');
+
+  -- confirm_migration_v2 is security definer, so current_user is its owner
+  -- (postgres) and the caller's jwt role is still authenticated. The GUC is
+  -- what distinguishes that function from every other postgres writer.
+  -- A failure reading the setting locks the marker and leaves every other
+  -- column on the existing trusted path, so profile writes keep working.
+  begin
+    marker_ok :=
+      jwt_role = 'service_role'
+      or current_user = 'service_role'
+      or current_setting('rounds.migrated_v2_writer', true) = 'confirm_migration_v2';
+  exception when others then
+    marker_ok := jwt_role = 'service_role' or current_user = 'service_role';
+  end;
+
+  if tg_op = 'INSERT' then
+    if not marker_ok then
+      new.migrated_v2_at := null;
+    end if;
+    if trusted then
+      return new;
+    end if;
+
+    new.role                     := 'user';
+    new.role_slug                := null;
+    new.pro_source               := 'none';
+    new.pro_granted_at           := null;
+    new.subscription_status      := 'free';
+    new.subscription_product_id  := null;
+    new.subscription_store       := null;
+    new.subscription_expires_at  := null;
+    new.subscription_will_renew  := null;
+    new.subscription_period_type := null;
+    new.subscription_updated_at  := null;
+    new.rc_last_event_id         := null;
+    new.referred_by              := null;
+    new.attributed_campaign_id   := null;
+    new.attribution_source       := null;
+    new.attribution_set_at       := null;
+    new.migrated_v2_at           := null;
+    if current_user in ('anon', 'authenticated', 'authenticator') then
+      new.referral_code := null;
+    end if;
+    return new;
+  end if;
+
+  if tg_op = 'UPDATE' then
+    if not marker_ok then
+      new.migrated_v2_at := old.migrated_v2_at;
+    end if;
+    if trusted then
+      return new;
+    end if;
+
+    new.id                       := old.id;
+    new.created_at               := old.created_at;
+    new.role                     := old.role;
+    new.role_slug                := old.role_slug;
+    new.pro_source               := old.pro_source;
+    new.pro_granted_at           := old.pro_granted_at;
+    new.subscription_status      := old.subscription_status;
+    new.subscription_product_id  := old.subscription_product_id;
+    new.subscription_store       := old.subscription_store;
+    new.subscription_expires_at  := old.subscription_expires_at;
+    new.subscription_will_renew  := old.subscription_will_renew;
+    new.subscription_period_type := old.subscription_period_type;
+    new.subscription_updated_at  := old.subscription_updated_at;
+    new.rc_last_event_id         := old.rc_last_event_id;
+    new.referral_code            := old.referral_code;
+    new.referred_by              := old.referred_by;
+    new.attributed_campaign_id   := old.attributed_campaign_id;
+    new.attribution_source       := old.attribution_source;
+    new.attribution_set_at       := old.attribution_set_at;
+    new.migrated_v2_at           := old.migrated_v2_at;
+    return new;
+  end if;
+
+  return new;
+end;
+$function$;
+
+drop trigger if exists trg_protect_profiles_privileged on public.profiles;
+create trigger trg_protect_profiles_privileged
+  before insert or update on public.profiles
+  for each row execute function public.protect_profiles_privileged_columns();
 
 -- =========================================================================
 -- Streak freeze lives with the progress row: one number, one spend.
@@ -180,6 +323,31 @@ grant execute on function public.sync_progress(integer, integer, integer, intege
 -- =========================================================================
 -- claim_anonymous_account: move every row, merge conflicts, drop nothing
 -- that the target does not already have.
+--
+-- Live production matches supabase/schema_claim_full_data.sql, not the older
+-- claim in schema_sync.sql (that one never moves history). This body starts
+-- from the live function and still moves everything it moves:
+--   * pro_source, pro_granted_at, referred_by, and attributed_campaign_id,
+--     only when the target's pro_source is 'none' and the anonymous one is not
+--   * redemptions.redeemer_id, inside that same grant
+--   * attribution_source and attribution_set_at when the target has no campaign
+--   * player_progress: games_played, games_won, total_score, max_streak,
+--     current_streak, guess_distribution, completed_case_ids,
+--     last_played_date, last_daily_case_played, device_updated_at
+--   * case_history, missed_items, ddx_sessions (user_id reassigned)
+--   * achievements: unlocked union, greatest first_hint_win_count,
+--     category_stats with the target's keys winning (excluded || target),
+--     and the freeze columns when the target has no achievements row
+--   * leaderboard_entries reassigned when the target has no row
+--   * anonymous pro_source set back to 'none' and attributed_campaign_id null
+--
+-- The live ON CONFLICT omits guess_distribution, last_daily_case_played, and
+-- device_updated_at, and it deletes the anonymous leaderboard row without
+-- copying scores. Those values are merged here. current_streak follows the
+-- later last_played_date (same day still takes the greater count). The weekly
+-- freeze is merged by the later reset, and by the lower count when the reset
+-- day matches, so a second device cannot refill it. None of that removes a
+-- move the live function performs.
 --
 -- Works whether case_history / missed_items / ddx_sessions are keyed on id
 -- alone (shipping) or on (user_id, id) (schema_identity.sql, not yet applied).
@@ -686,6 +854,11 @@ grant execute on function public.sync_streak_freeze(date, boolean, boolean) to a
 -- Sets profiles.migrated_v2_at only when the server already holds at least
 -- as many rows as the device counted. The device must not set its own flag
 -- unless this returns confirmed = true.
+--
+-- The privileged-column trigger ignores a marker write unless this function
+-- has set rounds.migrated_v2_writer for the transaction, or the caller is
+-- service_role. The returned confirmed flag is true only when the row still
+-- holds a timestamp after that trigger runs.
 -- =========================================================================
 create or replace function public.confirm_migration_v2(
     p_case_history_count integer,
@@ -705,6 +878,7 @@ declare
     v_ddx integer;
     v_achievements boolean;
     v_ok boolean;
+    v_marker timestamptz;
 begin
     if v_user is null then
         raise exception 'not_authenticated';
@@ -721,9 +895,12 @@ begin
         and (not coalesce(p_has_achievements, false) or v_achievements);
 
     if v_ok then
+        perform set_config('rounds.migrated_v2_writer', 'confirm_migration_v2', true);
         update public.profiles
            set migrated_v2_at = coalesce(migrated_v2_at, now())
-         where id = v_user;
+         where id = v_user
+         returning migrated_v2_at into v_marker;
+        v_ok := v_marker is not null;
     end if;
 
     return jsonb_build_object(
@@ -824,3 +1001,45 @@ $$;
 
 revoke all on function public.delete_own_account() from public, anon;
 grant execute on function public.delete_own_account() to authenticated, service_role;
+
+-- =========================================================================
+-- Rollback (do not run as part of applying this file)
+--
+-- The new objects are profiles.migrated_v2_at, the three streak-freeze
+-- columns on player_progress, sync_streak_freeze, confirm_migration_v2,
+-- and delete_own_account. sync_progress, claim_anonymous_account, and
+-- protect_profiles_privileged_columns() replace functions that already
+-- exist. No RLS policy was created or replaced. "update own profile" stays.
+--
+-- Order matters for the marker. The trigger function above assigns
+-- new.migrated_v2_at. Dropping the column while that assignment is still
+-- in the function makes every profile insert and update fail.
+--
+-- 1. Put protect_profiles_privileged_columns() back to the body recorded in
+--    roundsapp-landing
+--    supabase/migrations/20261008211720_profiles_lockdown_privileged_columns.sql.
+--    That body does not mention migrated_v2_at. Leave the trigger
+--    trg_protect_profiles_privileged in place; the web app relies on it
+--    for pro_source, role, the subscription mirror, and attribution.
+--    Do not re-run that file's REVOKE. The column grants added later
+--    (first_name, school, school_year, exam_date, target_score, school,
+--    show_in_activity, nudges) have to stay.
+-- 2. Only after step 1, and only if nothing in production reads the marker:
+--      alter table public.profiles drop column if exists migrated_v2_at;
+--    Shipping 1.5 and the web do not read it. A build that already called
+--    confirm_migration_v2 will simply confirm again after the column returns.
+-- 3. To clear or set one account's marker without dropping the column, call
+--    as service_role, or in the same transaction as the writer:
+--      select set_config('rounds.migrated_v2_writer', 'confirm_migration_v2', true);
+--    postgres and supabase_admin cannot change migrated_v2_at on their own.
+--    They can still change the other privileged columns, as they can today.
+--
+-- The streak-freeze columns and the three new functions can be dropped
+-- after the app that calls them is gone. Do not drop them while 1.5 or this
+-- build is still calling sync_streak_freeze, confirm_migration_v2, or
+-- delete_own_account. Restoring sync_progress and claim_anonymous_account
+-- means re-applying the live claim body (schema_claim_full_data.sql) only
+-- if this file's replacement is being taken back; do not apply schema_sync.sql,
+-- which does not move case history, misses, differentials, achievements,
+-- or the leaderboard row.
+-- =========================================================================

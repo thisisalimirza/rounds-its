@@ -5,6 +5,10 @@
 -- (it drops last_daily_case_played on conflict and deletes a leaderboard row
 -- without merging scores). schema_sync_v2.sql is the one to run.
 --
+-- Live production's claim_anonymous_account matches this file, not
+-- supabase/schema_sync.sql. The replacement in schema_sync_v2.sql starts
+-- from the body below so none of these moves are dropped.
+--
 -- `claim_anonymous_account()` was written when the only server-side state was
 -- `player_progress` plus the referral/campaign columns on `profiles`. The rest
 -- of the model — case history, the miss log, saved differentials, achievements,
