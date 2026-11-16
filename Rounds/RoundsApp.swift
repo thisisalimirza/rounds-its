@@ -136,6 +136,8 @@ struct RoundsApp: App {
                     // Ensure a (silent, anonymous) account exists and tie it to
                     // RevenueCat so Pro syncs across devices; loads referral status.
                     await AccountManager.shared.bootstrap()
+                    AppConfigService.shared.refresh()
+                    await AnnouncementService.shared.refresh()
 
                     // Mirror on-device progress to the account. The server
                     // merges rather than overwrites, so this is safe even from
@@ -168,6 +170,8 @@ struct RoundsApp: App {
                         Task { await ProgressSyncManager.shared.pushIfPossible(force: true) }
                     }
                     if phase == .active {
+                        AppConfigService.shared.refresh()
+                        Task { await AnnouncementService.shared.refresh() }
                         // Coming back is when another device's games are most
                         // likely to be waiting, and also when CloudKit tends to
                         // have delivered whatever it fetched while suspended.

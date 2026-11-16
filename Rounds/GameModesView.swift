@@ -12,6 +12,12 @@ struct GameModesView: View {
     @State private var showingConnections = false
     @State private var showingDDxChallenge = false
 
+    /// These three modes have no screen yet. The flag only lifts the
+    /// "coming soon" label. Leave the flags off until the mode ships.
+    private func modeStatus(_ flag: String) -> GameModeCard.Status {
+        AppConfigService.shared.snapshot.flag(flag) ? .available : .comingSoon
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -44,7 +50,7 @@ struct GameModesView: View {
                             title: "Rapid Fire",
                             subtitle: "Beat the clock on quick-fire diagnoses",
                             colors: [.orange, .pink],
-                            status: .comingSoon
+                            status: modeStatus("enable_rapid_fire")
                         )
 
                         GameModeCard(
@@ -52,7 +58,7 @@ struct GameModesView: View {
                             title: "Lab Values",
                             subtitle: "Match findings to the right lab panel",
                             colors: [.mint, .cyan],
-                            status: .comingSoon
+                            status: modeStatus("enable_lab_values")
                         )
 
                         GameModeCard(
@@ -60,7 +66,7 @@ struct GameModesView: View {
                             title: "Image Rounds",
                             subtitle: "Read the scan, name the diagnosis",
                             colors: [.indigo, .blue],
-                            status: .comingSoon
+                            status: modeStatus("enable_image_rounds")
                         )
 
                         Text("More modes are on the way. Have an idea? Send us feedback!")

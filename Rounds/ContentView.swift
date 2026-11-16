@@ -27,6 +27,7 @@ struct ContentView: View {
     @State private var showingFeedback = false
     @State private var showingDailyCompleteAlert = false
     @State private var showingPaywall = false
+    @State private var showingSoftUpdate = false
     @State private var showingConfetti = false
     #if DEBUG
     @State private var showingDebugMenu = false
@@ -54,6 +55,38 @@ struct ContentView: View {
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     private var differentialAccess: DifferentialAccessManager { DifferentialAccessManager.shared }
+
+    private var modalAnnouncement: Binding<RemoteAnnouncement?> {
+        Binding(
+            get: { AnnouncementService.shared.modal() },
+            set: { newValue in
+                if newValue == nil, let current = AnnouncementService.shared.modal(), current.dismissible {
+                    AnnouncementService.shared.dismiss(current)
+                }
+            }
+        )
+    }
+
+    private var maintenancePresented: Binding<Bool> {
+        Binding(
+            get: { AppConfigService.shared.snapshot.maintenanceMode && !showingGame },
+            set: { _ in }
+        )
+    }
+
+    private var hardUpdatePresented: Binding<Bool> {
+        Binding(
+            get: {
+                let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0"
+                let config = AppConfigService.shared.snapshot
+                if case .hard = VersionGate.decide(current: version, minimum: config.minSupportedVersionIOS, recommended: config.recommendedVersionIOS) {
+                    return !showingGame
+                }
+                return false
+            },
+            set: { _ in }
+        )
+    }
 
     private var stats: PlayerStats {
         if let existingStats = playerStats.first {
@@ -370,6 +403,22 @@ struct ContentView: View {
                 StreakSavedSheet(daysSaved: freezeSavedDays, streak: stats.currentStreak)
                     .presentationDetents([.medium])
             }
+            .sheet(item: modalAnnouncement) { item in
+                AnnouncementCard(item: item)
+                    .padding(.vertical, 24)
+                    .presentationDetents([.medium])
+            }
+            .fullScreenCover(isPresented: maintenancePresented) {
+                MaintenanceView(message: AppConfigService.shared.snapshot.maintenanceMessage)
+            }
+            .fullScreenCover(isPresented: hardUpdatePresented) {
+                MaintenanceView(message: "This version of Rounds is no longer supported. Update from the App Store to keep playing. Your cases stay on this phone.")
+            }
+            .alert("A newer version is ready", isPresented: $showingSoftUpdate) {
+                Button("Not now", role: .cancel) {}
+            } message: {
+                Text("This update is optional. The App Store has a newer Rounds.")
+            }
             .sheet(isPresented: $showingWhatsNew) {
                 if let data = whatsNewManager.whatsNewData {
                     WhatsNewView(data: data) {
@@ -419,7 +468,18 @@ struct ContentView: View {
             .task {
                 // Decide What's New vs. a gentle "secure your account" nudge —
                 // never both in the same session.
-                whatsNewManager.checkForWhatsNew()
+                await whatsNewManager.checkForWhatsNew()
+                await AppConfigService.shared.refreshNow()
+                await AnnouncementService.shared.refresh()
+                let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0"
+                let config = AppConfigService.shared.snapshot
+                if case .soft = VersionGate.decide(current: version, minimum: config.minSupportedVersionIOS, recommended: config.recommendedVersionIOS) {
+                    let seen = UserDefaults.standard.string(forKey: "version.softPrompt.v1")
+                    if seen != config.recommendedVersionIOS {
+                        UserDefaults.standard.set(config.recommendedVersionIOS, forKey: "version.softPrompt.v1")
+                        showingSoftUpdate = true
+                    }
+                }
                 if whatsNewManager.shouldShowWhatsNew {
                     try? await Task.sleep(nanoseconds: 500_000_000)
                     showingWhatsNew = true
@@ -482,6 +542,9 @@ struct ContentView: View {
     // MARK: - Play Tab Content
     private var playTabContent: some View {
         VStack(spacing: 16) {
+            if let banner = AnnouncementService.shared.banner() {
+                AnnouncementCard(item: banner)
+            }
             Spacer()
 
             // Daily Case Number
@@ -653,7 +716,7 @@ struct ContentView: View {
                     title: "High-Yield Playbooks",
                     subtitle: "Step-by-step workups for common presentations",
                     colors: [.indigo, .blue],
-                    available: false
+                    available: AppConfigService.shared.snapshot.flag("enable_high_yield_playbooks")
                 )
 
                 Text("More tools coming soon.")
