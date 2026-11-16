@@ -74,6 +74,9 @@ enum AppLinks {
     /// Privacy Policy. Must match the Privacy Policy URL set in App Store Connect.
     static let privacyPolicy = "https://getrounds.app/privacy"
 
+    /// Support inbox. Used when a restore can't find a purchase.
+    static let supportEmail = "support@braskgroup.com"
+
     // MARK: - Convenience
 
     /// Non-optional `URL` accessors. Every string above is a compile-time
@@ -84,4 +87,5 @@ enum AppLinks {
     static var companyURL: URL { URL(string: company)! }
     static var terms: URL { URL(string: termsOfUse)! }
     static var privacy: URL { URL(string: privacyPolicy)! }
+    static var support: URL { URL(string: "mailto:\(supportEmail)")! }
 }

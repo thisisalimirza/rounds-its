@@ -39,8 +39,32 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  const { data: profile } = await admin
-    .from("profiles").select("referral_code, pro_source").eq("id", user.id).single();
+  const full = await admin
+    .from("profiles")
+    .select("referral_code, pro_source, subscription_status, subscription_expires_at")
+    .eq("id", user.id)
+    .single();
+
+  let profile = full.data;
+  if (full.error) {
+    const fallback = await admin
+      .from("profiles")
+      .select("referral_code, pro_source")
+      .eq("id", user.id)
+      .single();
+    profile = fallback.data;
+  }
+
+  // is_pro stays "a code was redeemed" so the web, which already reads it,
+  // does not change meaning. has_pro is the full definition: a code OR a live
+  // subscription, matching profile_has_pro.
+  const proSource = profile?.pro_source ?? "none";
+  const status = profile?.subscription_status ?? "free";
+  const expiresAt = profile?.subscription_expires_at
+    ? new Date(profile.subscription_expires_at)
+    : null;
+  const subscriptionLive = ["active", "trialing", "grace_period"].includes(status)
+    && (expiresAt == null || expiresAt.getTime() > Date.now());
 
   const { count } = await admin
     .from("redemptions")
@@ -51,8 +75,9 @@ Deno.serve(async (req) => {
 
   return json({
     referral_code: profile?.referral_code ?? null,
-    pro_source: profile?.pro_source ?? "none",
-    is_pro: (profile?.pro_source ?? "none") !== "none",
+    pro_source: proSource,
+    is_pro: proSource !== "none",
+    has_pro: proSource !== "none" || subscriptionLive,
     invites_used: invitesUsed,
     invites_remaining: Math.max(0, MAX_REFERRALS - invitesUsed),
     max_referrals: MAX_REFERRALS,

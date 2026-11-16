@@ -31,6 +31,9 @@ struct AboutView: View {
     @State private var previewBody = ""
     @State private var showingHowToPlay = false
     @State private var showingWhatsNew = false
+    @State private var versionTapCount = 0
+    @State private var showingProDiagnostics = false
+    @State private var copiedAccountID = false
     @StateObject private var whatsNewManager = WhatsNewManager.shared
     @AppStorage("dailyReminderHour") private var reminderHour = 19
     @AppStorage("dailyReminderMinute") private var reminderMinute = 0
@@ -43,6 +46,37 @@ struct AboutView: View {
 
     private var subscriptionManager: SubscriptionManager { SubscriptionManager.shared }
     private var account: AccountManager { AccountManager.shared }
+
+    private var accountIDRow: some View {
+        Button {
+            guard let id = account.userID else { return }
+            UIPasteboard.general.string = id
+            copiedAccountID = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                copiedAccountID = false
+            }
+        } label: {
+            HStack {
+                Label("Account ID", systemImage: "number")
+                Spacer()
+                if let id = account.userID {
+                    Text(copiedAccountID ? "Copied" : id)
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .frame(maxWidth: 140, alignment: .trailing)
+                } else {
+                    Text("Not signed in")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Image(systemName: copiedAccountID ? "checkmark" : "doc.on.doc")
+                    .foregroundStyle(copiedAccountID ? .green : .secondary)
+            }
+        }
+        .disabled(account.userID == nil)
+    }
 
     private var appVersionString: String {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.4"
@@ -122,6 +156,7 @@ struct AboutView: View {
                 // MARK: - About Section
                 Section {
                     aboutAppRow
+                    accountIDRow
                     supportLinksRows
                 } header: {
                     Label("About", systemImage: "info.circle")
@@ -137,6 +172,13 @@ struct AboutView: View {
                         Text("Made with ❤️ for medical students")
                         Text("© 2026 Brask Group LLC")
                         Text("Version \(appVersionString)")
+                            .onTapGesture {
+                                versionTapCount += 1
+                                if versionTapCount >= 5 {
+                                    versionTapCount = 0
+                                    showingProDiagnostics = true
+                                }
+                            }
                     }
                     .font(.caption)
                     .frame(maxWidth: .infinity)
@@ -166,6 +208,9 @@ struct AboutView: View {
         }
         .sheet(isPresented: $showingAccount) {
             AccountView()
+        }
+        .sheet(isPresented: $showingProDiagnostics) {
+            ProDiagnosticsView()
         }
         .sheet(isPresented: $showingLeaderboardSetup) {
             LeaderboardProfileSetupView()

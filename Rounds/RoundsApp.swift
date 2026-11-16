@@ -185,7 +185,11 @@ struct RoundsApp: App {
                         NetworkMonitor.shared.start()
                         AppConfigService.shared.refresh()
                         Task { await PlayTelemetry.shared.flush() }
-                        Task { await ProgressSyncManager.shared.sync() }
+                        Task {
+                            await SubscriptionManager.shared.refreshCustomerInfo()
+                            await AccountManager.shared.refreshStatus()
+                            await ProgressSyncManager.shared.sync()
+                        }
                         ProgressSyncManager.shared.startBackfillWatch()
                     }
                 }
