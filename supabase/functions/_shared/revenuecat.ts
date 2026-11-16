@@ -83,10 +83,23 @@ type RCSubscription = {
   current_period_ends_at?: number | null;
   entitlement_ids?: string[] | null;
 };
+type RCPurchase = {
+  product_id?: string | null;
+  store?: string | null;
+  status?: string | null;
+  purchased_at?: number | null;
+};
+
+function pickPurchase(items: RCPurchase[]): RCPurchase | null {
+  const open = items.filter((item) => (item.status ?? "owned").toLowerCase() !== "refunded");
+  open.sort((a, b) => (b.purchased_at ?? 0) - (a.purchased_at ?? 0));
+  return open.find((item) => (item.store ?? "").toLowerCase() !== "promotional") ?? open[0] ?? null;
+}
 
 export async function customerAccess(config: RCConfig, appUserId: string): Promise<{
   active: ActiveEntitlement | null;
   subscription: RCSubscription | null;
+  purchase: RCPurchase | null;
   promotional: boolean;
 }> {
   const entitlementId = await roundsProEntitlementId(config);
@@ -102,9 +115,19 @@ export async function customerAccess(config: RCConfig, appUserId: string): Promi
   const matching = subscriptions.find((item) =>
     (item.entitlement_ids ?? []).includes(entitlementId) && item.gives_access !== false
   ) ?? subscriptions.find((item) => item.gives_access) ?? null;
-  const store = (matching?.store ?? "").toLowerCase();
-  const promotional = active != null && (matching == null || store === "promotional");
-  return { active, subscription: matching, promotional };
+  let purchase: RCPurchase | null = null;
+  if (!matching) {
+    const purchaseList = await rcGet(config, `/customers/${encoded}/purchases`);
+    purchase = pickPurchase((purchaseList?.items ?? []) as RCPurchase[]);
+  }
+  const store = (matching?.store ?? purchase?.store ?? "").toLowerCase();
+  // A lifetime App Store purchase has no subscription. That is not a grant.
+  // Promotional is only a purchase whose store is promotional, or an active
+  // entitlement with neither a subscription nor a purchase.
+  const promotional = active != null && (
+    store === "promotional" || (matching == null && purchase == null)
+  );
+  return { active, subscription: matching, purchase, promotional };
 }
 
 function isoFromMillis(value: number | null | undefined): string | null {
@@ -112,17 +135,32 @@ function isoFromMillis(value: number | null | undefined): string | null {
   return new Date(value).toISOString();
 }
 
+function storeName(
+  active: ActiveEntitlement | null,
+  subscription: RCSubscription | null,
+  purchase: RCPurchase | null,
+): string | null {
+  const named = subscription?.store ?? purchase?.store ?? null;
+  if (named) return named.toLowerCase();
+  if (active && !subscription && !purchase) return "promotional";
+  return null;
+}
+
 export function mirrorFromAccess(
   active: ActiveEntitlement | null,
   subscription: RCSubscription | null,
+  purchase: RCPurchase | null = null,
+  periodType: string | null = null,
 ): SubscriptionMirror {
+  const period = periodType && periodType.trim() !== "" ? periodType : null;
+  const productId = subscription?.product_id ?? purchase?.product_id ?? null;
   if (!active) {
     return {
       subscription_status: "expired",
       subscription_will_renew: false,
-      subscription_product_id: subscription?.product_id ?? null,
-      subscription_store: subscription?.store?.toLowerCase() ?? null,
-      subscription_period_type: null,
+      subscription_product_id: productId,
+      subscription_store: storeName(null, subscription, purchase),
+      subscription_period_type: period,
       // A null expiry used to keep a refunded lifetime inside profile_has_pro.
       subscription_expires_at: new Date().toISOString(),
       has_pro: false,
@@ -143,17 +181,50 @@ export function mirrorFromAccess(
   return {
     subscription_status: status,
     subscription_will_renew: willRenew,
-    subscription_product_id: subscription?.product_id ?? null,
-    subscription_store: subscription?.store?.toLowerCase() ?? (active ? "promotional" : null),
-    subscription_period_type: null,
+    subscription_product_id: productId,
+    subscription_store: storeName(active, subscription, purchase),
+    subscription_period_type: period,
     subscription_expires_at: expires,
     has_pro: live && (expires == null || new Date(expires).getTime() > Date.now()),
   };
 }
 
-export async function recomputeCustomer(config: RCConfig, appUserId: string): Promise<SubscriptionMirror> {
+export async function recomputeCustomer(
+  config: RCConfig,
+  appUserId: string,
+  periodType: string | null = null,
+): Promise<SubscriptionMirror> {
   const access = await customerAccess(config, appUserId);
-  return mirrorFromAccess(access.active, access.subscription);
+  return mirrorFromAccess(access.active, access.subscription, access.purchase, periodType);
+}
+
+/// Read-only. Confirms RC_SECRET_KEY can GET active_entitlements and
+/// subscriptions. Returns status codes and item counts, never the secret
+/// and never a profile write.
+export async function probeSecretReads(config: RCConfig, appUserId: string): Promise<{
+  active_entitlements: { status: number; count: number | null };
+  subscriptions: { status: number; count: number | null };
+}> {
+  async function hit(path: string): Promise<{ status: number; count: number | null }> {
+    const res = await fetch(`${config.base}${path}`, { headers: config.headers });
+    const text = await res.text();
+    let count: number | null = null;
+    if (res.ok) {
+      try {
+        const body = JSON.parse(text);
+        count = Array.isArray(body.items) ? body.items.length : null;
+      } catch {
+        count = null;
+      }
+    }
+    return { status: res.status, count };
+  }
+  const encoded = encodeURIComponent(appUserId);
+  const [active_entitlements, subscriptions] = await Promise.all([
+    hit(`/customers/${encoded}/active_entitlements`),
+    hit(`/customers/${encoded}/subscriptions`),
+  ]);
+  return { active_entitlements, subscriptions };
 }
 
 export async function grantPromotional(

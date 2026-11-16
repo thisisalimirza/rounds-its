@@ -44,6 +44,19 @@
 // profiles.subscription_* for customers who currently have Rounds Pro active,
 // and expires the mirror when the page's customer no longer does — only for
 // ids that already have a profile. It does not target individual accounts.
+//
+// ---------------------------------------------------------------------------
+// Read check (not a write, and not run from this repo)
+//
+// Confirms RC_SECRET_KEY can read /customers/{id}/active_entitlements and
+// /customers/{id}/subscriptions. The response is HTTP status and item counts.
+// It does not update profiles.
+//
+//   curl -X POST \
+//     'https://gvbycponexvxsbrlaejw.supabase.co/functions/v1/revenuecat-webhook' \
+//     -H 'Content-Type: application/json' \
+//     -H "x-rounds-reconcile-secret: $RC_RECONCILE_SECRET" \
+//     -d '{"mode":"check_reads","app_user_id":"<supabase user uuid>"}'
 // ---------------------------------------------------------------------------
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -51,6 +64,7 @@ import {
   isUuid,
   listCustomers,
   rcConfig,
+  probeSecretReads,
   recomputeCustomer,
   type RCConfig,
   type SubscriptionMirror,
@@ -136,7 +150,9 @@ async function writeMirror(
     subscription_will_renew: mirror.subscription_will_renew,
     subscription_product_id: mirror.subscription_product_id,
     subscription_store: mirror.subscription_store,
-    subscription_period_type: mirror.subscription_period_type,
+    ...(mirror.subscription_period_type
+      ? { subscription_period_type: mirror.subscription_period_type }
+      : {}),
     subscription_expires_at: mirror.subscription_expires_at,
     subscription_updated_at: new Date().toISOString(),
     rc_last_event_id: eventId,
@@ -147,7 +163,7 @@ async function writeMirror(
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
-  let body: { event?: RCEvent; mode?: string; cursor?: string | null };
+  let body: { event?: RCEvent; mode?: string; cursor?: string | null; app_user_id?: string };
   try {
     body = await req.json();
   } catch {
@@ -155,10 +171,11 @@ Deno.serve(async (req) => {
   }
 
   const reconcileSecret = Deno.env.get("RC_RECONCILE_SECRET");
-  if (body?.mode === "reconcile_all") {
+  if (body?.mode === "reconcile_all" || body?.mode === "check_reads") {
     if (!reconcileSecret || req.headers.get("x-rounds-reconcile-secret") !== reconcileSecret) {
       return json({ error: "unauthorized" }, 401);
     }
+    if (body.mode === "check_reads") return await checkReads(body.app_user_id ?? null);
     return await reconcilePage(body.cursor ?? null);
   }
 
@@ -206,7 +223,7 @@ Deno.serve(async (req) => {
   let failed = false;
   for (const userId of ids) {
     try {
-      const mirror = await recomputeCustomer(config, userId);
+      const mirror = await recomputeCustomer(config, userId, event.period_type ?? null);
       const outcome = await writeMirror(admin, userId, mirror, event.id ?? null);
       results[userId] = outcome;
       if (outcome === "updated") wrote = true;
@@ -235,6 +252,24 @@ Deno.serve(async (req) => {
     founder_email: founderEmailStatus,
   });
 });
+
+async function checkReads(appUserId: string | null): Promise<Response> {
+  if (!appUserId || !isUuid(appUserId)) return json({ error: "app_user_id_required" }, 400);
+  let config: RCConfig;
+  try {
+    config = rcConfig();
+  } catch (error) {
+    console.error(error);
+    return json({ error: "not_configured" }, 500);
+  }
+  try {
+    const reads = await probeSecretReads(config, appUserId);
+    return json({ status: "read_only", ...reads });
+  } catch (error) {
+    console.error(error);
+    return json({ error: "rc_read_failed" }, 502);
+  }
+}
 
 async function reconcilePage(cursor: string | null): Promise<Response> {
   let config: RCConfig;
