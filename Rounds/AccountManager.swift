@@ -210,6 +210,9 @@ final class AccountManager {
         await SubscriptionManager.shared.refreshCustomerInfo()
         await refreshStatus()
         reportAnalyticsIdentity(isAnonymous: user.isAnonymous)
+        // Events recorded before this account existed were PostHog-only.
+        // Anything queued under this id can go out now.
+        await PlayTelemetry.shared.flush()
     }
 
     /// Identifies the PostHog person as this Supabase user. Called after anonymous

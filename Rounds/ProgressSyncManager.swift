@@ -447,8 +447,13 @@ final class ProgressSyncManager {
     /// The one exception is email verification, which pushes under the
     /// anonymous id *before* the session changes — see `verifyEmailCode`.
     ///
-    /// TODO: `play_events` is owned by the web app and its shape is not in this
-    /// repo. iOS does not create, alter, or write that table.
+    /// `play_events` is created and locked down by the web app
+    /// (roundsapp-landing#164). This repo does not create the table, change
+    /// its columns, or replace its policies. `PlayTelemetry` only inserts
+    /// rows, and a failed insert is reported as `sync_failed` stage
+    /// `play_events`. Case history is not given a new column for this: browse
+    /// plays are tagged on the local history row and on new `missed_items`
+    /// inserts, and existing server rows are not updated.
     ///
     /// Sync used to be one-directional in practice. Push ran on launch, after
     /// every game, on backgrounding and on the CloudKit backfill watch, while

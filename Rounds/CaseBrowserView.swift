@@ -290,6 +290,7 @@ struct CaseBrowserView: View {
                     GameView(
                         medicalCase: selectedCase,
                         caseContext: currentCaseContext,
+                        origin: .browse,
                         onRequestNextCase: { context, excludingID in
                             getNextCase(context: context, excludingID: excludingID)
                         }
@@ -684,6 +685,7 @@ struct CategoryCasesView: View {
                 GameView(
                     medicalCase: selectedCase,
                     caseContext: .category(displayCategory.name),
+                    origin: .browse,
                     onRequestNextCase: onRequestNextCase
                 )
             }
@@ -792,6 +794,7 @@ struct AllCasesView: View {
                 GameView(
                     medicalCase: selectedCase,
                     caseContext: .random,
+                    origin: .browse,
                     onRequestNextCase: onRequestNextCase
                 )
             }

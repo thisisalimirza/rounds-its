@@ -485,6 +485,9 @@ final class CaseHistoryEntry {
     var playedAt: Date = Date()
     var guesses: [String] = []
     var wasDailyCase: Bool = false
+    /// `PlayOrigin` raw value. Empty on history written before browse tagging,
+    /// which keeps the old daily/random split.
+    var playSource: String = ""
     
     init(
         caseID: UUID,
@@ -496,7 +499,8 @@ final class CaseHistoryEntry {
         score: Int,
         hintsUsed: Int,
         guesses: [String],
-        wasDailyCase: Bool
+        wasDailyCase: Bool,
+        playSource: String = ""
     ) {
         self.id = UUID()
         self.caseID = caseID
@@ -510,6 +514,7 @@ final class CaseHistoryEntry {
         self.playedAt = Date()
         self.guesses = guesses
         self.wasDailyCase = wasDailyCase
+        self.playSource = playSource
     }
 }
 

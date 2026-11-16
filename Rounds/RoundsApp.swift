@@ -176,6 +176,7 @@ struct RoundsApp: App {
                     // trip for every case played.
                     if phase == .background {
                         Task { await ProgressSyncManager.shared.pushIfPossible(force: true) }
+                        Task { await PlayTelemetry.shared.flush() }
                     }
                     if phase == .active {
                         // Coming back is when another device's games are most
@@ -183,6 +184,7 @@ struct RoundsApp: App {
                         // have delivered whatever it fetched while suspended.
                         NetworkMonitor.shared.start()
                         AppConfigService.shared.refresh()
+                        Task { await PlayTelemetry.shared.flush() }
                         Task { await ProgressSyncManager.shared.sync() }
                         ProgressSyncManager.shared.startBackfillWatch()
                     }
@@ -250,29 +252,29 @@ struct RoundsApp: App {
         backfillMissedItemsFromHistory(context: context)
     }
 
-    /// Backfills `MissedItem` records from `CaseHistoryEntry` misses that predate
+    /// Backfills `MissedItem` records from `CaseHistoryEntry` rows that predate
     /// the universal miss log, or that arrived via CloudKit after an earlier
-    /// backfill found nothing. Deduped by diagnosis + day so it never
-    /// double-counts misses that were already logged.
+    /// backfill found nothing. Includes losses and wins that needed help
+    /// (`WeakSpotRule`). Deduped by diagnosis + day, so a row already logged
+    /// is left alone — this does not retag existing items or server rows.
     ///
-    /// **Key fix**: only marks backfill complete (`v2`) after processing
-    /// non-empty history. An empty history can mean CloudKit hasn't delivered
-    /// yet, so we leave the flag unset and retry on later launches / when the
-    /// CloudKit backfill watch notices new history.
+    /// Only marks backfill complete (`v3`) after seeing non-empty history. An
+    /// empty history can mean CloudKit hasn't delivered yet, so the flag stays
+    /// unset and a later launch, or the CloudKit backfill watch, tries again.
+    /// History written before browse tagging has an empty `playSource` and
+    /// stays on the old daily/random split.
     ///
     /// - Parameter force: When `true`, skips the "already done" flag check.
     ///   Used by the CloudKit backfill watch to catch history that arrives
     ///   after the initial backfill completed.
     @MainActor
     static func backfillMissedItemsFromHistory(context: ModelContext, force: Bool = false) {
-        let keyV2 = "didBackfillMissedItemsFromHistory_v2"
-        if !force && UserDefaults.standard.bool(forKey: keyV2) { return }
+        let keyV3 = "didBackfillMissedItemsFromHistory_v3"
+        if !force && UserDefaults.standard.bool(forKey: keyV3) { return }
 
-        let missed = (try? context.fetch(
-            FetchDescriptor<CaseHistoryEntry>(predicate: #Predicate { $0.wasCorrect == false })
-        )) ?? []
+        let history = (try? context.fetch(FetchDescriptor<CaseHistoryEntry>())) ?? []
 
-        if missed.isEmpty {
+        if history.isEmpty {
             return
         }
 
@@ -283,13 +285,18 @@ struct RoundsApp: App {
         var seen = Set(existing.map { dayKey($0.item, $0.timestamp) })
 
         var inserted = 0
-        for entry in missed {
+        for entry in history where WeakSpotRule.shouldLog(
+            won: entry.wasCorrect,
+            hintsUsed: entry.hintsUsed,
+            guesses: entry.guessCount
+        ) {
             let diagnosis = entry.diagnosis.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !diagnosis.isEmpty else { continue }
             let k = dayKey(diagnosis, entry.playedAt)
             if seen.contains(k) { continue }
             seen.insert(k)
-            let source: MissSource = entry.wasDailyCase ? .dailyCase : .randomCase
+            let raw = PlayOrigin.missSourceRaw(stored: entry.playSource, wasDailyCase: entry.wasDailyCase)
+            guard let source = MissSource(rawValue: raw) else { continue }
             let mi = MissedItem(source: source,
                                 topic: entry.category.isEmpty ? "General" : entry.category,
                                 item: diagnosis)
@@ -303,7 +310,7 @@ struct RoundsApp: App {
             print("Backfilled \(inserted) MissedItems from case history")
         }
 
-        UserDefaults.standard.set(true, forKey: keyV2)
+        UserDefaults.standard.set(true, forKey: keyV3)
     }
 
     // MARK: - Schema Migration

@@ -176,4 +176,25 @@ struct SyncAndGateTests {
         #expect(EmailAddressHints.tone(of: "me@hospital.org") == .other)
         #expect(EmailAddressHints.suggestion(for: "Me@Gmial.com") == "me@gmail.com")
     }
+
+    @Test func aCleanWinIsNotAWeakSpot() {
+        #expect(!WeakSpotRule.shouldLog(won: true, hintsUsed: 1, guesses: 1))
+        #expect(!WeakSpotRule.neededHelp(hintsUsed: 1, guesses: 1))
+    }
+
+    @Test func aWinNeedsHelpAfterAnExtraHintOrASecondGuess() {
+        #expect(WeakSpotRule.extraHints == 1)
+        #expect(WeakSpotRule.guesses == 2)
+        #expect(WeakSpotRule.shouldLog(won: true, hintsUsed: 2, guesses: 1))
+        #expect(WeakSpotRule.shouldLog(won: true, hintsUsed: 1, guesses: 2))
+        #expect(WeakSpotRule.shouldLog(won: false, hintsUsed: 1, guesses: 1))
+    }
+
+    @Test func browsePlaysAreBrowseAndOldHistoryStaysRandom() {
+        #expect(PlayOrigin.missSourceRaw(stored: "browse", wasDailyCase: false) == "browseCase")
+        #expect(PlayOrigin.missSourceRaw(stored: "daily", wasDailyCase: true) == "dailyCase")
+        #expect(PlayOrigin.missSourceRaw(stored: "random", wasDailyCase: false) == "randomCase")
+        #expect(PlayOrigin.missSourceRaw(stored: "", wasDailyCase: false) == "randomCase")
+        #expect(PlayOrigin.missSourceRaw(stored: "", wasDailyCase: true) == "dailyCase")
+    }
 }

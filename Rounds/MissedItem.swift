@@ -39,6 +39,62 @@ enum MissSource: String, CaseIterable, Codable {
     var isWrongAnswer: Bool { self != .ddxBuilder }
 }
 
+/// How a case play was started. Stored on `CaseHistoryEntry.playSource`.
+///
+/// `CaseContext.random` is also used for a Browse search with no category, so
+/// context alone cannot tell a Random Case play from a Browse play.
+nonisolated enum PlayOrigin: String, Sendable {
+    case daily
+    case random
+    case browse
+
+    var modeName: String { rawValue }
+
+    /// `MissSource` raw value for a stored origin.
+    ///
+    /// An empty or unknown value keeps the old rule: daily stays daily, everything
+    /// else stays random. Existing history has no origin, and this does not go
+    /// back and retag rows already on the server.
+    static func missSourceRaw(stored: String, wasDailyCase: Bool) -> String {
+        switch stored {
+        case PlayOrigin.daily.rawValue, "dailyCase":
+            return "dailyCase"
+        case PlayOrigin.browse.rawValue, "browseCase":
+            return "browseCase"
+        case PlayOrigin.random.rawValue, "randomCase":
+            return "randomCase"
+        case "connections", "ddxChallenge", "ddxBuilder":
+            return stored
+        default:
+            return wasDailyCase ? "dailyCase" : "randomCase"
+        }
+    }
+}
+
+/// When a finished case belongs in Weak Spots.
+///
+/// A loss always counts. A win counts when the player needed help: at least
+/// `extraHints` hints past the free first hint, or at least `guesses` guesses
+/// (the correct guess counts). These two numbers must match
+/// `roundsapp-landing` `docs/weak-spots.md` before this ships. That doc is not
+/// on the web repo's main branch yet.
+nonisolated enum WeakSpotRule {
+    /// Hints past the free first hint. `hintsUsed` of 2 is 1 extra hint.
+    static let extraHints = 1
+    /// Guesses used, including the correct one.
+    static let guesses = 2
+
+    static func neededHelp(hintsUsed: Int, guesses: Int) -> Bool {
+        let extra = max(0, hintsUsed - 1)
+        return extra >= extraHints || guesses >= Self.guesses
+    }
+
+    static func shouldLog(won: Bool, hintsUsed: Int, guesses: Int) -> Bool {
+        if !won { return true }
+        return neededHelp(hintsUsed: hintsUsed, guesses: guesses)
+    }
+}
+
 @Model
 final class MissedItem {
     var id: UUID = UUID()

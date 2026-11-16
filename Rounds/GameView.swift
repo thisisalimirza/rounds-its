@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import Supabase
 
 // MARK: - iPad Layout Support
 extension View {
@@ -50,6 +51,8 @@ struct GameView: View {
     @Query private var playerStats: [PlayerStats]
     @State private var currentCase: MedicalCase
     @State private var gameSession: GameSession
+    /// Telemetry for the current play; replaced on every swipe.
+    @State private var attempt: PlayAttempt
     @State private var currentGuess = ""
     @State private var showingResult = false
     @State private var resultMessage = ""
@@ -84,6 +87,9 @@ struct GameView: View {
 
     // Context and next case provider
     let caseContext: CaseContext
+    /// Where this play was started. Browse passes this explicitly because a
+    /// category-less browse search uses `CaseContext.random`.
+    let origin: PlayOrigin
     let onRequestNextCase: ((CaseContext, UUID) -> MedicalCase?)?
 
     private var leaderboardProfile: LeaderboardProfile? {
@@ -94,19 +100,44 @@ struct GameView: View {
         medicalCase: MedicalCase,
         isDailyCase: Bool = false,
         caseContext: CaseContext = .random,
+        origin: PlayOrigin? = nil,
         onRequestNextCase: ((CaseContext, UUID) -> MedicalCase?)? = nil
     ) {
+        let resolvedOrigin = origin ?? Self.inferredOrigin(isDailyCase: isDailyCase, context: caseContext)
         _currentCase = State(initialValue: medicalCase)
         _gameSession = State(initialValue: GameSession(caseID: medicalCase.id))
+        _attempt = State(initialValue: Self.makeAttempt(for: medicalCase, origin: resolvedOrigin))
         self.isDailyCase = isDailyCase
         self.caseContext = caseContext
+        self.origin = resolvedOrigin
         self.onRequestNextCase = onRequestNextCase
 
-        // Track case started
-        AnalyticsManager.shared.trackCaseStarted(
-            caseID: medicalCase.id.uuidString,
-            isDaily: isDailyCase
+        // Shown, not necessarily played: case_started fires on the first
+        // hint or guess, so swiping past a case does not count as a play.
+        Self.noteCaseViewed(medicalCase, origin: resolvedOrigin)
+    }
+
+    private static func inferredOrigin(isDailyCase: Bool, context: CaseContext) -> PlayOrigin {
+        if isDailyCase { return .daily }
+        if case .category = context { return .browse }
+        return .random
+    }
+
+    private static func makeAttempt(for medicalCase: MedicalCase, origin: PlayOrigin) -> PlayAttempt {
+        PlayAttempt(
+            caseID: medicalCase.id,
+            mode: origin.modeName,
+            difficulty: medicalCase.difficulty,
+            category: medicalCase.category
         )
+    }
+
+    private static func noteCaseViewed(_ medicalCase: MedicalCase, origin: PlayOrigin) {
+        AnalyticsManager.shared.track("case_viewed", properties: [
+            "case_id": medicalCase.id.uuidString.lowercased(),
+            "is_daily": origin == .daily,
+            "mode": origin.modeName,
+        ])
     }
     
     var body: some View {
@@ -191,9 +222,16 @@ struct GameView: View {
                         // Reveal Hint button (1/3 width, on right, similar style)
                         if gameSession.canRevealHint() {
                             Button {
+                                attempt.startIfNeeded()
+                                let guessesSoFar = gameSession.guesses.count
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                     gameSession.revealNextHint()
                                 }
+                                attempt.emit("hint_revealed", [
+                                    "hint_index": .integer(gameSession.hintsRevealed),
+                                    "guesses_so_far": .integer(guessesSoFar),
+                                    "auto": .bool(false),
+                                ])
                                 HapticManager.shared.hintRevealed()
 
                                 // Track hint revealed
@@ -254,6 +292,15 @@ struct GameView: View {
                 } label: {
                     Image(systemName: "flag")
                 }
+            }
+        }
+        .onDisappear {
+            if gameSession.gameState == .playing {
+                attempt.end("case_abandoned", [
+                    "reason": .string("left"),
+                    "guesses_made": .integer(gameSession.guesses.count),
+                    "hints_visible": .integer(gameSession.hintsRevealed),
+                ])
             }
         }
         .sheet(isPresented: $showingStats) {
@@ -756,6 +803,15 @@ struct GameView: View {
         isTransitioning = true
         HapticManager.shared.swipeTransitionStart()
 
+        if gameSession.gameState == .playing {
+            attempt.end("case_abandoned", [
+                "reason": .string("swiped"),
+                "guesses_made": .integer(gameSession.guesses.count),
+                "hints_visible": .integer(gameSession.hintsRevealed),
+            ])
+        }
+        Self.noteCaseViewed(nextCase, origin: origin)
+
         // Track swipe to next case
         AnalyticsManager.shared.track("swipe_to_next_case", properties: [
             "from_case_id": currentCase.id.uuidString,
@@ -768,6 +824,7 @@ struct GameView: View {
             withAnimation(.easeInOut(duration: 0.3)) {
                 currentCase = nextCase
                 gameSession = GameSession(caseID: nextCase.id)
+                attempt = Self.makeAttempt(for: nextCase, origin: origin)
                 swipeOffset = 0
                 isTransitioning = false
             }
@@ -782,6 +839,7 @@ struct GameView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 currentCase = nextCase
                 gameSession = GameSession(caseID: nextCase.id)
+                attempt = Self.makeAttempt(for: nextCase, origin: origin)
                 swipeOffset = UIScreen.main.bounds.height * 0.3 // Position slightly below
 
                 // Step 3: Slide new view up into place
@@ -815,6 +873,11 @@ struct GameView: View {
         }
         
         if isDuplicate {
+            attempt.startIfNeeded()
+            attempt.emit("guess_rejected", [
+                "guess": .string(String(trimmedGuess.prefix(120))),
+                "reason": .string("duplicate"),
+            ])
             HapticManager.shared.incorrectGuess()
             resultMessage = "You've already guessed '\(trimmedGuess)'. Try a different diagnosis."
             showingResult = true
@@ -835,9 +898,33 @@ struct GameView: View {
             "hints_revealed": gameSession.hintsRevealed,
             "is_daily": isDailyCase
         ])
-        
+
+        attempt.startIfNeeded()
+        if let prev = gameSession.guesses.last {
+            attempt.emit("answer_changed", [
+                "from": .string(String(prev.prefix(120))),
+                "to": .string(String(trimmedGuess.prefix(120))),
+                "guess_index": .integer(previousGuessCount),
+            ])
+        }
+        attempt.emit("guess_submitted", [
+            "guess": .string(String(trimmedGuess.prefix(120))),
+            "guess_index": .integer(previousGuessCount),
+            "correct": .bool(isCorrect),
+            "hints_visible": .integer(gameSession.hintsRevealed),
+            "picked_suggestion": .bool(suggestions.contains { $0.lowercased() == normalizedGuess }),
+        ])
+        let hintsBefore = gameSession.hintsRevealed
+
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             gameSession.makeGuess(trimmedGuess, isCorrect: isCorrect)
+        }
+        if !isCorrect && gameSession.gameState == .playing && gameSession.hintsRevealed > hintsBefore {
+            attempt.emit("hint_revealed", [
+                "hint_index": .integer(gameSession.hintsRevealed),
+                "guesses_so_far": .integer(gameSession.guesses.count),
+                "auto": .bool(true),
+            ])
         }
         
         // Only update stats if the guess was actually added (not a duplicate)
@@ -973,14 +1060,28 @@ struct GameView: View {
             score: gameSession.score,
             hintsUsed: actualHintsUsed,
             guesses: gameSession.guesses,
-            wasDailyCase: isDailyCase
+            wasDailyCase: isDailyCase,
+            playSource: origin.rawValue
         )
+        // Same id as the attempt, so case_history can be joined to play_events.
+        historyEntry.id = attempt.id
+        attempt.end("case_completed", [
+            "won": .bool(won),
+            "guess_count": .integer(gameSession.guesses.count),
+            "hints_used": .integer(actualHintsUsed),
+            "score": .integer(won ? gameSession.score : 0),
+        ])
         modelContext.insert(historyEntry)
 
-        // Universal miss log — feeds Weak Spots / future study plans.
-        if !won {
+        // Weak Spots: a loss, or a win that needed help. Same rule as the
+        // history backfill (WeakSpotRule).
+        if WeakSpotRule.shouldLog(
+            won: won,
+            hintsUsed: actualHintsUsed,
+            guesses: gameSession.guesses.count
+        ), let source = MissSource(rawValue: PlayOrigin.missSourceRaw(stored: origin.rawValue, wasDailyCase: isDailyCase)) {
             MistakeLog.record(modelContext,
-                              source: isDailyCase ? .dailyCase : .randomCase,
+                              source: source,
                               topic: currentCase.category,
                               item: currentCase.diagnosis)
         }
