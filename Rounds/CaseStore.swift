@@ -207,11 +207,14 @@ final class CaseStore {
             let serverCount = counted.count ?? caseRecords.count
 
             let cursor = UserDefaults.standard.string(forKey: Self.cursorKey)
-            let full = serverCount != caseRecords.count || cursor == nil
+            // A cache written before sort_order was selected has nil on every
+            // row. Treat that as a full pull once so Browse Cases gets library order.
+            let missingOrder = caseRecords.contains { $0.sort_order == nil }
+            let full = serverCount != caseRecords.count || cursor == nil || missingOrder
 
             var query = client
                 .from("cases")
-                .select("id, diagnosis, diagnosis_slug, alternative_names, hints, category, difficulty, updated_at")
+                .select("id, diagnosis, diagnosis_slug, alternative_names, hints, category, difficulty, sort_order, updated_at")
             if !full, let cursor {
                 query = query.gt("updated_at", value: cursor)
             }
@@ -261,15 +264,25 @@ final class CaseStore {
                 UserDefaults.standard.set(SyncTime.string(from: Date()), forKey: Self.diagnosisCursorKey)
             }
 
-            // Only when the local copy is running out. The schedule is
-            // months of tiny rows; re-pulling it because a refresh happened
-            // is pure waste.
+            // Today's assignment can change after the horizon was cached.
+            // Always re-read yesterday through today, and only pull the rest
+            // of the horizon when this phone doesn't have it yet.
+            let todayKey = Self.dayKey(Date())
+            let yesterdayKey = Self.dayKey(Date().addingTimeInterval(-86_400))
+            let recent: [ScheduleRow] = try await client
+                .from("daily_cases")
+                .select("day, case_id")
+                .gte("day", value: yesterdayKey)
+                .lte("day", value: todayKey)
+                .execute().value
+            for row in recent { schedule[row.day] = row.case_id }
+
             let horizon = Self.dayKey(Date().addingTimeInterval(86_400 * 14))
-            if schedule[Self.dayKey(Date())] == nil || schedule[horizon] == nil {
+            if schedule[horizon] == nil {
                 let upcoming: [ScheduleRow] = try await client
                     .from("daily_cases")
                     .select("day, case_id")
-                    .gte("day", value: Self.dayKey(Date().addingTimeInterval(-86_400 * 2)))
+                    .gte("day", value: yesterdayKey)
                     .execute().value
                 for row in upcoming { schedule[row.day] = row.case_id }
             }

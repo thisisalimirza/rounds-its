@@ -39,6 +39,75 @@ enum MissSource: String, CaseIterable, Codable {
     var isWrongAnswer: Bool { self != .ddxBuilder }
 }
 
+/// How a case play was started. Stored on `CaseHistoryEntry.playSource`.
+///
+/// `CaseContext.random` is also used for a Browse search with no category, so
+/// context alone cannot tell a Random Case play from a Browse play.
+nonisolated enum PlayOrigin: String, Sendable {
+    case daily
+    case random
+    case browse
+
+    var modeName: String { rawValue }
+
+    /// `MissSource` raw value for a stored origin.
+    ///
+    /// Daily stays daily. An explicit random stays random. Anything else that
+    /// is not daily — browse, archive, an empty stored source — is browse.
+    /// Existing server rows are not rewritten.
+    static func missSourceRaw(stored: String, wasDailyCase: Bool) -> String {
+        switch stored {
+        case PlayOrigin.daily.rawValue, "dailyCase":
+            return "dailyCase"
+        case PlayOrigin.browse.rawValue, "browseCase":
+            return "browseCase"
+        case PlayOrigin.random.rawValue, "randomCase":
+            return "randomCase"
+        case "connections", "ddxChallenge", "ddxBuilder":
+            return stored
+        default:
+            return wasDailyCase ? "dailyCase" : "browseCase"
+        }
+    }
+}
+
+/// When a finished case belongs in Weak Spots.
+///
+/// Same numbers as `roundsapp-landing` `lib/game/weak-spot.ts`: a loss always
+/// counts, and a win counts when a second clue was opened (`hintsUsed` >= 2,
+/// which includes the free first clue), four clues were opened, four guesses
+/// were used (the correct guess counts), or all five clues were opened.
+/// `hintsUsed` of 4 and 5 sit inside `>= 2`. They stay so this matches the web
+/// expression exactly.
+nonisolated enum WeakSpotRule {
+    /// A second clue. `hintsUsed` includes the free first clue.
+    static let hintsUsed = 2
+    /// Four clues. Subsumed by `hintsUsed`, kept to match the web rule.
+    static let manyClues = 4
+    /// Guesses used, including the correct one.
+    static let guesses = 4
+    /// All five clues open.
+    static let allClues = 5
+
+    static func neededHelp(hintsUsed: Int, guesses: Int) -> Bool {
+        let openedAnother = hintsUsed >= Self.hintsUsed
+        let many = hintsUsed >= manyClues
+        let close = guesses >= Self.guesses || hintsUsed >= allClues
+        return openedAnother || many || close
+    }
+
+    static func shouldLog(diagnosis: String, won: Bool, hintsUsed: Int, guesses: Int) -> Bool {
+        guard !diagnosis.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
+        if !won { return true }
+        return neededHelp(hintsUsed: hintsUsed, guesses: guesses)
+    }
+
+    /// Qualifying wins store `needed_help`. Losses store an empty detail.
+    static func detail(won: Bool, hintsUsed: Int, guesses: Int) -> String {
+        won && neededHelp(hintsUsed: hintsUsed, guesses: guesses) ? "needed_help" : ""
+    }
+}
+
 @Model
 final class MissedItem {
     var id: UUID = UUID()
@@ -70,12 +139,42 @@ final class MissedItem {
 
 enum MistakeLog {
     /// Record a single miss. Safe to call from any view that has a ModelContext.
-    static func record(_ context: ModelContext, source: MissSource, topic: String, item: String, detail: String = "") {
+    ///
+    /// One row per diagnosis, compared as lower(trim(item)), per local calendar
+    /// day. A row that is already there is left alone: reviewed stays reviewed,
+    /// and detail is not rewritten. Case plays store dailyCase, randomCase, or
+    /// browseCase, and the caller passes detail (`needed_help` or empty).
+    @discardableResult
+    static func record(
+        _ context: ModelContext,
+        source: MissSource,
+        topic: String,
+        item: String,
+        detail: String = "",
+        at date: Date = Date()
+    ) -> Bool {
         let trimmedTopic = topic.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedItem = item.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedItem.isEmpty else { return }
-        context.insert(MissedItem(source: source, topic: trimmedTopic.isEmpty ? "General" : trimmedTopic, item: trimmedItem, detail: detail))
+        guard !trimmedItem.isEmpty else { return false }
+        let needle = trimmedItem.lowercased()
+        let calendar = Calendar.current
+        let existing = (try? context.fetch(FetchDescriptor<MissedItem>())) ?? []
+        if existing.contains(where: {
+            $0.item.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == needle
+                && calendar.isDate($0.timestamp, inSameDayAs: date)
+        }) {
+            return false
+        }
+        let row = MissedItem(
+            source: source,
+            topic: trimmedTopic.isEmpty ? "General" : trimmedTopic,
+            item: trimmedItem,
+            detail: detail
+        )
+        row.timestamp = date
+        context.insert(row)
         try? context.save()
+        return true
     }
 }
 

@@ -43,6 +43,8 @@ struct ContentView: View {
     @State private var showingInviteRedeem = false
     @State private var inviteCodeToRedeem: String?
     @State private var showingSecureAccount = false
+    @State private var showingAccountGate = false
+    @State private var accountGateKind: AccountGateKind = .trialLimit
     @State private var securePromptReasonValue: AccountManager.SecurePromptReason = .generic
     @State private var selectedTab: HomeTab = .play
     @State private var showingFreezeSaved = false
@@ -296,6 +298,17 @@ struct ContentView: View {
             .sheet(isPresented: $showingInviteRedeem) {
                 AccountView(initialCode: inviteCodeToRedeem)
             }
+            .fullScreenCover(isPresented: $showingAccountGate) {
+                AccountGateView(
+                    kind: accountGateKind == .grandfathered ? .grandfathered : .trialLimit,
+                    casesPlayed: stats.gamesPlayed,
+                    currentStreak: stats.currentStreak,
+                    unlockedAchievements: achievementProgressList.first?.unlockedAchievements.count ?? 0,
+                    hasPro: subscriptionManager.hasProAccess(),
+                    schoolName: leaderboardProfiles.first?.schoolName,
+                    onFinished: { showingAccountGate = false }
+                )
+            }
             .sheet(isPresented: $showingSecureAccount, onDismiss: {
                 // Full height, not a medium detent — see SecureAccountPromptView.
                 // Mark the nudge as spent only once it has actually been seen.
@@ -416,44 +429,25 @@ struct ContentView: View {
                     await IllnessLibraryStore.shared.syncFullLibrary(isPro: subscriptionManager.isProUser)
                 }
             }
+            .onChange(of: accountGateKey) { _, _ in
+                refreshAccountGate()
+            }
             .task {
-                // Decide What's New vs. a gentle "secure your account" nudge —
-                // never both in the same session.
+                // The required gate wins over What's New and the one-time nudge.
+                await AccountManager.shared.bootstrap()
+                refreshAccountGate()
+                let blocking = AccountGatePolicy.decision(currentGateContext(playing: false))
+                if blocking == .grandfathered || blocking == .trialLimit {
+                    return
+                }
                 whatsNewManager.checkForWhatsNew()
                 if whatsNewManager.shouldShowWhatsNew {
                     try? await Task.sleep(nanoseconds: 500_000_000)
                     showingWhatsNew = true
-                } else {
-                    // Wait for the account to actually be ready before deciding.
-                    //
-                    // This previously read `AccountManager.shared.isReady` inline.
-                    // That is set only after bootstrap's two network round trips
-                    // (anonymous sign-in, then my-status), while this .task runs
-                    // the moment the view appears — so on a cold launch the check
-                    // essentially always lost the race and read false. Because
-                    // .task runs once per appearance and nothing re-evaluated
-                    // when isReady later flipped, the nudge never fired for
-                    // anyone. bootstrap() is deduplicated, so awaiting it here
-                    // joins the launch-time call rather than starting a second.
-                    await AccountManager.shared.bootstrap()
-
-                    // Ask when there is something to point at, not on a timer.
-                    //
-                    // This used to fire on `gamesPlayed >= 1` and then never
-                    // again, because the flag behind it was one-shot. So the
-                    // single ask anyone ever got arrived at their least
-                    // invested moment — one game in, when "protect your
-                    // progress" honestly means "protect this one thing you did
-                    // once". Someone forty days deep could not be asked at all.
-                    //
-                    // Now the moment picks itself, in descending order of what
-                    // the user would actually mind losing.
-                    if AccountManager.shared.canOfferAccountSecuring,
-                       let reason = securePromptReason(for: stats) {
-                        securePromptReasonValue = reason
-                        try? await Task.sleep(nanoseconds: 700_000_000)
-                        showingSecureAccount = true
-                    }
+                } else if blocking == .nudge, AccountManager.shared.canOfferAccountSecuring {
+                    securePromptReasonValue = securePromptReason(for: stats) ?? .generic
+                    try? await Task.sleep(nanoseconds: 700_000_000)
+                    showingSecureAccount = true
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
@@ -792,6 +786,7 @@ struct ContentView: View {
     }
     
     private func startNewGame() {
+        if gateBlocksNewCase() { return }
         // The scheduled case wins when the day has one.
         //
         // The seeded fallback below picks by *index* into the library array,
@@ -857,6 +852,7 @@ struct ContentView: View {
     }
     
     private func startRandomGame() {
+        if gateBlocksNewCase() { return }
         if let randomCase = CaseLibrary.getRandomCase() {
             currentCase = randomCase
             isDailyCase = false
@@ -891,7 +887,76 @@ struct ContentView: View {
         return .generic
     }
 
+    /// Inputs the gate reads. Observed so a finished backfill, a network
+    /// change, or the kill switch can show or hide the cover without a relaunch.
+    private var accountGateKey: String {
+        let config = AppConfigService.shared.snapshot
+        let account = AccountManager.shared
+        return [
+            account.isAnonymousAccount ? "anon" : "email",
+            NetworkMonitor.shared.isOnline ? "on" : "off",
+            account.authUserID?.uuidString ?? "none",
+            MigrationCoordinator.shared.isConfirmed ? "confirmed" : "pending",
+            AccountCohortStore.cohort.rawValue,
+            String(stats.gamesPlayed),
+            config.accountGateEnabled ? "gate" : "off",
+            config.grandfatheredGateEnabled ? "gf" : "nogf",
+            String(config.anonFreeCases),
+            showingGame ? "playing" : "home"
+        ].joined(separator: "|")
+    }
+
+    private func currentGateContext(playing: Bool) -> AccountGateContext {
+        let config = AppConfigService.shared.snapshot
+        return AccountGateContext(
+            isAnonymous: AccountManager.shared.isAnonymousAccount,
+            isOnline: NetworkMonitor.shared.isOnline,
+            hasSession: AccountManager.shared.authUserID != nil,
+            backfillConfirmed: MigrationCoordinator.shared.isConfirmed,
+            cohort: AccountCohortStore.cohort,
+            casesCompleted: stats.gamesPlayed,
+            gateEnabled: config.accountGateEnabled,
+            grandfatheredEnabled: config.grandfatheredGateEnabled,
+            freeCases: config.anonFreeCases,
+            playingCase: playing,
+            nudgeAlreadyShown: AccountCohortStore.nudgeShown
+        )
+    }
+
+    /// Shows the required gate. Does not hide it just because sign-in succeeded,
+    /// so the "you're all set" screen stays until Continue. Offline, and the
+    /// master kill switch, do dismiss it.
+    private func refreshAccountGate() {
+        let config = AppConfigService.shared.snapshot
+        if !config.accountGateEnabled || !NetworkMonitor.shared.isOnline {
+            showingAccountGate = false
+            return
+        }
+        if AccountCohortStore.cohort == .grandfathered,
+           !config.grandfatheredGateEnabled,
+           AccountManager.shared.isAnonymousAccount {
+            showingAccountGate = false
+            return
+        }
+        let decision = AccountGatePolicy.decision(currentGateContext(playing: showingGame))
+        if decision == .grandfathered || decision == .trialLimit {
+            accountGateKind = decision
+            showingAccountGate = true
+        }
+    }
+
+    private func gateBlocksNewCase() -> Bool {
+        let decision = AccountGatePolicy.decision(currentGateContext(playing: false))
+        if decision == .grandfathered || decision == .trialLimit {
+            accountGateKind = decision
+            showingAccountGate = true
+            return true
+        }
+        return false
+    }
+
     private func checkForDeepLinkedCase() {
+        if gateBlocksNewCase() { return }
         // Check if there's a pending case from a deep link
         guard let caseIDString = DeepLinkManager.shared.consumePendingCase(),
               let caseUUID = UUID(uuidString: caseIDString) else {

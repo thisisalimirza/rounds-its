@@ -2,13 +2,12 @@
 //  LeaderboardManager.swift
 //  Rounds
 //
-//  Leaderboard standings, read from CloudKit and Supabase and ranked over the
-//  union of the two.
+//  Leaderboard standings, read from Supabase.
 //
-//  Writes still go to CloudKit here; the Supabase entry is written by
-//  ProgressSyncManager alongside the rest of the account. Reading both is a
-//  transition measure — see SupabaseLeaderboard for why, and for what comes
-//  out once adoption is high enough.
+//  CloudKit is no longer written. For one release this file still reads the
+//  signed-in player's own CloudKit row once, and only when Supabase has no
+//  row yet, so a score that never made it off iCloud is not dropped. The
+//  iCloud entitlement stays for that read and can be removed later.
 //
 
 import Foundation
@@ -80,6 +79,8 @@ final class LeaderboardManager {
 
     // MARK: - Properties
 
+    private static let cloudKitBackfillKey = "leaderboard.cloudkitBackfill.v1"
+
     private let container: CKContainer
     private let publicDatabase: CKDatabase
 
@@ -121,7 +122,7 @@ final class LeaderboardManager {
 
     // MARK: - Profile Management
 
-    /// Create or update leaderboard entry in CloudKit
+    /// Uploads the leaderboard row to Supabase. CloudKit is not written.
     func syncProfile(
         profile: LeaderboardProfile,
         totalScore: Int,
@@ -130,61 +131,16 @@ final class LeaderboardManager {
     ) async throws {
         isLoading = true
         error = nil
-
         defer { isLoading = false }
 
-        let record: CKRecord
-
-        // Every path must land on a deterministic record id.
-        //
-        // This previously fell back to `CKRecord(recordType:)` with no id when
-        // fetching the existing record failed, which CloudKit answers by
-        // generating a fresh UUID. The fetch fails on an ordinary network
-        // blip, not just a missing record, so each failure minted another row
-        // for the same player — which is why one playerID holds three entries
-        // in the live data. Naming the record after the player makes a retry
-        // overwrite instead of duplicate.
-        let canonicalID = CKRecord.ID(recordName: "player_\(profile.playerID)")
-
-        if let existingRecordID = profile.cloudKitRecordID {
-            let recordID = CKRecord.ID(recordName: existingRecordID)
-            do {
-                record = try await publicDatabase.record(for: recordID)
-            } catch {
-                record = CKRecord(recordType: RecordType.leaderboardEntry, recordID: canonicalID)
-            }
-        } else {
-            record = CKRecord(recordType: RecordType.leaderboardEntry, recordID: canonicalID)
-        }
-
-        // Update record fields
-        record[RecordField.playerID] = profile.playerID
-        record[RecordField.displayName] = profile.displayName
-        record[RecordField.schoolID] = profile.schoolID
-        record[RecordField.schoolName] = profile.schoolName
-        record[RecordField.state] = profile.state
-        record[RecordField.country] = profile.country
-        record[RecordField.totalScore] = totalScore as CKRecordValue
-        record[RecordField.gamesPlayed] = gamesPlayed as CKRecordValue
-        record[RecordField.gamesWon] = gamesWon as CKRecordValue
-        record[RecordField.visibilityLevel] = profile.visibilityLevel.rawValue
-        record[RecordField.lastUpdated] = Date()
-
-        // Save to CloudKit
-        let savedRecord = try await publicDatabase.save(record)
-
-        // Update local profile with CloudKit record ID
-        profile.cloudKitRecordID = savedRecord.recordID.recordName
         profile.lastSyncedScore = totalScore
         profile.lastSyncedAt = Date()
+        await ProgressSyncManager.shared.pushIfPossible(force: true)
     }
 
-    /// Removes the player from the leaderboard, in both stores.
-    ///
-    /// Leaving Supabase out would make "remove me from the leaderboard" a lie
-    /// as soon as the merged read landed: the CloudKit row would go and the
-    /// Supabase one would keep them listed. The Supabase delete goes first, so
-    /// a CloudKit failure can't leave them visible.
+    /// Removes the player from the Supabase leaderboard. The CloudKit copy is
+    /// left in place; this build no longer writes there, and a delete would be
+    /// a write. The row stops appearing because reads are Supabase-only.
     func deleteProfile(profile: LeaderboardProfile) async throws {
         if let userID = AccountManager.shared.authUserID {
             try await AccountManager.shared.supabase
@@ -193,11 +149,63 @@ final class LeaderboardManager {
                 .eq("user_id", value: userID.uuidString)
                 .execute()
         }
+    }
 
-        guard let recordIDName = profile.cloudKitRecordID else { return }
+    /// One read of this player's own CloudKit score, copied into Supabase when
+    /// that account has no leaderboard row yet. A fetch error does not set the
+    /// flag, so the next launch tries again. A missing record does.
+    func backfillOwnCloudKitScoreIfNeeded(profile: LeaderboardProfile) async {
+        if UserDefaults.standard.bool(forKey: Self.cloudKitBackfillKey) { return }
+        guard let userID = AccountManager.shared.authUserID else { return }
 
-        let recordID = CKRecord.ID(recordName: recordIDName)
-        try await publicDatabase.deleteRecord(withID: recordID)
+        do {
+            let counted: PostgrestResponse<Void> = try await AccountManager.shared.supabase
+                .from("leaderboard_entries")
+                .select("user_id", head: true, count: .exact)
+                .eq("user_id", value: userID.uuidString)
+                .execute()
+            if (counted.count ?? 0) > 0 {
+                UserDefaults.standard.set(true, forKey: Self.cloudKitBackfillKey)
+                return
+            }
+        } catch {
+            return
+        }
+
+        let recordID = CKRecord.ID(recordName: "player_\(profile.playerID)")
+        do {
+            let record = try await publicDatabase.record(for: recordID)
+            let score = record[RecordField.totalScore] as? Int ?? 0
+            let played = record[RecordField.gamesPlayed] as? Int ?? 0
+            let won = record[RecordField.gamesWon] as? Int ?? 0
+            guard score > 0 || played > 0 else {
+                UserDefaults.standard.set(true, forKey: Self.cloudKitBackfillKey)
+                return
+            }
+            let row = LegacyLeaderboardBackfill(
+                user_id: userID.uuidString,
+                display_name: profile.displayName,
+                school_id: profile.schoolID,
+                school_name: profile.schoolName,
+                state: profile.state,
+                country: profile.country,
+                is_international: profile.isInternational,
+                visibility: profile.visibilityLevel.rawValue,
+                total_score: score,
+                games_played: played,
+                games_won: won,
+                legacy_player_id: profile.playerID
+            )
+            try await AccountManager.shared.supabase
+                .from("leaderboard_entries")
+                .upsert(row, onConflict: "user_id")
+                .execute()
+            UserDefaults.standard.set(true, forKey: Self.cloudKitBackfillKey)
+        } catch let error as CKError where error.code == .unknownItem {
+            UserDefaults.standard.set(true, forKey: Self.cloudKitBackfillKey)
+        } catch {
+            print("⚠️ CloudKit leaderboard backfill skipped: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Leaderboard Fetching
@@ -307,37 +315,10 @@ final class LeaderboardManager {
 
     // MARK: - Private Helpers
 
-    /// Reads both stores and ranks the union.
-    ///
-    /// See SupabaseLeaderboard for why both: a player only reaches Supabase
-    /// once they install a build that writes it, so reading Supabase alone
-    /// would empty the standings on release day, and reading CloudKit alone
-    /// keeps the duplicates.
-    ///
-    /// Either store may fail on its own without failing the fetch — a leaderboard
-    /// missing the half that didn't load beats an error screen. Only a double
-    /// failure throws.
+    /// Reads Supabase only. CloudKit is no longer part of the standings.
     private func fetchLeaderboard(filter: LeaderboardFilter, currentPlayerID: String) async throws -> [LeaderboardEntry] {
-        // Only the Supabase half runs as `async let`. Its rows are Sendable, so
-        // they can leave the child task; `[CKRecord]` is not, and returning it
-        // out of one would be crossing an actor boundary with a mutable
-        // reference type. CloudKit is awaited directly instead — still
-        // concurrent, because the request above is already in flight.
-        async let remoteTask = SupabaseLeaderboard.fetch(filter)
-
-        var cloudRecords: [CKRecord] = []
-        var cloudError: Error?
-        do { cloudRecords = try await fetchCloudKitRecords(filter: filter) } catch { cloudError = error }
-
-        var remoteRows: [RemoteLeaderboardRow] = []
-        var remoteError: Error?
-        do { remoteRows = try await remoteTask } catch { remoteError = error }
-
-        if let cloudError, remoteError != nil {
-            throw cloudError
-        }
-
-        return merge(cloudRecords: cloudRecords,
+        let remoteRows = try await SupabaseLeaderboard.fetch(filter)
+        return merge(cloudRecords: [],
                      remoteRows: remoteRows,
                      currentPlayerID: currentPlayerID)
     }
@@ -551,6 +532,21 @@ final class LeaderboardManager {
     }
 }
 
+private struct LegacyLeaderboardBackfill: Encodable, Sendable {
+    let user_id: String
+    let display_name: String
+    let school_id: String
+    let school_name: String
+    let state: String
+    let country: String
+    let is_international: Bool
+    let visibility: String
+    let total_score: Int
+    let games_played: Int
+    let games_won: Int
+    let legacy_player_id: String
+}
+
 // MARK: - Convenience Extensions
 
 extension LeaderboardManager {
@@ -605,12 +601,7 @@ extension LeaderboardManager {
     ) async {
         guard let profile = profile else { return }
 
-        // Always sync if this profile has never been synced to CloudKit
-        // (cloudKitRecordID will be nil for brand new profiles)
-        let needsInitialSync = profile.cloudKitRecordID == nil
-
-        // Only sync if score has changed OR if this is the first sync
-        guard needsInitialSync || totalScore != profile.lastSyncedScore else { return }
+        guard totalScore != profile.lastSyncedScore || profile.lastSyncedAt == nil else { return }
 
         do {
             try await syncProfile(

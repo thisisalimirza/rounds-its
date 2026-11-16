@@ -174,6 +174,7 @@ final class SubscriptionManager {
         } else {
             self.subscriptionStatus = .free
         }
+        AccountManager.shared.reportAnalyticsIdentity()
     }
     
     // MARK: - Offerings
@@ -253,16 +254,11 @@ final class SubscriptionManager {
         if isTestFlightBuild() {
             print("✅ TestFlight detected - granting Pro access")
 
-            // Track TestFlight usage in analytics
-            AnalyticsManager.shared.setUserProperty(key: "is_testflight", value: true)
-
             return true
         }
 
         print("ℹ️ Not TestFlight - checking subscription: \(isProSubscriber)")
 
-        // Track production usage
-        AnalyticsManager.shared.setUserProperty(key: "is_testflight", value: false)
         AnalyticsManager.shared.setUserProperty(key: "subscription_status", value: subscriptionStatus.rawValue)
 
         return isProSubscriber

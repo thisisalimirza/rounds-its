@@ -135,7 +135,14 @@ struct RoundsApp: App {
                 .task {
                     // Ensure a (silent, anonymous) account exists and tie it to
                     // RevenueCat so Pro syncs across devices; loads referral status.
+                    NetworkMonitor.shared.start()
                     await AccountManager.shared.bootstrap()
+                    AppConfigService.shared.refresh()
+                    let context = sharedModelContainer.mainContext
+                    let games = (try? context.fetch(FetchDescriptor<PlayerStats>()))?.first?.gamesPlayed ?? 0
+                    let history = (try? context.fetchCount(FetchDescriptor<CaseHistoryEntry>())) ?? 0
+                    AccountCohortStore.establishIfNeeded(hasPriorProgress: games > 0 || history > 0)
+                    MigrationCoordinator.shared.noteSession(userID: AccountManager.shared.authUserID)
 
                     // Mirror on-device progress to the account. The server
                     // merges rather than overwrites, so this is safe even from
@@ -155,6 +162,9 @@ struct RoundsApp: App {
                     // Both directions. Pushing alone left a second device
                     // uploading forever and never receiving.
                     await ProgressSyncManager.shared.sync()
+                    if let profile = try? context.fetch(FetchDescriptor<LeaderboardProfile>()).first {
+                        await LeaderboardManager.shared.backfillOwnCloudKitScoreIfNeeded(profile: profile)
+                    }
 
                     // CloudKit restores history asynchronously after launch, so
                     // the push above can only see what has arrived so far.
@@ -166,11 +176,15 @@ struct RoundsApp: App {
                     // trip for every case played.
                     if phase == .background {
                         Task { await ProgressSyncManager.shared.pushIfPossible(force: true) }
+                        Task { await PlayTelemetry.shared.flush() }
                     }
                     if phase == .active {
                         // Coming back is when another device's games are most
                         // likely to be waiting, and also when CloudKit tends to
                         // have delivered whatever it fetched while suspended.
+                        NetworkMonitor.shared.start()
+                        AppConfigService.shared.refresh()
+                        Task { await PlayTelemetry.shared.flush() }
                         Task { await ProgressSyncManager.shared.sync() }
                         ProgressSyncManager.shared.startBackfillWatch()
                     }
@@ -228,58 +242,67 @@ struct RoundsApp: App {
             try? context.save()
         }
 
+        let gamesPlayed = (try? context.fetch(FetchDescriptor<PlayerStats>()))?.first?.gamesPlayed ?? 0
+        let historyCount = (try? context.fetchCount(FetchDescriptor<CaseHistoryEntry>())) ?? 0
+        AccountCohortStore.establishIfNeeded(hasPriorProgress: gamesPlayed > 0 || historyCount > 0)
+
         // One-time: seed the universal miss log from historical missed cases so
         // existing users' Weak Spots, Study Plan, and Illness Scripts pick up
         // everything they've already gotten wrong (not just new misses).
         backfillMissedItemsFromHistory(context: context)
     }
 
-    /// Backfills `MissedItem` records from `CaseHistoryEntry` misses that predate
+    /// Backfills `MissedItem` records from `CaseHistoryEntry` rows that predate
     /// the universal miss log, or that arrived via CloudKit after an earlier
-    /// backfill found nothing. Deduped by diagnosis + day so it never
-    /// double-counts misses that were already logged.
+    /// backfill found nothing. Includes losses and wins that needed help
+    /// (`WeakSpotRule`). One row per diagnosis per local day. A row that is
+    /// already there is left alone: reviewed stays reviewed and detail is not
+    /// rewritten. This does not retag existing items or server rows.
     ///
-    /// **Key fix**: only marks backfill complete (`v2`) after processing
-    /// non-empty history. An empty history can mean CloudKit hasn't delivered
-    /// yet, so we leave the flag unset and retry on later launches / when the
-    /// CloudKit backfill watch notices new history.
+    /// Only marks backfill complete (`v3`) after seeing non-empty history. An
+    /// empty history can mean CloudKit hasn't delivered yet, so the flag stays
+    /// unset and a later launch, or the CloudKit backfill watch, tries again.
+    /// History with an empty `playSource` that was not a daily case is logged
+    /// as browse. An explicit random source stays random.
     ///
     /// - Parameter force: When `true`, skips the "already done" flag check.
     ///   Used by the CloudKit backfill watch to catch history that arrives
     ///   after the initial backfill completed.
     @MainActor
     static func backfillMissedItemsFromHistory(context: ModelContext, force: Bool = false) {
-        let keyV2 = "didBackfillMissedItemsFromHistory_v2"
-        if !force && UserDefaults.standard.bool(forKey: keyV2) { return }
+        let keyV3 = "didBackfillMissedItemsFromHistory_v3"
+        if !force && UserDefaults.standard.bool(forKey: keyV3) { return }
 
-        let missed = (try? context.fetch(
-            FetchDescriptor<CaseHistoryEntry>(predicate: #Predicate { $0.wasCorrect == false })
-        )) ?? []
+        let history = (try? context.fetch(FetchDescriptor<CaseHistoryEntry>())) ?? []
 
-        if missed.isEmpty {
+        if history.isEmpty {
             return
         }
 
-        let existing = (try? context.fetch(FetchDescriptor<MissedItem>())) ?? []
-        func dayKey(_ item: String, _ date: Date) -> String {
-            "\(item.lowercased())|\(Int(Calendar.current.startOfDay(for: date).timeIntervalSince1970))"
-        }
-        var seen = Set(existing.map { dayKey($0.item, $0.timestamp) })
-
         var inserted = 0
-        for entry in missed {
+        for entry in history {
             let diagnosis = entry.diagnosis.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !diagnosis.isEmpty else { continue }
-            let k = dayKey(diagnosis, entry.playedAt)
-            if seen.contains(k) { continue }
-            seen.insert(k)
-            let source: MissSource = entry.wasDailyCase ? .dailyCase : .randomCase
-            let mi = MissedItem(source: source,
-                                topic: entry.category.isEmpty ? "General" : entry.category,
-                                item: diagnosis)
-            mi.timestamp = entry.playedAt
-            context.insert(mi)
-            inserted += 1
+            guard WeakSpotRule.shouldLog(
+                diagnosis: diagnosis,
+                won: entry.wasCorrect,
+                hintsUsed: entry.hintsUsed,
+                guesses: entry.guessCount
+            ) else { continue }
+            let raw = PlayOrigin.missSourceRaw(stored: entry.playSource, wasDailyCase: entry.wasDailyCase)
+            guard let source = MissSource(rawValue: raw) else { continue }
+            let wrote = MistakeLog.record(
+                context,
+                source: source,
+                topic: entry.category,
+                item: diagnosis,
+                detail: WeakSpotRule.detail(
+                    won: entry.wasCorrect,
+                    hintsUsed: entry.hintsUsed,
+                    guesses: entry.guessCount
+                ),
+                at: entry.playedAt
+            )
+            if wrote { inserted += 1 }
         }
 
         if inserted > 0 {
@@ -287,7 +310,7 @@ struct RoundsApp: App {
             print("Backfilled \(inserted) MissedItems from case history")
         }
 
-        UserDefaults.standard.set(true, forKey: keyV2)
+        UserDefaults.standard.set(true, forKey: keyV3)
     }
 
     // MARK: - Schema Migration
