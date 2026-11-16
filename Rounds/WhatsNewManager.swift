@@ -13,7 +13,7 @@ import Combine
 
 // MARK: - What's New Data Models
 
-struct WhatsNewData: Codable {
+nonisolated struct WhatsNewData: Codable {
     let version: String
     let lastUpdated: String
     let showToVersionsBelow: String
@@ -23,7 +23,7 @@ struct WhatsNewData: Codable {
     let dismissButtonText: String?
 }
 
-struct WhatsNewFeature: Codable, Identifiable {
+nonisolated struct WhatsNewFeature: Codable, Identifiable {
     var id: String { title }
     let icon: String
     let title: String
@@ -115,20 +115,32 @@ final class WhatsNewManager: ObservableObject {
     // MARK: - Public API
 
     /// Call on app launch. Decides whether the newest release should be shown.
-    func checkForWhatsNew() {
+    ///
+    /// The server changelog wins when it can be read or is cached. The compiled
+    /// notes are only the fallback for offline with an empty cache.
+    func checkForWhatsNew() async {
+        if let remote = await RemoteChangelog.shared.latest() {
+            whatsNewData = remote
+            considerShowing(version: remote.version)
+            return
+        }
         guard let latest = AppChangelog.latest else { return }
         whatsNewData = latest.asWhatsNewData()
 
+        considerShowing(version: latest.version)
+    }
+
+    private func considerShowing(version: String) {
         let lastSeen = UserDefaults.standard.string(forKey: lastSeenVersionKey)
 
         // Brand-new install: don't interrupt onboarding — silently record the
         // newest version so What's New only appears after a real update.
         guard let lastSeen else {
-            UserDefaults.standard.set(latest.version, forKey: lastSeenVersionKey)
+            UserDefaults.standard.set(version, forKey: lastSeenVersionKey)
             return
         }
 
-        if Self.compareVersions(lastSeen, isLessThan: latest.version) {
+        if Self.compareVersions(lastSeen, isLessThan: version) {
             shouldShowWhatsNew = true
         }
     }

@@ -491,6 +491,9 @@ final class AccountManager {
     /// Code entry also matches the web flow, so the two surfaces behave
     /// identically.
     func sendEmailCode(_ email: String) async throws {
+        if AppConfigService.shared.snapshot.signupsPaused {
+            throw SignupPausedError()
+        }
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
         try await supabase.auth.signInWithOTP(email: trimmed, shouldCreateUser: true)
     }
@@ -935,5 +938,11 @@ nonisolated struct IllnessScriptSummary: Codable, Sendable, Identifiable {
         case system
         case oneLiner = "one_liner"
         case missCount = "miss_count"
+    }
+}
+
+private struct SignupPausedError: LocalizedError {
+    var errorDescription: String? {
+        "New sign-ups are paused for a bit. You can still play on this phone."
     }
 }

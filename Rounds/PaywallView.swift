@@ -45,6 +45,36 @@ struct RoundsPaywallView: View {
     }
 
     var body: some View {
+        if AppConfigService.shared.snapshot.iosPurchasesEnabled {
+            purchaseFlow
+        } else {
+            NavigationStack {
+                VStack(spacing: 12) {
+                    Image(systemName: "pause.circle")
+                        .font(.system(size: 40))
+                        .foregroundStyle(Color(red: 0.29, green: 0.565, blue: 0.886))
+                    Text("Purchases are paused")
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                    Text("You can keep playing. Checkout will be back shortly.")
+                        .font(.system(size: 15, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(24)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button { dismiss() } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                                .symbolRenderingMode(.hierarchical)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var purchaseFlow: some View {
         NavigationStack {
             RevenueCatUI.PaywallView()
                 .onAppear {
