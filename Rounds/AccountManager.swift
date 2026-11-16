@@ -162,6 +162,7 @@ final class AccountManager {
             await handleSignedIn(user: session.user)
         } catch {
             print("⚠️ AccountManager.bootstrap error: \(error.localizedDescription)")
+            AnalyticsManager.shared.trackSyncFailure(stage: "auth", error: error)
         }
         isReady = true
     }
@@ -208,6 +209,20 @@ final class AccountManager {
 
         await SubscriptionManager.shared.refreshCustomerInfo()
         await refreshStatus()
+        reportAnalyticsIdentity(isAnonymous: user.isAnonymous)
+    }
+
+    /// Identifies the PostHog person as this Supabase user. Called after anonymous
+    /// start and again after an email claim, which aliases the previous id.
+    func reportAnalyticsIdentity(isAnonymous: Bool? = nil) {
+        guard let userID else { return }
+        let anonymous = isAnonymous ?? isAnonymousAccount
+        let serverPro = proSource != "none"
+        AnalyticsManager.shared.identifyAccount(
+            userId: userID,
+            isAnonymous: anonymous,
+            hasPro: SubscriptionManager.shared.isProSubscriber || serverPro
+        )
     }
 
     // MARK: - Referral / Pro status
@@ -221,6 +236,7 @@ final class AccountManager {
             self.invitesRemaining = status.invites_remaining
             self.maxReferrals = status.max_referrals
             self.statusLoadFailed = false
+            reportAnalyticsIdentity()
         } catch {
             self.statusLoadFailed = true
             print("⚠️ my-status error: \(error.localizedDescription)")
@@ -600,6 +616,7 @@ final class AccountManager {
                 // failed to carry over. Say so — don't claim the backup worked.
                 claimFailed = true
                 print("⚠️ claim_anonymous_account failed: \(error.localizedDescription)")
+                AnalyticsManager.shared.trackSyncFailure(stage: "claim", error: error)
             }
         }
 
@@ -684,6 +701,7 @@ struct StreakFreezeServerState: Decodable, Sendable {
         if !wasAnonymous {
             _ = try? await Purchases.shared.logOut()
         }
+        AnalyticsManager.shared.resetUser()
         try? await supabase.auth.signOut(scope: .local)
         userID = nil
         accountEmail = nil

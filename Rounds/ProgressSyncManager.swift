@@ -116,6 +116,7 @@ final class ProgressSyncManager {
             // Never surfaced to the user: the local store is authoritative and
             // the next launch retries.
             print("⚠️ progress push failed: \(error.localizedDescription)")
+            AnalyticsManager.shared.trackSyncFailure(stage: "progress_push", error: error)
         }
 
         // Aggregates are only half the picture. The rich records — every case
@@ -186,6 +187,7 @@ final class ProgressSyncManager {
             lastSyncedAt = Date()
         } catch {
             print("⚠️ progress pull failed: \(error.localizedDescription)")
+            AnalyticsManager.shared.trackSyncFailure(stage: "progress_pull", error: error)
         }
 
         // Then the records themselves, so a new phone shows the actual case
@@ -233,6 +235,7 @@ final class ProgressSyncManager {
             )
         } catch {
             print("⚠️ progress snapshot failed: \(error.localizedDescription)")
+            AnalyticsManager.shared.trackSyncFailure(stage: "progress_snapshot", error: error)
             return nil
         }
     }
@@ -299,6 +302,7 @@ final class ProgressSyncManager {
             }
         } catch {
             print("⚠️ record push failed: \(error.localizedDescription)")
+            AnalyticsManager.shared.trackSyncFailure(stage: "records_push", error: error)
         }
     }
 
@@ -429,6 +433,7 @@ final class ProgressSyncManager {
             lastSyncedAt = Date()
         } catch {
             print("⚠️ progress push failed: \(error.localizedDescription)")
+            AnalyticsManager.shared.trackSyncFailure(stage: "progress_push", error: error)
             return false
         }
         await pushRecords()
@@ -484,6 +489,7 @@ final class ProgressSyncManager {
             try? context.save()
         } catch {
             print("⚠️ streak freeze sync failed: \(error.localizedDescription)")
+            AnalyticsManager.shared.trackSyncFailure(stage: "streak_freeze", error: error)
         }
     }
 
@@ -610,6 +616,7 @@ final class ProgressSyncManager {
             try context.save()
         } catch {
             print("⚠️ record pull failed: \(error.localizedDescription)")
+            AnalyticsManager.shared.trackSyncFailure(stage: "records_pull", error: error)
         }
     }
 }

@@ -9,6 +9,7 @@ import Testing
 import Foundation
 @testable import Rounds
 
+@MainActor
 struct CaseLibraryValidationTests {
 
     // MARK: - Duplicate Detection

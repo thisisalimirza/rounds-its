@@ -50,10 +50,16 @@ final class MigrationCoordinator {
             } else {
                 isConfirmed = false
                 print("⚠️ migration not confirmed: server counts \(result.serverHistory)/\(result.serverMisses)/\(result.serverDDx) vs local \(history)/\(misses)/\(ddx)")
+                AnalyticsManager.shared.track("sync_failed", properties: [
+                    "stage": "migration",
+                    "error_code": "counts_short",
+                    "error_message": "server \(result.serverHistory)/\(result.serverMisses)/\(result.serverDDx) local \(history)/\(misses)/\(ddx)",
+                ])
             }
         } catch {
             isConfirmed = false
             print("⚠️ migration confirm failed: \(error.localizedDescription)")
+            AnalyticsManager.shared.trackSyncFailure(stage: "migration", error: error)
         }
     }
 
