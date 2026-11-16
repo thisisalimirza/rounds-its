@@ -12,9 +12,11 @@
 -- after this file. Both define older copies of the two functions replaced here,
 -- and running them later would put the streak bug and the partial claim back.
 --
--- play_events is intentionally not created or altered. The web migration landing
--- this week owns that table. iOS does not write it until the column list is
--- confirmed (see the TODO in ProgressSyncManager.sync).
+-- play_events is intentionally not created or altered, and no policy on it is
+-- replaced. The web migration (roundsapp-landing#164) owns the table. iOS only
+-- inserts rows (PlayTelemetry). A duplicate primary key (23505) counts as
+-- delivered. Existing case_history and missed_items rows are not updated to
+-- retag browse plays or to add a play_mode column.
 --
 -- Functions created or replaced (conflict-check these names):
 --   REPLACE public.sync_progress(integer, integer, integer, integer, integer,
