@@ -20,7 +20,7 @@ nonisolated enum ChangelogContract {
     static let cacheName = "changelog_entries.json"
 }
 
-nonisolated struct RemoteChangelogEntry: Decodable, Equatable, Sendable {
+nonisolated struct RemoteChangelogEntry: Codable, Equatable, Sendable {
     let version: String
     let title: String?
     let body: String?
@@ -50,7 +50,7 @@ final class RemoteChangelog {
     func latest() async -> WhatsNewData? {
         if let fresh = try? await fetch() {
             if let data = try? JSONEncoder().encode(fresh) {
-                try? data.write(to: cacheURL, options: .atomic)
+                try? data.write(to: cacheURL, options: [.atomic])
             }
             return Self.notes(from: fresh)
         }
