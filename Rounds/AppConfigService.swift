@@ -207,6 +207,7 @@ final class AppConfigService {
         }
         let task = Task { [weak self] in
             await self?.performRefresh()
+            return
         }
         refreshTask = task
         await task.value
