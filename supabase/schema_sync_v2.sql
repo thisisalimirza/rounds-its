@@ -9,6 +9,9 @@
 --   * no RLS policy is created, dropped, or replaced. "update own profile"
 --     stays. The privileged-column trigger is extended so that policy cannot
 --     write profiles.migrated_v2_at (see the trigger section and Rollback).
+--   * anonymous_claim_tickets has row level security enabled and no policies,
+--     which is default deny. The table privileges are revoked from
+--     public, anon, and authenticated. That is not a policy.
 --
 -- Do NOT re-apply supabase/schema_sync.sql or supabase/schema_claim_full_data.sql
 -- after this file. Both define older copies of functions replaced here.
@@ -28,23 +31,32 @@
 --
 -- record_case_play is owned by the web app and is already live (PR 202).
 -- This file does not create or replace it, and it does not add an overload.
--- faculty_assignments (web PR 203) is not applied and is not touched.
+-- faculty_assignments (web PR 203) is applied. It has no user_id, so claim
+-- does not move it, and this file does not touch the table.
 --
--- Objects that are not on production yet are referenced only after a check,
--- via EXECUTE, so this file applies and runs today:
---   * profiles.cohort_reporting (web PR 203) and profiles.show_in_activity
---   * player_announcement_events (web PR 200)
---   * feed_reactions, feed_reads, feed_mentions (no foreign keys)
--- Web PR 200 (app_config, announcements, changelog public read) is not applied.
+-- Web PR 200 (app_config, announcements, changelog, player_announcement_events)
+-- and web PR 203 (faculty_assignments, profiles.cohort_reporting) are applied.
+-- profiles.show_in_activity is on production too. The functions still check
+-- with to_regclass / information_schema and use EXECUTE, so a missing column
+-- does not fail the apply. feed_reactions, feed_reads, and feed_mentions have
+-- no foreign key to auth.users.
 --
 -- Functions created or replaced (conflict-check these names):
 --   REPLACE public.sync_progress(integer, integer, integer, integer, integer,
 --           integer[], text[], date, text, timestamptz)
+--   REPLACE public.claim_anonymous_account(uuid, text)
 --   REPLACE public.claim_anonymous_account(uuid)
+--           wrapper: calls the two-argument function with a null token
+--   CREATE  public.begin_anonymous_claim()
 --   REPLACE public.protect_profiles_privileged_columns()
 --   CREATE  public.sync_streak_freeze(date, boolean, boolean)
 --   CREATE  public.confirm_migration_v2(integer, integer, integer, boolean)
 --   CREATE  public.delete_own_account()
+--
+-- pgcrypto is in the extensions schema on production:
+--   extensions.gen_random_bytes(integer)
+--   extensions.digest(text, text) and extensions.digest(bytea, text)
+-- auth.users.is_anonymous is boolean. The ticket functions call those by name.
 --
 -- Grants (not policies) are re-applied on the replaced functions because a
 -- future CREATE OR REPLACE from an older file would reset them, and on the new
@@ -67,11 +79,11 @@ alter table public.profiles
 -- pro_source, the subscription mirror, role, and attribution stay as they
 -- are: service_role, postgres, and supabase_admin may write them, and every
 -- other role keeps the old values. migrated_v2_at is tighter. Only
--- service_role, or confirm_migration_v2 (which sets rounds.migrated_v2_writer
--- for this transaction), may set or change it. postgres is not enough, so a
--- SQL-editor update and every other security-definer function leave the
--- marker alone. A player insert stores null. A player update keeps the
--- previous value. The policy itself is not replaced.
+-- service_role, or postgres while confirm_migration_v2 has set
+-- rounds.migrated_v2_writer, may set or change it. supabase_admin and a
+-- plain postgres session cannot. confirm_migration_v2 clears that setting
+-- as soon as its update returns. A player insert stores null. A player
+-- update keeps the previous value. The policy itself is not replaced.
 --
 -- The trigger trg_protect_profiles_privileged already calls this function.
 -- It is dropped and recreated so a database missing it gets the same
@@ -109,15 +121,19 @@ begin
     or current_user in ('postgres', 'supabase_admin', 'service_role');
 
   -- confirm_migration_v2 is security definer, so current_user is its owner
-  -- (postgres) and the caller's jwt role is still authenticated. The GUC is
-  -- what distinguishes that function from every other postgres writer.
+  -- (postgres) and the caller's jwt role is still authenticated. The marker
+  -- moves only for service_role, or for postgres while that function's GUC
+  -- is set. confirm_migration_v2 clears the GUC as soon as the update returns.
   -- A failure reading the setting locks the marker and leaves every other
   -- column on the existing trusted path, so profile writes keep working.
   begin
     marker_ok :=
       jwt_role = 'service_role'
       or current_user = 'service_role'
-      or current_setting('rounds.migrated_v2_writer', true) = 'confirm_migration_v2';
+      or (
+        current_user = 'postgres'
+        and current_setting('rounds.migrated_v2_writer', true) = 'confirm_migration_v2'
+      );
   exception when others then
     marker_ok := jwt_role = 'service_role' or current_user = 'service_role';
   end;
@@ -321,6 +337,59 @@ revoke all on function public.sync_progress(integer, integer, integer, integer, 
 grant execute on function public.sync_progress(integer, integer, integer, integer, integer, integer[], text[], date, text, timestamptz) to authenticated, service_role;
 
 -- =========================================================================
+-- Proof that the caller held the anonymous session. leaderboard_entries
+-- exposes user_id, so a signed-in player who only knows an anon id must not
+-- be able to pull that account's Pro or subscription onto themselves.
+--
+-- The anonymous session calls begin_anonymous_claim() and keeps the returned
+-- token in memory. After the email sign-in, claim_anonymous_account checks
+-- the hash. The row stays until expires_at so a retry of the same token
+-- still works. There is no policy: row level security is on, and public,
+-- anon, and authenticated have no table privileges.
+--
+-- Checked on production before this file was written:
+--   extensions.gen_random_bytes(integer)
+--   extensions.digest(text, text)
+--   auth.users.is_anonymous boolean
+-- =========================================================================
+create table if not exists public.anonymous_claim_tickets (
+  anon_id uuid primary key references auth.users(id) on delete cascade,
+  token_hash bytea not null,
+  expires_at timestamptz not null
+);
+
+alter table public.anonymous_claim_tickets enable row level security;
+
+revoke all on table public.anonymous_claim_tickets from public, anon, authenticated;
+
+create or replace function public.begin_anonymous_claim()
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_token text;
+begin
+  if v_uid is null or not exists (
+    select 1 from auth.users where id = v_uid and is_anonymous
+  ) then
+    raise exception 'not_anonymous';
+  end if;
+  v_token := encode(extensions.gen_random_bytes(32), 'hex');
+  insert into public.anonymous_claim_tickets (anon_id, token_hash, expires_at)
+  values (v_uid, extensions.digest(v_token, 'sha256'), now() + interval '1 hour')
+  on conflict (anon_id) do update
+    set token_hash = excluded.token_hash,
+        expires_at = excluded.expires_at;
+  return v_token;
+end $$;
+
+revoke all on function public.begin_anonymous_claim() from public, anon;
+grant execute on function public.begin_anonymous_claim() to authenticated;
+
+-- =========================================================================
 -- claim_anonymous_account: move every row, merge conflicts, drop nothing
 -- that the target does not already have.
 --
@@ -328,8 +397,9 @@ grant execute on function public.sync_progress(integer, integer, integer, intege
 -- claim in schema_sync.sql (that one never moves history). This body starts
 -- from the live function and still moves everything it moves:
 --   * pro_source, pro_granted_at, referred_by, and attributed_campaign_id,
---     only when the target's pro_source is 'none' and the anonymous one is not
---   * redemptions.redeemer_id, inside that same grant
+--     only when the token is proven, the target's pro_source is 'none', and
+--     the anonymous one is not
+--   * redemptions.redeemer_id, inside that same proven grant
 --   * attribution_source and attribution_set_at when the target has no campaign
 --   * player_progress: games_played, games_won, total_score, max_streak,
 --     current_streak, guess_distribution, completed_case_ids,
@@ -339,7 +409,19 @@ grant execute on function public.sync_progress(integer, integer, integer, intege
 --     category_stats with the target's keys winning (excluded || target),
 --     and the freeze columns when the target has no achievements row
 --   * leaderboard_entries reassigned when the target has no row
---   * anonymous pro_source set back to 'none' and attributed_campaign_id null
+--   * anonymous pro_source set back to 'none' and attributed_campaign_id null,
+--     and the subscription mirror cleared, only when the claim token proves
+--     the caller held that anonymous session
+--
+-- The two-argument function is the body. claim_anonymous_account(uuid) is a
+-- one-line wrapper that passes a null token, so shipping 1.5 (which cannot
+-- send a token) still resolves to one function and still moves progress.
+-- There is no default argument, so a one-argument call is not ambiguous.
+-- Pro grant, redemptions.redeemer_id, and the subscription mirror run only
+-- when the token matches an unexpired ticket. The ticket row is not deleted.
+-- Both profile rows are locked with SELECT ... FOR UPDATE, lower uuid first.
+-- An unproven claim does not clear pro_source or the subscription mirror:
+-- that would destroy a stranger's Pro without moving it.
 --
 -- The live ON CONFLICT omits guess_distribution, last_daily_case_played, and
 -- device_updated_at, and it deletes the anonymous leaderboard row without
@@ -355,7 +437,10 @@ grant execute on function public.sync_progress(integer, integer, integer, intege
 -- Where both accounts have the same id, reviewed flags are OR-ed and the
 -- anonymous copy is removed only after that merge.
 -- =========================================================================
-create or replace function public.claim_anonymous_account(p_anonymous_id uuid)
+create or replace function public.claim_anonymous_account(
+    p_anonymous_id uuid,
+    p_claim_token text
+)
 returns jsonb
 language plpgsql
 security definer
@@ -371,6 +456,9 @@ declare
     v_anon_live boolean;
     v_tgt_live boolean;
     v_take_anon boolean := false;
+    v_proven   boolean := false;
+    v_campaign_copied boolean := false;
+    v_anon_miss_keys text[] := '{}';
 begin
     if v_target is null then
         raise exception 'not_authenticated';
@@ -379,19 +467,34 @@ begin
         return jsonb_build_object('status', 'nothing_to_claim');
     end if;
 
-    select * into v_anon from public.profiles where id = p_anonymous_id;
-    if not found then
-        return jsonb_build_object('status', 'unknown_account');
-    end if;
-
     if exists (select 1 from auth.users u
                 where u.id = p_anonymous_id and u.email is not null) then
         return jsonb_build_object('status', 'not_anonymous');
     end if;
 
-    select * into v_target_p from public.profiles where id = v_target;
+    -- Lock both rows, lower uuid first, so two claims cannot deadlock.
+    if v_target < p_anonymous_id then
+        select * into v_target_p from public.profiles where id = v_target for update;
+        select * into v_anon from public.profiles where id = p_anonymous_id for update;
+        if not found then
+            return jsonb_build_object('status', 'unknown_account');
+        end if;
+    else
+        select * into v_anon from public.profiles where id = p_anonymous_id for update;
+        if not found then
+            return jsonb_build_object('status', 'unknown_account');
+        end if;
+        select * into v_target_p from public.profiles where id = v_target for update;
+    end if;
 
-    if v_target_p.pro_source = 'none' and v_anon.pro_source <> 'none' then
+    v_proven := p_claim_token is not null and exists (
+        select 1 from public.anonymous_claim_tickets
+         where anon_id = p_anonymous_id
+           and token_hash = extensions.digest(p_claim_token, 'sha256')
+           and expires_at > now()
+    );
+
+    if v_proven and v_target_p.pro_source = 'none' and v_anon.pro_source <> 'none' then
         update public.profiles
            set pro_source     = v_anon.pro_source,
                pro_granted_at = v_anon.pro_granted_at,
@@ -410,7 +513,11 @@ begin
                attribution_source     = v_anon.attribution_source,
                attribution_set_at     = v_anon.attribution_set_at
          where id = v_target;
-        v_moved := v_moved || jsonb_build_object('campaign', true);
+        get diagnostics v_count = row_count;
+        v_campaign_copied := v_count > 0;
+        if v_campaign_copied then
+            v_moved := v_moved || jsonb_build_object('campaign', true);
+        end if;
     end if;
 
     -- Empty profile fields on the email account take the anonymous values.
@@ -451,10 +558,9 @@ begin
      where t.id = v_target
        and a.id = p_anonymous_id;
 
-    -- cohort_reporting is added by web PR 203, which is not applied.
-    -- show_in_activity may or may not be present. Neither is named in static
-    -- SQL, so this function still compiles and runs when a column is absent.
-    -- Null counts as opted in: coalesce(target, true) AND coalesce(anon, true).
+    -- cohort_reporting (web PR 203) and show_in_activity are on production.
+    -- They stay behind a column check so this function still runs if one is
+    -- absent. Null counts as opted in: coalesce(target, true) AND coalesce(anon, true).
     if exists (
         select 1 from information_schema.columns
          where table_schema = 'public'
@@ -565,6 +671,16 @@ begin
         v_moved := v_moved || jsonb_build_object('progress', true);
     end if;
 
+    -- Keys of the anonymous misses, taken before those rows change owner.
+    -- The collapse below only touches a diagnosis-day that came from this
+    -- anonymous account. Older duplicates that belong only to the email
+    -- account are left in place.
+    select coalesce(array_agg(distinct lower(btrim(item)) || '|' || (occurred_at::date)::text), '{}')
+      into v_anon_miss_keys
+      from public.missed_items
+     where user_id = p_anonymous_id
+       and btrim(coalesce(item, '')) <> '';
+
     -- Reviewed wins if either copy was reviewed, then reassign the rest.
     update public.missed_items t
        set reviewed = t.reviewed or a.reviewed
@@ -622,6 +738,7 @@ begin
           from public.missed_items
          where user_id = v_target
            and btrim(coalesce(item, '')) <> ''
+           and (lower(btrim(item)) || '|' || (occurred_at::date)::text) = any(v_anon_miss_keys)
     )
     delete from public.missed_items m
      using ranked r
@@ -704,10 +821,12 @@ begin
         v_moved := v_moved || jsonb_build_object('leaderboard', true);
     end if;
 
-    -- Paid-subscription mirror. pro_source was already carried; these columns
-    -- were not, so an App Store purchase on the anonymous id vanished on claim.
-    -- Keep the live side, preferring a non-expiring (lifetime) grant, then the
-    -- later expiry, then the later update. The anonymous row is cleared below.
+    -- Paid-subscription mirror. pro_source was already carried when the token
+    -- proved ownership; these columns were not, so an App Store purchase on
+    -- the anonymous id vanished on claim. Keep the live side, preferring a
+    -- non-expiring (lifetime) grant, then the later expiry, then the later
+    -- update. Without a matching ticket this block does not run.
+    if v_proven then
     v_anon_live := v_anon.subscription_status in ('active','trialing','grace_period','billing_issue')
         and (v_anon.subscription_expires_at is null or v_anon.subscription_expires_at > now());
     v_tgt_live := v_target_p.subscription_status in ('active','trialing','grace_period','billing_issue')
@@ -747,19 +866,45 @@ begin
          where id = v_target;
         v_moved := v_moved || jsonb_build_object('subscription', true);
     end if;
+    end if;
 
     -- A migration marker on the anonymous id must not count as the email
-    -- account being migrated. Leave the target's marker untouched. Clearing
-    -- the anonymous subscription mirror stops the abandoned id from also
-    -- looking paid after the columns have been copied.
-    update public.profiles
-       set pro_source = 'none',
-           attributed_campaign_id = null,
-           subscription_status = 'free',
-           subscription_will_renew = false
-     where id = p_anonymous_id;
+    -- account being migrated. Leave the target's marker untouched.
+    -- Pro and the subscription mirror are cleared only after a proven copy.
+    -- An unproven claim leaves them on the anonymous row. Campaign attribution
+    -- is cleared only when this call copied it, or when the token was proven
+    -- (the same clear the live function always did for the owner).
+    if v_proven then
+        update public.profiles
+           set pro_source = 'none',
+               attributed_campaign_id = null,
+               subscription_status = 'free',
+               subscription_will_renew = false
+         where id = p_anonymous_id;
+    elsif v_campaign_copied then
+        update public.profiles
+           set attributed_campaign_id = null
+         where id = p_anonymous_id;
+    end if;
 
     return jsonb_build_object('status', 'claimed', 'moved', v_moved);
+end;
+$$;
+
+revoke all on function public.claim_anonymous_account(uuid, text) from public, anon;
+grant execute on function public.claim_anonymous_account(uuid, text) to authenticated, service_role;
+
+-- Shipping 1.5 calls claim_anonymous_account with one argument. No default on
+-- the two-argument function, so that call resolves here and passes a null
+-- token: progress moves, the paid subscription does not.
+create or replace function public.claim_anonymous_account(p_anonymous_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    return public.claim_anonymous_account(p_anonymous_id, null);
 end;
 $$;
 
@@ -794,6 +939,12 @@ begin
     end if;
     if p_local_day is null then
         raise exception 'missing_day';
+    end if;
+    -- The phone's local today is at most one day off UTC. Anything further
+    -- away is rejected rather than granting or spending a freeze for it.
+    if p_local_day < (timezone('utc', now()))::date - 1
+       or p_local_day > (timezone('utc', now()))::date + 1 then
+        raise exception 'bad_day';
     end if;
 
     insert into public.player_progress (user_id)
@@ -900,6 +1051,7 @@ begin
            set migrated_v2_at = coalesce(migrated_v2_at, now())
          where id = v_user
          returning migrated_v2_at into v_marker;
+        perform set_config('rounds.migrated_v2_writer', '', true);
         v_ok := v_marker is not null;
     end if;
 
@@ -949,11 +1101,11 @@ begin
         raise exception 'team_account';
     end if;
 
-    -- These have no foreign key to auth.users, so the cascade would leave them
-    -- behind and a later constraint would not remove them. Each statement runs
-    -- only when the table and the column exist. feed_mentions stores the
-    -- person on mentioned_user_id (there is no user_id column).
-    -- player_announcement_events is created by web PR 200, which is not applied.
+    -- These have no foreign key to auth.users, so deleting the auth user
+    -- would leave them behind. Each statement runs only when the table and
+    -- the column exist. feed_mentions keeps the row and clears
+    -- mentioned_user_id, which is nullable. player_announcement_events is
+    -- on production (web PR 200); the check stays so a missing table is skipped.
     if to_regclass('public.feed_reactions') is not null
        and exists (
            select 1 from information_schema.columns
@@ -970,18 +1122,12 @@ begin
         execute 'delete from public.feed_reads where user_id = $1' using uid;
     end if;
 
-    if to_regclass('public.feed_mentions') is not null then
-        if exists (
-            select 1 from information_schema.columns
-             where table_schema = 'public' and table_name = 'feed_mentions' and column_name = 'user_id'
-        ) then
-            execute 'delete from public.feed_mentions where user_id = $1' using uid;
-        elsif exists (
-            select 1 from information_schema.columns
-             where table_schema = 'public' and table_name = 'feed_mentions' and column_name = 'mentioned_user_id'
-        ) then
-            execute 'delete from public.feed_mentions where mentioned_user_id = $1' using uid;
-        end if;
+    if to_regclass('public.feed_mentions') is not null
+       and exists (
+           select 1 from information_schema.columns
+            where table_schema = 'public' and table_name = 'feed_mentions' and column_name = 'mentioned_user_id'
+       ) then
+        execute 'update public.feed_mentions set mentioned_user_id = null where mentioned_user_id = $1' using uid;
     end if;
 
     if to_regclass('public.player_announcement_events') is not null
@@ -1005,41 +1151,61 @@ grant execute on function public.delete_own_account() to authenticated, service_
 -- =========================================================================
 -- Rollback (do not run as part of applying this file)
 --
--- The new objects are profiles.migrated_v2_at, the three streak-freeze
--- columns on player_progress, sync_streak_freeze, confirm_migration_v2,
--- and delete_own_account. sync_progress, claim_anonymous_account, and
--- protect_profiles_privileged_columns() replace functions that already
--- exist. No RLS policy was created or replaced. "update own profile" stays.
+-- Nothing in this file drops a column, table, or policy. "update own
+-- profile" stays. anonymous_claim_tickets has row level security and no
+-- policies. Run the steps below by hand, in this order, only to take the
+-- file back after it has been applied.
 --
--- Order matters for the marker. The trigger function above assigns
--- new.migrated_v2_at. Dropping the column while that assignment is still
--- in the function makes every profile insert and update fail.
+-- 1. Trigger, then the marker column. protect_profiles_privileged_columns()
+--    assigns new.migrated_v2_at. Dropping the column first makes every
+--    profile insert and update fail.
+--      a. Replace the function with the body recorded in roundsapp-landing
+--         supabase/migrations/20261008211720_profiles_lockdown_privileged_columns.sql.
+--         That body does not mention migrated_v2_at. Leave the trigger
+--         trg_protect_profiles_privileged in place. Do not re-run that
+--         file's REVOKE. Live column UPDATE grants for authenticated are
+--         first_name, school_year, exam_date, target_score,
+--         show_in_activity, and nudges. school is not among them.
+--      b. Then, only if nothing in production reads the marker:
+--           alter table public.profiles drop column if exists migrated_v2_at;
+--         Shipping 1.5 and the web do not read it.
+--      c. To set or clear one row without dropping the column, as
+--         service_role, or as postgres in the same transaction:
+--           select set_config('rounds.migrated_v2_writer', 'confirm_migration_v2', true);
+--           update public.profiles set migrated_v2_at = null where id = '...';
+--           select set_config('rounds.migrated_v2_writer', '', true);
+--         supabase_admin cannot write the marker. postgres cannot either
+--         unless that setting is confirm_migration_v2 during the update.
 --
--- 1. Put protect_profiles_privileged_columns() back to the body recorded in
---    roundsapp-landing
---    supabase/migrations/20261008211720_profiles_lockdown_privileged_columns.sql.
---    That body does not mention migrated_v2_at. Leave the trigger
---    trg_protect_profiles_privileged in place; the web app relies on it
---    for pro_source, role, the subscription mirror, and attribution.
---    Do not re-run that file's REVOKE. The column grants added later
---    (first_name, school, school_year, exam_date, target_score, school,
---    show_in_activity, nudges) have to stay.
--- 2. Only after step 1, and only if nothing in production reads the marker:
---      alter table public.profiles drop column if exists migrated_v2_at;
---    Shipping 1.5 and the web do not read it. A build that already called
---    confirm_migration_v2 will simply confirm again after the column returns.
--- 3. To clear or set one account's marker without dropping the column, call
---    as service_role, or in the same transaction as the writer:
---      select set_config('rounds.migrated_v2_writer', 'confirm_migration_v2', true);
---    postgres and supabase_admin cannot change migrated_v2_at on their own.
---    They can still change the other privileged columns, as they can today.
+-- 2. Both claim functions. Drop the two-argument one first so the name is
+--    not overloaded, then put the one-argument function back to the live
+--    body in supabase/schema_claim_full_data.sql. Do not apply
+--    schema_sync.sql: that body does not move case history, misses,
+--    differentials, achievements, or the leaderboard row.
+--      drop function if exists public.claim_anonymous_account(uuid, text);
+--      -- then re-apply only the function in schema_claim_full_data.sql,
+--      -- which is claim_anonymous_account(uuid)
 --
--- The streak-freeze columns and the three new functions can be dropped
--- after the app that calls them is gone. Do not drop them while 1.5 or this
--- build is still calling sync_streak_freeze, confirm_migration_v2, or
--- delete_own_account. Restoring sync_progress and claim_anonymous_account
--- means re-applying the live claim body (schema_claim_full_data.sql) only
--- if this file's replacement is being taken back; do not apply schema_sync.sql,
--- which does not move case history, misses, differentials, achievements,
--- or the leaderboard row.
+-- 3. The ticket. Drop the function before the table.
+--      drop function if exists public.begin_anonymous_claim();
+--      drop table if exists public.anonymous_claim_tickets;
+--    There is no policy to drop. The table's ON DELETE CASCADE follows
+--    auth.users, so dropping the table does not delete users.
+--
+-- 4. Functions this file created, after the app that calls them is gone.
+--    Dropping them while 1.5 or this build still calls them breaks those
+--    clients. Drop the functions before the columns they read.
+--      drop function if exists public.sync_streak_freeze(date, boolean, boolean);
+--      drop function if exists public.confirm_migration_v2(integer, integer, integer, boolean);
+--      drop function if exists public.delete_own_account();
+--      alter table public.player_progress drop constraint if exists player_progress_freezes_nonnegative;
+--      alter table public.player_progress drop column if exists streak_freeze_used_on;
+--      alter table public.player_progress drop column if exists last_streak_freeze_reset;
+--      alter table public.player_progress drop column if exists streak_freezes_available;
+--
+-- 5. sync_progress. This file replaces the body and keeps the argument list.
+--    Production's current body is whatever is live before this file runs.
+--    Restore that body from a dump taken before the apply. Do not restore
+--    it by re-applying schema_sync.sql, because that file also replaces
+--    claim_anonymous_account with the short version.
 -- =========================================================================

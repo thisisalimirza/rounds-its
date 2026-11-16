@@ -198,6 +198,29 @@ struct SyncAndGateTests {
         #expect(WeakSpotRule.detail(won: true, hintsUsed: 1, guesses: 3) == "")
     }
 
+    @Test func aClaimTicketIsSentOnlyWhenTheAnonymousSessionReturnedOne() {
+        let id = UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE")!
+        let proven = AnonymousClaimRequest(anonymousID: id, token: "abc123")
+        #expect(!proven.ticketFailed)
+        #expect(proven.token == "abc123")
+        #expect(proven.rpcParameters["p_anonymous_id"] == id.uuidString)
+        #expect(proven.rpcParameters["p_claim_token"] == "abc123")
+        #expect(proven.rpcParameters.count == 2)
+
+        // Ticket RPC failed, or was never attempted. The claim still has an
+        // anonymous id and no token, which is the one-argument server call:
+        // progress moves, the paid subscription does not.
+        let failed = AnonymousClaimRequest(anonymousID: id, token: nil)
+        #expect(failed.ticketFailed)
+        #expect(failed.token == nil)
+        #expect(failed.rpcParameters["p_claim_token"] == nil)
+        #expect(failed.rpcParameters == ["p_anonymous_id": id.uuidString])
+
+        let blank = AnonymousClaimRequest(anonymousID: id, token: "   ")
+        #expect(blank.ticketFailed)
+        #expect(blank.rpcParameters.count == 1)
+    }
+
     @Test func browsePlaysAreBrowseAndUnknownNonDailyIsBrowse() {
         #expect(PlayOrigin.missSourceRaw(stored: "browse", wasDailyCase: false) == "browseCase")
         #expect(PlayOrigin.missSourceRaw(stored: "daily", wasDailyCase: true) == "dailyCase")

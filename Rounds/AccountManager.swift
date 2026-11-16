@@ -26,6 +26,46 @@ enum AccountDeletionError: LocalizedError {
     }
 }
 
+/// Arguments for `claim_anonymous_account`. The token lives only in this value.
+/// Callers keep it in a local variable and do not write it to disk.
+struct AnonymousClaimRequest: Equatable, Sendable {
+    var anonymousID: UUID
+    /// Set only when `begin_anonymous_claim` returned a token.
+    var token: String?
+    /// True when the ticket call failed or returned nothing. The claim still
+    /// runs, and `rpcParameters` omits `p_claim_token`, so the server moves
+    /// progress and leaves the paid subscription for RevenueCat restore.
+    var ticketFailed: Bool
+
+    init(anonymousID: UUID, token: String?) {
+        self.anonymousID = anonymousID
+        let trimmed = token?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty {
+            self.token = nil
+            self.ticketFailed = true
+        } else {
+            self.token = trimmed
+            self.ticketFailed = false
+        }
+    }
+
+    var rpcParameters: [String: String] {
+        var params = ["p_anonymous_id": anonymousID.uuidString]
+        if let token {
+            params["p_claim_token"] = token
+        }
+        return params
+    }
+}
+
+enum AnonymousClaimTicketError: LocalizedError {
+    case emptyToken
+
+    var errorDescription: String? {
+        "begin_anonymous_claim returned an empty token"
+    }
+}
+
 @MainActor
 @Observable
 final class AccountManager {
@@ -544,10 +584,13 @@ final class AccountManager {
     ///     replaces the session and we would otherwise lose the reference;
     ///  2. push local progress up under the anonymous id, so nothing played
     ///     before signing in is stranded;
-    ///  3. verify, which signs us in as the email's account (created if new);
-    ///  4. claim the anonymous account server-side, merging progress, any
-    ///     redeemed Pro, and campaign attribution;
-    ///  5. re-point RevenueCat at the new id so entitlements follow.
+    ///  3. while still that anonymous session, ask for a claim ticket and
+    ///     keep the token in memory only;
+    ///  4. verify, which signs us in as the email's account (created if new);
+    ///  5. claim the anonymous account. With the token, Pro and the
+    ///     subscription mirror move. Without it, progress still moves and
+    ///     RevenueCat restore is what brings Pro across;
+    ///  6. re-point RevenueCat at the new id so entitlements follow.
     func verifyEmailCode(_ email: String, code: String) async -> LinkOutcome {
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedCode = code.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -564,6 +607,33 @@ final class AccountManager {
         // sealed — a later push would write to the new id, leaving the
         // anonymous rows behind for good.
         await ProgressSyncManager.shared.pushIfPossible(force: true)
+
+        // Proof this device held the anonymous session. The token is a local
+        // variable: it is not written to disk, UserDefaults, or the keychain.
+        // If the ticket call fails, sign-in continues and the claim below
+        // moves progress only.
+        var claimRequest: AnonymousClaimRequest?
+        if let anonymousID, supabase.auth.currentSession?.user.isAnonymous == true {
+            do {
+                let token: String = try await supabase
+                    .rpc("begin_anonymous_claim", params: [String: String]())
+                    .execute()
+                    .value
+                let request = AnonymousClaimRequest(anonymousID: anonymousID, token: token)
+                claimRequest = request
+                if request.ticketFailed {
+                    print("⚠️ begin_anonymous_claim returned an empty token")
+                    AnalyticsManager.shared.trackSyncFailure(
+                        stage: "claim_ticket",
+                        error: AnonymousClaimTicketError.emptyToken
+                    )
+                }
+            } catch {
+                claimRequest = AnonymousClaimRequest(anonymousID: anonymousID, token: nil)
+                print("⚠️ begin_anonymous_claim failed: \(error.localizedDescription)")
+                AnalyticsManager.shared.trackSyncFailure(stage: "claim_ticket", error: error)
+            }
+        }
 
         do {
             // The code must be verified under the same type GoTrue stored it
@@ -612,13 +682,14 @@ final class AccountManager {
         var mergedIntoExisting = false
         var claimFailed = false
 
-        // Step 4: only meaningful when the account we landed on differs from
+        // Step 5: only meaningful when the account we landed on differs from
         // the anonymous one. If Supabase converted the same user, there's
         // nothing to claim.
         if let anonymousID, anonymousID != user.id {
+            let request = claimRequest ?? AnonymousClaimRequest(anonymousID: anonymousID, token: nil)
             do {
                 let result: ClaimResult = try await supabase
-                    .rpc("claim_anonymous_account", params: ["p_anonymous_id": anonymousID.uuidString])
+                    .rpc("claim_anonymous_account", params: request.rpcParameters)
                     .execute()
                     .value
                 mergedIntoExisting = result.status == "claimed"
