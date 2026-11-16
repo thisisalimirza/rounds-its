@@ -140,9 +140,10 @@ final class MissedItem {
 enum MistakeLog {
     /// Record a single miss. Safe to call from any view that has a ModelContext.
     ///
-    /// One row per diagnosis (case-insensitive) per local calendar day. A row
-    /// that is already there is left alone: reviewed stays reviewed, and detail
-    /// is not rewritten.
+    /// One row per diagnosis, compared as lower(trim(item)), per local calendar
+    /// day. A row that is already there is left alone: reviewed stays reviewed,
+    /// and detail is not rewritten. Case plays store dailyCase, randomCase, or
+    /// browseCase, and the caller passes detail (`needed_help` or empty).
     @discardableResult
     static func record(
         _ context: ModelContext,
@@ -159,7 +160,8 @@ enum MistakeLog {
         let calendar = Calendar.current
         let existing = (try? context.fetch(FetchDescriptor<MissedItem>())) ?? []
         if existing.contains(where: {
-            $0.item.lowercased() == needle && calendar.isDate($0.timestamp, inSameDayAs: date)
+            $0.item.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == needle
+                && calendar.isDate($0.timestamp, inSameDayAs: date)
         }) {
             return false
         }

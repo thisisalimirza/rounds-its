@@ -21,6 +21,17 @@
 -- and missed_items rows are not updated to retag browse plays or to add a
 -- play_mode column.
 --
+-- record_case_play is owned by the web app and is already live (PR 202).
+-- This file does not create or replace it, and it does not add an overload.
+-- faculty_assignments (web PR 203) is not applied and is not touched.
+--
+-- Objects that are not on production yet are referenced only after a check,
+-- via EXECUTE, so this file applies and runs today:
+--   * profiles.cohort_reporting (web PR 203) and profiles.show_in_activity
+--   * player_announcement_events (web PR 200)
+--   * feed_reactions, feed_reads, feed_mentions (no foreign keys)
+-- Web PR 200 (app_config, announcements, changelog public read) is not applied.
+--
 -- Functions created or replaced (conflict-check these names):
 --   REPLACE public.sync_progress(integer, integer, integer, integer, integer,
 --           integer[], text[], date, text, timestamptz)
@@ -235,8 +246,7 @@ begin
     end if;
 
     -- Empty profile fields on the email account take the anonymous values.
-    -- A field the email account already filled stays. cohort_reporting and
-    -- show_in_activity are the AND of both rows.
+    -- A field the email account already filled stays.
     update public.profiles t
        set first_name = case
                when t.first_name is not null and btrim(t.first_name) <> '' then t.first_name
@@ -268,12 +278,46 @@ begin
                when t.target_score is not null then t.target_score
                when a.target_score between 1 and 300 then a.target_score
                else t.target_score
-           end,
-           cohort_reporting = t.cohort_reporting and a.cohort_reporting,
-           show_in_activity = t.show_in_activity and a.show_in_activity
+           end
       from public.profiles a
      where t.id = v_target
        and a.id = p_anonymous_id;
+
+    -- cohort_reporting is added by web PR 203, which is not applied.
+    -- show_in_activity may or may not be present. Neither is named in static
+    -- SQL, so this function still compiles and runs when a column is absent.
+    -- Null counts as opted in: coalesce(target, true) AND coalesce(anon, true).
+    if exists (
+        select 1 from information_schema.columns
+         where table_schema = 'public'
+           and table_name = 'profiles'
+           and column_name = 'cohort_reporting'
+    ) then
+        execute $claim_cohort$
+            update public.profiles t
+               set cohort_reporting = coalesce(t.cohort_reporting, true)
+                                   and coalesce(a.cohort_reporting, true)
+              from public.profiles a
+             where t.id = $1
+               and a.id = $2
+        $claim_cohort$ using v_target, p_anonymous_id;
+    end if;
+
+    if exists (
+        select 1 from information_schema.columns
+         where table_schema = 'public'
+           and table_name = 'profiles'
+           and column_name = 'show_in_activity'
+    ) then
+        execute $claim_activity$
+            update public.profiles t
+               set show_in_activity = coalesce(t.show_in_activity, true)
+                                   and coalesce(a.show_in_activity, true)
+              from public.profiles a
+             where t.id = $1
+               and a.id = $2
+        $claim_activity$ using v_target, p_anonymous_id;
+    end if;
 
     -- play_events.user_id references auth.users ON DELETE CASCADE. Move the
     -- rows while the anonymous user still exists.
@@ -396,6 +440,25 @@ begin
            select 1 from public.missed_items t
             where t.user_id = v_target and t.id = h.id
        );
+
+    -- One row per diagnosis per database date of occurred_at, matching the
+    -- day comparison in the live record_case_play. The reviewed copy is kept
+    -- (true sorts first). Other copies are deleted. reviewed is never set
+    -- back to false, and detail and source on the kept row are not rewritten.
+    with ranked as (
+        select id,
+               row_number() over (
+                   partition by lower(btrim(item)), occurred_at::date
+                   order by reviewed desc, occurred_at, id
+               ) as rn
+          from public.missed_items
+         where user_id = v_target
+           and btrim(coalesce(item, '')) <> ''
+    )
+    delete from public.missed_items m
+     using ranked r
+     where m.id = r.id
+       and r.rn > 1;
 
     update public.ddx_sessions h
        set user_id = v_target
@@ -707,6 +770,51 @@ begin
            and status <> 'suspended'
     ) then
         raise exception 'team_account';
+    end if;
+
+    -- These have no foreign key to auth.users, so the cascade would leave them
+    -- behind and a later constraint would not remove them. Each statement runs
+    -- only when the table and the column exist. feed_mentions stores the
+    -- person on mentioned_user_id (there is no user_id column).
+    -- player_announcement_events is created by web PR 200, which is not applied.
+    if to_regclass('public.feed_reactions') is not null
+       and exists (
+           select 1 from information_schema.columns
+            where table_schema = 'public' and table_name = 'feed_reactions' and column_name = 'user_id'
+       ) then
+        execute 'delete from public.feed_reactions where user_id = $1' using uid;
+    end if;
+
+    if to_regclass('public.feed_reads') is not null
+       and exists (
+           select 1 from information_schema.columns
+            where table_schema = 'public' and table_name = 'feed_reads' and column_name = 'user_id'
+       ) then
+        execute 'delete from public.feed_reads where user_id = $1' using uid;
+    end if;
+
+    if to_regclass('public.feed_mentions') is not null then
+        if exists (
+            select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'feed_mentions' and column_name = 'user_id'
+        ) then
+            execute 'delete from public.feed_mentions where user_id = $1' using uid;
+        elsif exists (
+            select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'feed_mentions' and column_name = 'mentioned_user_id'
+        ) then
+            execute 'delete from public.feed_mentions where mentioned_user_id = $1' using uid;
+        end if;
+    end if;
+
+    if to_regclass('public.player_announcement_events') is not null
+       and exists (
+           select 1 from information_schema.columns
+            where table_schema = 'public'
+              and table_name = 'player_announcement_events'
+              and column_name = 'user_id'
+       ) then
+        execute 'delete from public.player_announcement_events where user_id = $1' using uid;
     end if;
 
     update public.profiles set referred_by = null where referred_by = uid;
