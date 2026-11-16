@@ -146,8 +146,8 @@ struct SyncAndGateTests {
     }
 
     @Test func grandfatheredGateWaitsForAConfirmedOnlineBackup() {
-        #expect(gate(cohort: .grandfathered, cases: 40, confirmed: false) == .none)
-        #expect(gate(cohort: .grandfathered, cases: 40, online: false) == .none)
+        #expect(gate(confirmed: false, cohort: .grandfathered, cases: 40) == .none)
+        #expect(gate(online: false, cohort: .grandfathered, cases: 40) == .none)
         #expect(gate(cohort: .grandfathered, cases: 40, playing: true) == .none)
         #expect(gate(cohort: .grandfathered, cases: 40) == .grandfathered)
     }
@@ -160,10 +160,10 @@ struct SyncAndGateTests {
         #expect(gate(cases: 2) == .nudge)
         #expect(gate(cases: 2, nudged: true) == .none)
         #expect(gate(cases: 3) == .trialLimit)
-        #expect(gate(cases: 3, online: false) == .none)
+        #expect(gate(online: false, cases: 3) == .none)
         #expect(gate(cases: 3, playing: true) == .none)
-        #expect(gate(cases: 3, session: false) == .none)
-        #expect(gate(cases: 3, anonymous: false) == .none)
+        #expect(gate(session: false, cases: 3) == .none)
+        #expect(gate(anonymous: false, cases: 3) == .none)
         #expect(gate(cases: 3, enabled: false) == .none)
     }
 
