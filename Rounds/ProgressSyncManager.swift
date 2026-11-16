@@ -394,6 +394,8 @@ final class ProgressSyncManager {
         let missing = rows.filter { known[$0.id.lowercased()] == nil }
         let newlyReviewed = rows.filter { row in
             row.reviewed && known[row.id.lowercased()] == false
+        }.map {
+            MissedItemReviewedUpdate(id: $0.id, user_id: $0.user_id, reviewed: true)
         }
 
         for chunk in stride(from: 0, to: missing.count, by: Self.uploadChunkSize) {
@@ -1007,5 +1009,12 @@ struct RemoteProgress: Decodable {
 
 nonisolated struct MissedReviewRow: Decodable, Sendable {
     let id: String
+    let reviewed: Bool
+}
+
+/// Marks a miss reviewed without rewriting detail, source, or the item.
+nonisolated struct MissedItemReviewedUpdate: Encodable, Sendable {
+    let id: String
+    let user_id: String
     let reviewed: Bool
 }

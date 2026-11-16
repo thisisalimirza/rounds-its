@@ -255,14 +255,15 @@ struct RoundsApp: App {
     /// Backfills `MissedItem` records from `CaseHistoryEntry` rows that predate
     /// the universal miss log, or that arrived via CloudKit after an earlier
     /// backfill found nothing. Includes losses and wins that needed help
-    /// (`WeakSpotRule`). Deduped by diagnosis + day, so a row already logged
-    /// is left alone — this does not retag existing items or server rows.
+    /// (`WeakSpotRule`). One row per diagnosis per local day. A row that is
+    /// already there is left alone: reviewed stays reviewed and detail is not
+    /// rewritten. This does not retag existing items or server rows.
     ///
     /// Only marks backfill complete (`v3`) after seeing non-empty history. An
     /// empty history can mean CloudKit hasn't delivered yet, so the flag stays
     /// unset and a later launch, or the CloudKit backfill watch, tries again.
-    /// History written before browse tagging has an empty `playSource` and
-    /// stays on the old daily/random split.
+    /// History with an empty `playSource` that was not a daily case is logged
+    /// as browse. An explicit random source stays random.
     ///
     /// - Parameter force: When `true`, skips the "already done" flag check.
     ///   Used by the CloudKit backfill watch to catch history that arrives
@@ -278,31 +279,30 @@ struct RoundsApp: App {
             return
         }
 
-        let existing = (try? context.fetch(FetchDescriptor<MissedItem>())) ?? []
-        func dayKey(_ item: String, _ date: Date) -> String {
-            "\(item.lowercased())|\(Int(Calendar.current.startOfDay(for: date).timeIntervalSince1970))"
-        }
-        var seen = Set(existing.map { dayKey($0.item, $0.timestamp) })
-
         var inserted = 0
-        for entry in history where WeakSpotRule.shouldLog(
-            won: entry.wasCorrect,
-            hintsUsed: entry.hintsUsed,
-            guesses: entry.guessCount
-        ) {
+        for entry in history {
             let diagnosis = entry.diagnosis.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !diagnosis.isEmpty else { continue }
-            let k = dayKey(diagnosis, entry.playedAt)
-            if seen.contains(k) { continue }
-            seen.insert(k)
+            guard WeakSpotRule.shouldLog(
+                diagnosis: diagnosis,
+                won: entry.wasCorrect,
+                hintsUsed: entry.hintsUsed,
+                guesses: entry.guessCount
+            ) else { continue }
             let raw = PlayOrigin.missSourceRaw(stored: entry.playSource, wasDailyCase: entry.wasDailyCase)
             guard let source = MissSource(rawValue: raw) else { continue }
-            let mi = MissedItem(source: source,
-                                topic: entry.category.isEmpty ? "General" : entry.category,
-                                item: diagnosis)
-            mi.timestamp = entry.playedAt
-            context.insert(mi)
-            inserted += 1
+            let wrote = MistakeLog.record(
+                context,
+                source: source,
+                topic: entry.category,
+                item: diagnosis,
+                detail: WeakSpotRule.detail(
+                    won: entry.wasCorrect,
+                    hintsUsed: entry.hintsUsed,
+                    guesses: entry.guessCount
+                ),
+                at: entry.playedAt
+            )
+            if wrote { inserted += 1 }
         }
 
         if inserted > 0 {

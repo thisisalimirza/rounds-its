@@ -1076,6 +1076,7 @@ struct GameView: View {
         // Weak Spots: a loss, or a win that needed help. Same rule as the
         // history backfill (WeakSpotRule).
         if WeakSpotRule.shouldLog(
+            diagnosis: currentCase.diagnosis,
             won: won,
             hintsUsed: actualHintsUsed,
             guesses: gameSession.guesses.count
@@ -1083,7 +1084,12 @@ struct GameView: View {
             MistakeLog.record(modelContext,
                               source: source,
                               topic: currentCase.category,
-                              item: currentCase.diagnosis)
+                              item: currentCase.diagnosis,
+                              detail: WeakSpotRule.detail(
+                                won: won,
+                                hintsUsed: actualHintsUsed,
+                                guesses: gameSession.guesses.count
+                              ))
         }
 
         try? modelContext.save()

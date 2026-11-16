@@ -146,6 +146,8 @@ struct AccountView: View {
         do {
             try await account.deleteAccount()
             dismiss()
+        } catch let error as AccountDeletionError {
+            deleteError = error.localizedDescription
         } catch {
             deleteError = "We couldn't delete the account. Your cases are still on this phone. Try again when you're online."
         }

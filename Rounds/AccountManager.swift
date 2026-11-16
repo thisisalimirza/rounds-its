@@ -18,6 +18,14 @@ import RevenueCat
 import AuthenticationServices
 import CryptoKit
 
+enum AccountDeletionError: LocalizedError {
+    case teamAccount
+
+    var errorDescription: String? {
+        "Contact support to delete a team account."
+    }
+}
+
 @MainActor
 @Observable
 final class AccountManager {
@@ -697,10 +705,18 @@ struct StreakFreezeServerState: Decodable, Sendable {
     ///
     /// RevenueCat is logged out only for an email account. An anonymous
     /// customer is the receipt's current owner; logging it out would orphan
-    /// the purchase.
+    /// the purchase. A team or staff account is refused by the server
+    /// (`team_account`) and is not signed out.
     func deleteAccount() async throws {
         let wasAnonymous = isAnonymousAccount
-        try await supabase.rpc("delete_own_account").execute()
+        do {
+            try await supabase.rpc("delete_own_account").execute()
+        } catch {
+            if Self.mentionsTeamAccount(error) {
+                throw AccountDeletionError.teamAccount
+            }
+            throw error
+        }
         if !wasAnonymous {
             _ = try? await Purchases.shared.logOut()
         }
@@ -710,6 +726,17 @@ struct StreakFreezeServerState: Decodable, Sendable {
         accountEmail = nil
         isReady = false
         await bootstrap()
+    }
+
+    private static func mentionsTeamAccount(_ error: Error) -> Bool {
+        var texts = [String(describing: error), error.localizedDescription]
+        if let pg = error as? PostgrestError {
+            texts.append(pg.message)
+            if let detail = pg.detail { texts.append(detail) }
+            if let hint = pg.hint { texts.append(hint) }
+            if let code = pg.code { texts.append(code) }
+        }
+        return texts.contains { $0.localizedCaseInsensitiveContains("team_account") }
     }
 
     /// Uploads a progress snapshot. The server merges rather than overwrites,

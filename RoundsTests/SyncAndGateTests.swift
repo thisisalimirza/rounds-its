@@ -178,23 +178,33 @@ struct SyncAndGateTests {
     }
 
     @Test func aCleanWinIsNotAWeakSpot() {
-        #expect(!WeakSpotRule.shouldLog(won: true, hintsUsed: 1, guesses: 1))
-        #expect(!WeakSpotRule.neededHelp(hintsUsed: 1, guesses: 1))
+        #expect(!WeakSpotRule.shouldLog(diagnosis: "MI", won: true, hintsUsed: 1, guesses: 1))
+        #expect(!WeakSpotRule.shouldLog(diagnosis: "MI", won: true, hintsUsed: 1, guesses: 3))
+        #expect(!WeakSpotRule.neededHelp(hintsUsed: 1, guesses: 3))
+        #expect(!WeakSpotRule.shouldLog(diagnosis: "  ", won: false, hintsUsed: 5, guesses: 5))
     }
 
-    @Test func aWinNeedsHelpAfterAnExtraHintOrASecondGuess() {
-        #expect(WeakSpotRule.extraHints == 1)
-        #expect(WeakSpotRule.guesses == 2)
-        #expect(WeakSpotRule.shouldLog(won: true, hintsUsed: 2, guesses: 1))
-        #expect(WeakSpotRule.shouldLog(won: true, hintsUsed: 1, guesses: 2))
-        #expect(WeakSpotRule.shouldLog(won: false, hintsUsed: 1, guesses: 1))
+    @Test func aWinNeedsHelpWhenAClueOrAFourthGuessWasUsed() {
+        #expect(WeakSpotRule.hintsUsed == 2)
+        #expect(WeakSpotRule.manyClues == 4)
+        #expect(WeakSpotRule.guesses == 4)
+        #expect(WeakSpotRule.allClues == 5)
+        #expect(WeakSpotRule.shouldLog(diagnosis: "MI", won: true, hintsUsed: 2, guesses: 1))
+        #expect(WeakSpotRule.shouldLog(diagnosis: "MI", won: true, hintsUsed: 1, guesses: 4))
+        #expect(WeakSpotRule.shouldLog(diagnosis: "MI", won: true, hintsUsed: 5, guesses: 1))
+        #expect(WeakSpotRule.shouldLog(diagnosis: "MI", won: false, hintsUsed: 1, guesses: 1))
+        #expect(WeakSpotRule.detail(won: true, hintsUsed: 2, guesses: 1) == "needed_help")
+        #expect(WeakSpotRule.detail(won: false, hintsUsed: 5, guesses: 5) == "")
+        #expect(WeakSpotRule.detail(won: true, hintsUsed: 1, guesses: 3) == "")
     }
 
-    @Test func browsePlaysAreBrowseAndOldHistoryStaysRandom() {
+    @Test func browsePlaysAreBrowseAndUnknownNonDailyIsBrowse() {
         #expect(PlayOrigin.missSourceRaw(stored: "browse", wasDailyCase: false) == "browseCase")
         #expect(PlayOrigin.missSourceRaw(stored: "daily", wasDailyCase: true) == "dailyCase")
         #expect(PlayOrigin.missSourceRaw(stored: "random", wasDailyCase: false) == "randomCase")
-        #expect(PlayOrigin.missSourceRaw(stored: "", wasDailyCase: false) == "randomCase")
+        #expect(PlayOrigin.missSourceRaw(stored: "randomCase", wasDailyCase: false) == "randomCase")
+        #expect(PlayOrigin.missSourceRaw(stored: "", wasDailyCase: false) == "browseCase")
+        #expect(PlayOrigin.missSourceRaw(stored: "archive", wasDailyCase: false) == "browseCase")
         #expect(PlayOrigin.missSourceRaw(stored: "", wasDailyCase: true) == "dailyCase")
     }
 }

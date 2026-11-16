@@ -15,8 +15,11 @@
 -- play_events is intentionally not created or altered, and no policy on it is
 -- replaced. The web migration (roundsapp-landing#164) owns the table. iOS only
 -- inserts rows (PlayTelemetry). A duplicate primary key (23505) counts as
--- delivered. Existing case_history and missed_items rows are not updated to
--- retag browse plays or to add a play_mode column.
+-- delivered. claim_anonymous_account reassigns play_events.user_id from the
+-- anonymous id to the email account before either auth user can be deleted
+-- (the column references auth.users ON DELETE CASCADE). Existing case_history
+-- and missed_items rows are not updated to retag browse plays or to add a
+-- play_mode column.
 --
 -- Functions created or replaced (conflict-check these names):
 --   REPLACE public.sync_progress(integer, integer, integer, integer, integer,
@@ -229,6 +232,57 @@ begin
                attribution_set_at     = v_anon.attribution_set_at
          where id = v_target;
         v_moved := v_moved || jsonb_build_object('campaign', true);
+    end if;
+
+    -- Empty profile fields on the email account take the anonymous values.
+    -- A field the email account already filled stays. cohort_reporting and
+    -- show_in_activity are the AND of both rows.
+    update public.profiles t
+       set first_name = case
+               when t.first_name is not null and btrim(t.first_name) <> '' then t.first_name
+               when a.first_name is not null and char_length(btrim(a.first_name)) between 1 and 40
+                   then btrim(a.first_name)
+               else t.first_name
+           end,
+           school = case
+               when t.school is not null and btrim(t.school) <> '' then t.school
+               when a.school is not null and char_length(btrim(a.school)) between 1 and 120
+                   then btrim(a.school)
+               else t.school
+           end,
+           school_id = case
+               when t.school_id is null or btrim(t.school_id) = '' then nullif(btrim(a.school_id), '')
+               else t.school_id
+           end,
+           school_source = case
+               when t.school_source is null or btrim(t.school_source) = '' then nullif(btrim(a.school_source), '')
+               else t.school_source
+           end,
+           school_year = case
+               when t.school_year is not null and btrim(t.school_year) <> '' then t.school_year
+               when a.school_year in ('MS1', 'MS2', 'MS3', 'MS4', 'Resident', 'Other') then a.school_year
+               else t.school_year
+           end,
+           exam_date = coalesce(t.exam_date, a.exam_date),
+           target_score = case
+               when t.target_score is not null then t.target_score
+               when a.target_score between 1 and 300 then a.target_score
+               else t.target_score
+           end,
+           cohort_reporting = t.cohort_reporting and a.cohort_reporting,
+           show_in_activity = t.show_in_activity and a.show_in_activity
+      from public.profiles a
+     where t.id = v_target
+       and a.id = p_anonymous_id;
+
+    -- play_events.user_id references auth.users ON DELETE CASCADE. Move the
+    -- rows while the anonymous user still exists.
+    update public.play_events
+       set user_id = v_target
+     where user_id = p_anonymous_id;
+    get diagnostics v_count = row_count;
+    if v_count > 0 then
+        v_moved := v_moved || jsonb_build_object('play_events', v_count);
     end if;
 
     -- Progress. Later last_played_date owns current_streak. last_daily_case_played
@@ -484,6 +538,9 @@ grant execute on function public.claim_anonymous_account(uuid) to authenticated,
 -- =========================================================================
 -- One weekly freeze, one spend per local day. The client may call this as
 -- often as it likes; a second spend on the same day is a no-op.
+-- p_is_pro stays in the signature so shipping 1.5 clients can still call this.
+-- The grant and the spend use public.profile_has_pro(auth.uid()), which is
+-- already on production. The argument is not trusted.
 -- =========================================================================
 create or replace function public.sync_streak_freeze(
     p_local_day date,
@@ -499,6 +556,7 @@ declare
     v_user uuid := auth.uid();
     v_row  public.player_progress%rowtype;
     v_spent boolean := false;
+    v_is_pro boolean := false;
 begin
     if v_user is null then
         raise exception 'not_authenticated';
@@ -516,7 +574,9 @@ begin
      where user_id = v_user
        for update;
 
-    if coalesce(p_is_pro, false) then
+    v_is_pro := public.profile_has_pro(v_user);
+
+    if v_is_pro then
         if v_row.last_streak_freeze_reset is null
            or (p_local_day - v_row.last_streak_freeze_reset) >= 7 then
             v_row.streak_freezes_available := 1;
@@ -526,7 +586,7 @@ begin
     end if;
 
     if coalesce(p_spend, false)
-       and coalesce(p_is_pro, false)
+       and v_is_pro
        and v_row.streak_freezes_available > 0
        and (v_row.streak_freeze_used_on is null or v_row.streak_freeze_used_on < p_local_day) then
         v_row.streak_freezes_available := v_row.streak_freezes_available - 1;
@@ -634,6 +694,19 @@ declare
 begin
     if uid is null then
         raise exception 'not_authenticated';
+    end if;
+
+    -- Staff and live team memberships are not self-serve deletes.
+    if exists (
+        select 1 from public.profiles
+         where id = uid
+           and (role in ('owner', 'admin') or role_slug is not null)
+    ) or exists (
+        select 1 from public.team_members
+         where user_id = uid
+           and status <> 'suspended'
+    ) then
+        raise exception 'team_account';
     end if;
 
     update public.profiles set referred_by = null where referred_by = uid;
