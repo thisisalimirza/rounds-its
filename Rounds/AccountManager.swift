@@ -56,6 +56,20 @@ struct AnonymousClaimRequest: Equatable, Sendable {
         }
         return params
     }
+
+    /// `claimed` is the only status that moved rows. `proof_required` and
+    /// every other status leave the anonymous account untouched.
+    static func movedRows(_ status: String) -> Bool {
+        status == "claimed"
+    }
+}
+
+struct ClaimStatusError: LocalizedError {
+    let status: String
+
+    var errorDescription: String? {
+        "claim_anonymous_account returned \(status)"
+    }
 }
 
 enum AnonymousClaimTicketError: LocalizedError {
@@ -692,13 +706,28 @@ final class AccountManager {
                     .rpc("claim_anonymous_account", params: request.rpcParameters)
                     .execute()
                     .value
-                mergedIntoExisting = result.status == "claimed"
+                if AnonymousClaimRequest.movedRows(result.status) {
+                    mergedIntoExisting = true
+                    MigrationCoordinator.shared.releaseConfirmationHold(userID: user.id)
+                } else {
+                    // proof_required and every other status deleted nothing.
+                    // Do not say the backup worked, and do not mark this
+                    // account migrated. Pro comes back from RevenueCat.
+                    claimFailed = true
+                    print("⚠️ claim_anonymous_account status: \(result.status)")
+                    AnalyticsManager.shared.trackSyncFailure(
+                        stage: "claim",
+                        error: ClaimStatusError(status: result.status)
+                    )
+                    MigrationCoordinator.shared.withholdConfirmation(userID: user.id)
+                }
             } catch {
                 // The account is still usable; only the old device's history
                 // failed to carry over. Say so — don't claim the backup worked.
                 claimFailed = true
                 print("⚠️ claim_anonymous_account failed: \(error.localizedDescription)")
                 AnalyticsManager.shared.trackSyncFailure(stage: "claim", error: error)
+                MigrationCoordinator.shared.withholdConfirmation(userID: user.id)
             }
         }
 

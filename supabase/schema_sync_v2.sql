@@ -355,8 +355,12 @@ grant execute on function public.sync_progress(integer, integer, integer, intege
 create table if not exists public.anonymous_claim_tickets (
   anon_id uuid primary key references auth.users(id) on delete cascade,
   token_hash bytea not null,
-  expires_at timestamptz not null
+  expires_at timestamptz not null,
+  claimed_by uuid
 );
+
+alter table public.anonymous_claim_tickets
+  add column if not exists claimed_by uuid;
 
 alter table public.anonymous_claim_tickets enable row level security;
 
@@ -417,8 +421,15 @@ grant execute on function public.begin_anonymous_claim() to authenticated;
 -- one-line wrapper that passes a null token, so shipping 1.5 (which cannot
 -- send a token) still resolves to one function and still moves progress.
 -- There is no default argument, so a one-argument call is not ambiguous.
--- Pro grant, redemptions.redeemer_id, and the subscription mirror run only
--- when the token matches an unexpired ticket. The ticket row is not deleted.
+-- Pro grant, redemptions.redeemer_id, the subscription mirror, campaign
+-- attribution, and empty profile fields run only when the token matches an
+-- unexpired ticket that this caller has not already lost to someone else.
+-- The ticket row is not deleted. claimed_by is set on the first proven
+-- claim and a later caller can reuse that ticket only when claimed_by is
+-- their own id. A school or global leaderboard row cannot be claimed at
+-- all without a ticket: the function returns proof_required and writes
+-- nothing. private is not in that check. Production's visibility check is
+-- ('private','school','global').
 -- Both profile rows are locked with SELECT ... FOR UPDATE, lower uuid first.
 -- An unproven claim does not clear pro_source or the subscription mirror:
 -- that would destroy a stranger's Pro without moving it.
@@ -467,8 +478,8 @@ begin
         return jsonb_build_object('status', 'nothing_to_claim');
     end if;
 
-    if exists (select 1 from auth.users u
-                where u.id = p_anonymous_id and u.email is not null) then
+    if not exists (select 1 from auth.users u
+                    where u.id = p_anonymous_id and u.is_anonymous) then
         return jsonb_build_object('status', 'not_anonymous');
     end if;
 
@@ -487,12 +498,33 @@ begin
         select * into v_target_p from public.profiles where id = v_target for update;
     end if;
 
+    -- A ticket is reusable until it expires, but only by the account that
+    -- first completed a proven claim. claimed_by stays null until then.
     v_proven := p_claim_token is not null and exists (
         select 1 from public.anonymous_claim_tickets
          where anon_id = p_anonymous_id
            and token_hash = extensions.digest(p_claim_token, 'sha256')
            and expires_at > now()
+           and (claimed_by is null or claimed_by = v_target)
     );
+
+    -- leaderboard_entries.visibility is text, check
+    -- ('private','school','global'), default 'school'. Strangers can read
+    -- user_id where visibility is school or global. Without a ticket, refuse
+    -- the claim before any row is updated or deleted. A private row, or no
+    -- leaderboard row, is not publicly readable, so 1.5 can still move
+    -- progress for that id.
+    --
+    -- TODO: once app_config.min_supported_version is a build that sends a
+    -- claim ticket, return proof_required for every claim that has no ticket,
+    -- including private and unlisted accounts.
+    if not v_proven and exists (
+        select 1 from public.leaderboard_entries
+         where user_id = p_anonymous_id
+           and visibility in ('school', 'global')
+    ) then
+        return jsonb_build_object('status', 'proof_required');
+    end if;
 
     if v_proven and v_target_p.pro_source = 'none' and v_anon.pro_source <> 'none' then
         update public.profiles
@@ -507,7 +539,7 @@ begin
         v_moved := v_moved || jsonb_build_object('pro_source', v_anon.pro_source);
     end if;
 
-    if v_target_p.attributed_campaign_id is null and v_anon.attributed_campaign_id is not null then
+    if v_proven and v_target_p.attributed_campaign_id is null and v_anon.attributed_campaign_id is not null then
         update public.profiles
            set attributed_campaign_id = v_anon.attributed_campaign_id,
                attribution_source     = v_anon.attribution_source,
@@ -521,7 +553,10 @@ begin
     end if;
 
     -- Empty profile fields on the email account take the anonymous values.
-    -- A field the email account already filled stays.
+    -- A field the email account already filled stays. Only a proven claim
+    -- copies them. cohort_reporting and show_in_activity are the same kind
+    -- of profile write, so they stay inside this block too.
+    if v_proven then
     update public.profiles t
        set first_name = case
                when t.first_name is not null and btrim(t.first_name) <> '' then t.first_name
@@ -591,6 +626,7 @@ begin
              where t.id = $1
                and a.id = $2
         $claim_activity$ using v_target, p_anonymous_id;
+    end if;
     end if;
 
     -- play_events.user_id references auth.users ON DELETE CASCADE. Move the
@@ -887,6 +923,13 @@ begin
          where id = p_anonymous_id;
     end if;
 
+    if v_proven then
+        update public.anonymous_claim_tickets
+           set claimed_by = v_target
+         where anon_id = p_anonymous_id
+           and claimed_by is null;
+    end if;
+
     return jsonb_build_object('status', 'claimed', 'moved', v_moved);
 end;
 $$;
@@ -896,7 +939,9 @@ grant execute on function public.claim_anonymous_account(uuid, text) to authenti
 
 -- Shipping 1.5 calls claim_anonymous_account with one argument. No default on
 -- the two-argument function, so that call resolves here and passes a null
--- token: progress moves, the paid subscription does not.
+-- token. Progress moves only when that anonymous id is not on a school or
+-- global leaderboard row. A public row returns proof_required and deletes
+-- nothing. The paid subscription never moves without a token.
 create or replace function public.claim_anonymous_account(p_anonymous_id uuid)
 returns jsonb
 language plpgsql
@@ -1186,7 +1231,10 @@ grant execute on function public.delete_own_account() to authenticated, service_
 --      -- then re-apply only the function in schema_claim_full_data.sql,
 --      -- which is claim_anonymous_account(uuid)
 --
--- 3. The ticket. Drop the function before the table.
+-- 3. The ticket. Drop the function before the table. claimed_by is a column
+--    of anonymous_claim_tickets; dropping the table drops it. To remove only
+--    that column and keep the table:
+--      alter table public.anonymous_claim_tickets drop column if exists claimed_by;
 --      drop function if exists public.begin_anonymous_claim();
 --      drop table if exists public.anonymous_claim_tickets;
 --    There is no policy to drop. The table's ON DELETE CASCADE follows

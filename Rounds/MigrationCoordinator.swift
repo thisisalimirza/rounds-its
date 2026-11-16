@@ -27,6 +27,10 @@ final class MigrationCoordinator {
     /// Uploads are performed by `ProgressSyncManager.sync()` before this runs.
     func confirmIfNeeded(context: ModelContext) async {
         guard let userID = AccountManager.shared.authUserID else { return }
+        if Self.confirmationWithheld(for: userID) {
+            isConfirmed = false
+            return
+        }
         if Self.localFlag(for: userID) {
             isConfirmed = true
             return
@@ -63,8 +67,27 @@ final class MigrationCoordinator {
         }
     }
 
+    /// A claim that did not return `claimed` must not set the migrated flag.
+    /// The anonymous rows were left in place. RevenueCat is what restores Pro.
+    func withholdConfirmation(userID: UUID) {
+        UserDefaults.standard.set(true, forKey: Self.withholdKey(for: userID))
+        isConfirmed = false
+    }
+
+    func releaseConfirmationHold(userID: UUID) {
+        UserDefaults.standard.removeObject(forKey: Self.withholdKey(for: userID))
+    }
+
     private static func key(for userID: UUID) -> String {
         "migrated_v2.\(userID.uuidString.lowercased())"
+    }
+
+    private static func withholdKey(for userID: UUID) -> String {
+        "claim_unconfirmed.\(userID.uuidString.lowercased())"
+    }
+
+    private static func confirmationWithheld(for userID: UUID) -> Bool {
+        UserDefaults.standard.bool(forKey: withholdKey(for: userID))
     }
 
     private static func localFlag(for userID: UUID?) -> Bool {

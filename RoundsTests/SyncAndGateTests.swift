@@ -221,6 +221,15 @@ struct SyncAndGateTests {
         #expect(blank.rpcParameters.count == 1)
     }
 
+    @Test func anUnrecognizedClaimStatusDoesNotCountAsMoved() {
+        #expect(AnonymousClaimRequest.movedRows("claimed"))
+        #expect(!AnonymousClaimRequest.movedRows("proof_required"))
+        #expect(!AnonymousClaimRequest.movedRows("not_anonymous"))
+        #expect(!AnonymousClaimRequest.movedRows("unknown_account"))
+        #expect(!AnonymousClaimRequest.movedRows("nothing_to_claim"))
+        #expect(!AnonymousClaimRequest.movedRows(""))
+    }
+
     @Test func browsePlaysAreBrowseAndUnknownNonDailyIsBrowse() {
         #expect(PlayOrigin.missSourceRaw(stored: "browse", wasDailyCase: false) == "browseCase")
         #expect(PlayOrigin.missSourceRaw(stored: "daily", wasDailyCase: true) == "dailyCase")
