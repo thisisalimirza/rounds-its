@@ -58,6 +58,21 @@ final class SubscriptionManager {
     private var simulateFreeUserStorage: Bool =
         UserDefaults.standard.bool(forKey: "debug_simulate_free_user")
 
+    /// Opt-in Pro for this device, from the hidden diagnostics screen.
+    /// Off unless someone turns it on. Not tied to a sandbox receipt.
+    static let diagnosticsProGrantKey = "debug_grant_pro_device"
+
+    private var diagnosticsProGrantStorage: Bool =
+        UserDefaults.standard.bool(forKey: "debug_grant_pro_device")
+
+    var diagnosticsProGrant: Bool {
+        get { diagnosticsProGrantStorage }
+        set {
+            diagnosticsProGrantStorage = newValue
+            UserDefaults.standard.set(newValue, forKey: Self.diagnosticsProGrantKey)
+        }
+    }
+
     /// Whether the free-user simulation is currently on. Setting it is a no-op
     /// outside beta builds.
     var isSimulatingFreeUser: Bool {
@@ -76,11 +91,32 @@ final class SubscriptionManager {
     
     // MARK: - Product Identifiers
     
+    /// Store product identifiers.
+    ///
+    /// `monthly`, `yearly`, and `lifetime` are RevenueCat Test Store ids. They
+    /// are not what the App Store sells. The live products are `01` (monthly,
+    /// no longer sold; still recognized), `02` (annual), `03` (lifetime), and
+    /// `04` (weekly, inactive). The current offering identifier is `new_pricing`.
     enum ProductID: String, CaseIterable, Sendable {
-        case monthly = "monthly"
-        case yearly = "yearly"
-        case lifetime = "lifetime"
+        case testMonthly = "monthly"
+        case testYearly = "yearly"
+        case testLifetime = "lifetime"
+        case monthlyLegacy = "01"
+        case annual = "02"
+        case lifetime = "03"
+        case weeklyInactive = "04"
+
+        var isTestStore: Bool {
+            switch self {
+            case .testMonthly, .testYearly, .testLifetime: return true
+            default: return false
+            }
+        }
     }
+
+    /// Offering the dashboard currently serves. Paywalls use the dashboard's
+    /// current offering; this is the identifier we prefer when fetching by name.
+    nonisolated static let currentOfferingID = "new_pricing"
     
     // MARK: - Subscription Status
     
@@ -162,11 +198,12 @@ final class SubscriptionManager {
             let isMonthly = productId == "01"
                 || productId.contains("monthly")
 
+            let isWeekly = productId == ProductID.weeklyInactive.rawValue
             if isLifetime {
                 self.subscriptionStatus = .lifetime
             } else if isAnnual {
                 self.subscriptionStatus = .yearly
-            } else if isMonthly {
+            } else if isMonthly || isWeekly {
                 self.subscriptionStatus = .monthly
             } else {
                 self.subscriptionStatus = .monthly
@@ -174,6 +211,7 @@ final class SubscriptionManager {
         } else {
             self.subscriptionStatus = .free
         }
+        reportEntitlementMismatch()
         AccountManager.shared.reportAnalyticsIdentity()
     }
     
@@ -183,7 +221,9 @@ final class SubscriptionManager {
     func fetchOfferings() async throws -> Offerings {
         let offerings = try await Purchases.shared.offerings()
         
-        if let current = offerings.current {
+        if let named = offerings.offering(identifier: Self.currentOfferingID) {
+            self.currentOffering = named
+        } else if let current = offerings.current {
             self.currentOffering = current
         }
         
@@ -212,13 +252,25 @@ final class SubscriptionManager {
         }
     }
     
-    /// Restore previous purchases
+    /// Restore previous purchases. The dashboard keeps "Transfer to new App User ID".
     func restorePurchases() async throws -> CustomerInfo {
+        AnalyticsManager.shared.track("restore_started")
         AnalyticsManager.shared.trackPurchaseRestored()
-
-        let info = try await Purchases.shared.restorePurchases()
-        updateCustomerInfo(info)
-        return info
+        do {
+            let info = try await Purchases.shared.restorePurchases()
+            updateCustomerInfo(info)
+            let active = info.entitlements[Self.proEntitlementID]?.isActive == true
+            AnalyticsManager.shared.track(active ? "restore_succeeded" : "restore_none_found")
+            if active {
+                await AccountManager.shared.refreshProMirror()
+            }
+            return info
+        } catch {
+            AnalyticsManager.shared.track("restore_failed", properties: [
+                "error": error.localizedDescription
+            ])
+            throw error
+        }
     }
 
     /// Sync purchases by uploading the current receipt to RevenueCat.
@@ -236,32 +288,69 @@ final class SubscriptionManager {
     /// Check if user has active Pro subscription
     /// Note: This is @MainActor isolated - call from SwiftUI views or main thread only
     func hasProAccess() -> Bool {
-        // Beta-only: allow simulating a free user for screenshots and for
-        // testing the free-tier experience.
-        //
-        // This used to be #if DEBUG, which meant it was compiled out of
-        // TestFlight builds — those are Release builds, so DEBUG is undefined.
-        // Combined with the TestFlight auto-grant below, that made it
-        // impossible to see the free experience on TestFlight at all. The gate
-        // is now a runtime check that covers DEBUG *and* TestFlight, while
-        // still ignoring the flag entirely in App Store builds.
-        if isBetaBuild, simulateFreeUserStorage {
-            print("🧪 Simulating free user (beta override active)")
+        // Opt-in only, from the hidden diagnostics screen. Default off.
+        // A sandbox receipt used to grant Pro to every TestFlight install and
+        // hid the cases where the entitlement never arrived.
+        if isSimulatingFreeUser {
             return false
         }
-
-        // Auto-grant Pro access for TestFlight users
-        if isTestFlightBuild() {
-            print("✅ TestFlight detected - granting Pro access")
-
+        if diagnosticsProGrantStorage {
             return true
         }
 
-        print("ℹ️ Not TestFlight - checking subscription: \(isProSubscriber)")
-
+        #if DEBUG
+        return true
+        #else
         AnalyticsManager.shared.setUserProperty(key: "subscription_status", value: subscriptionStatus.rawValue)
+        // RevenueCat's live entitlement, or a server grant (a code, or a
+        // subscription the webhook has mirrored). The server flag is cached
+        // so a ward with no signal does not take Pro away.
+        return entitlementOrServerGrant
+        #endif
+    }
 
-        return isProSubscriber
+    /// Live RevenueCat entitlement or the cached server grant. DEBUG and the
+    /// diagnostics override are not included, so person properties stay honest.
+    var entitlementOrServerGrant: Bool {
+        isProSubscriber || serverGrantIsPro
+    }
+
+    /// Cached `has_pro` from my-status / refresh-pro. A failed fetch leaves this alone.
+    private var serverGrantIsPro: Bool = UserDefaults.standard.bool(forKey: "pro.serverHasPro.v1")
+    private var serverGrantKnown: Bool = UserDefaults.standard.bool(forKey: "pro.serverHasProKnown.v1")
+    private var lastMismatchKey: String?
+
+    func noteServerGrant(_ hasPro: Bool) {
+        let changed = !serverGrantKnown || serverGrantIsPro != hasPro
+        serverGrantKnown = true
+        serverGrantIsPro = hasPro
+        UserDefaults.standard.set(hasPro, forKey: "pro.serverHasPro.v1")
+        UserDefaults.standard.set(true, forKey: "pro.serverHasProKnown.v1")
+        if changed {
+            reportEntitlementMismatch()
+        }
+    }
+
+    func reportEntitlementMismatch() {
+        #if DEBUG
+        return
+        #else
+        guard serverGrantKnown, customerInfo != nil else { return }
+        guard !diagnosticsProGrantStorage, !isSimulatingFreeUser else { return }
+        let device = isProSubscriber
+        let server = serverGrantIsPro
+        guard device != server else {
+            lastMismatchKey = nil
+            return
+        }
+        let key = "\(device)-\(server)"
+        guard lastMismatchKey != key else { return }
+        lastMismatchKey = key
+        AnalyticsManager.shared.track("entitlement_mismatch", properties: [
+            "revenuecat_active": device,
+            "server_has_pro": server,
+        ])
+        #endif
     }
 
     // MARK: - TestFlight Detection
