@@ -3,37 +3,28 @@
 // Mirrors subscription state from RevenueCat onto public.profiles so the web
 // (and the admin console) can see what someone actually bought.
 //
-// Before this existed, `pro_source` was only ever written by redeem-code, so a
-// real App Store purchase never touched the database at all: RevenueCat knew,
-// the iOS SDK knew, and getrounds.app told a paying subscriber they were on the
-// free plan indefinitely.
-//
-// RevenueCat stays the source of truth for entitlements. This is a mirror, kept
-// current by events, and read through public.profile_has_pro() which also
-// accounts for code-redeemed Pro.
+// RevenueCat stays the source of truth for entitlements. With RC_V2_SECRET_KEY
+// set, every event triggers a fresh lookup of each affected user's *current*
+// state (state.ts), so out-of-order events, transfers, aliases (anonymous
+// purchase later logged in) and promotional grants all converge. Without the
+// key it falls back to mapping the event itself, refusing stale events.
 //
 // On the first real payment, this also triggers the founder email via the
 // founder-email edge function. "First real payment" means money changed hands:
 //   * INITIAL_PURCHASE that is not a free trial (period_type != TRIAL)
 //   * RENEWAL with is_trial_conversion: true (the trial just converted)
 //   * NON_RENEWING_PURCHASE (lifetime / one-off)
-// Trial starts and RevenueCat-granted promotional entitlements are skipped:
-// the paid email thanks them for paying. founder-email enforces once-per-user.
+// Trial starts and RevenueCat-granted promotional entitlements are skipped.
 //
 // Deploy:  supabase functions deploy revenuecat-webhook --no-verify-jwt
-//   (--no-verify-jwt is required: RevenueCat is not a Supabase user and sends
-//    its own Authorization header, which we check below.)
 //
-// Secrets (supabase secrets set ...):
-//   RC_WEBHOOK_SECRET   the exact string configured as the Authorization
-//                       header value in RevenueCat → Integrations → Webhooks
+// Secrets:
+//   RC_WEBHOOK_SECRET   the exact Authorization header value set in RevenueCat
+//   RC_V2_SECRET_KEY    RevenueCat v2 secret key (customer information: read)
 //   RC_ENTITLEMENT_ID   entitlement lookup_key (default "Rounds Pro")
-//
-// RevenueCat → Integrations → Webhooks:
-//   URL     https://gvbycponexvxsbrlaejw.supabase.co/functions/v1/revenuecat-webhook
-//   Header  Authorization: <the same value as RC_WEBHOOK_SECRET>
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { currentState, type MirrorPatch } from "./state.ts";
 
 type RCEvent = {
   id?: string;
@@ -49,6 +40,8 @@ type RCEvent = {
   entitlement_ids?: string[] | null;
   transferred_to?: string[] | null;
   transferred_from?: string[] | null;
+  aliases?: string[] | null;
+  event_timestamp_ms?: number | null;
 };
 
 /** Our subscription_status values, mirroring the profiles CHECK constraint. */
@@ -140,6 +133,8 @@ function statusFor(event: RCEvent): { status: Status; willRenew: boolean | null 
   }
 }
 
+
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
@@ -182,14 +177,56 @@ Deno.serve(async (req) => {
 
   // Prefer app_user_id (set by Purchases.logIn to the Supabase user id) and
   // fall back to the original id, which is what transfers report.
-  const candidates = [event.app_user_id, event.original_app_user_id]
-    .filter((v): v is string => typeof v === "string" && UUID_RE.test(v));
+  // Every Supabase user this event touches: the buyer, every alias (an
+  // anonymous purchase later logged in to a real id), and both sides of a
+  // transfer (the purchase moved from one account to the other).
+  const candidates = [...new Set(
+    [
+      event.app_user_id,
+      event.original_app_user_id,
+      ...(event.aliases ?? []),
+      ...(event.transferred_to ?? []),
+      ...(event.transferred_from ?? []),
+    ].filter((v): v is string => typeof v === "string" && UUID_RE.test(v))
+      .map((v) => v.toLowerCase()),
+  )];
 
   if (candidates.length === 0) {
     // A customer who never signed in through AccountManager. Nothing to mirror
     // onto, and not an error worth retrying.
     return json({ status: "no_mappable_user", app_user_id: event.app_user_id ?? null });
   }
+  const rcKey = Deno.env.get("RC_V2_SECRET_KEY");
+  if (rcKey && (event.type ?? "").toUpperCase() !== "TEST") {
+    const results: Record<string, string> = {};
+    for (const uid of candidates) {
+      let state: MirrorPatch | null;
+      try {
+        state = await currentState(uid, rcKey);
+      } catch (e) {
+        // 500 so RevenueCat retries: a dropped event leaves the mirror stale.
+        console.error("RevenueCat lookup failed:", e);
+        return json({ error: "revenuecat_lookup_failed" }, 500);
+      }
+      if (!state) { results[uid] = "not_in_revenuecat"; continue; }
+      const { data: updated, error: upErr } = await admin
+        .from("profiles")
+        .update({ ...state, subscription_updated_at: new Date().toISOString(), rc_last_event_id: event.id ?? null })
+        .eq("id", uid)
+        .select("id");
+      if (upErr) {
+        console.error("profile update failed:", upErr.message);
+        return json({ error: "update_failed", detail: upErr.message }, 500);
+      }
+      results[uid] = updated?.length ? state.subscription_status : "unknown_profile";
+    }
+    const primary = candidates[0];
+    const founder = isFirstPaidEvent(event) && results[primary] && results[primary] !== "unknown_profile"
+      ? await sendFounderEmail(admin, primary, (event.environment ?? "").toUpperCase() === "SANDBOX")
+      : null;
+    return json({ status: "ok", mode: "state", type: event.type, results, founder_email: founder });
+  }
+
   const userId = candidates[0];
 
   const mapped = statusFor(event);
@@ -199,7 +236,7 @@ Deno.serve(async (req) => {
 
   const { data: profile } = await admin
     .from("profiles")
-    .select("id, rc_last_event_id")
+    .select("id, rc_last_event_id, subscription_updated_at")
     .eq("id", userId)
     .maybeSingle();
 
@@ -216,6 +253,12 @@ Deno.serve(async (req) => {
   // paying user, so drop exact repeats.
   if (event.id && profile.rc_last_event_id === event.id) {
     return json({ status: "duplicate", event_id: event.id });
+  }
+
+  // Without a key, at least refuse an event older than the last one applied.
+  if (event.event_timestamp_ms && profile.subscription_updated_at &&
+      event.event_timestamp_ms < new Date(profile.subscription_updated_at).getTime()) {
+    return json({ status: "stale", event_id: event.id ?? null });
   }
 
   const expiresAt = event.expiration_at_ms
@@ -248,54 +291,9 @@ Deno.serve(async (req) => {
   // Triggers asynchronously and never fails the webhook — the subscription
   // state update above is the critical path; the email is a nice-to-have.
   // -------------------------------------------------------------------------
-  let founderEmailStatus: string | null = null;
-
-  if (isFirstPurchase) {
-    try {
-      // Fetch user's email from auth.users
-      const { data: authUser } = await admin.auth.admin.getUserById(userId);
-      const userEmail = authUser?.user?.email;
-      const firstName = authUser?.user?.user_metadata?.full_name?.split(" ")[0] ?? null;
-
-      if (userEmail) {
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const founderEmailSecret = Deno.env.get("FOUNDER_EMAIL_SECRET");
-
-        if (!founderEmailSecret) {
-          console.warn("founder-email: FOUNDER_EMAIL_SECRET not set, skipping email");
-          founderEmailStatus = "no_secret";
-        } else {
-          const emailRes = await fetch(`${supabaseUrl}/functions/v1/founder-email`, {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${founderEmailSecret}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              user_id: userId,
-              email_type: "paid",
-              email: userEmail,
-              first_name: firstName,
-              is_sandbox: isSandbox,
-            }),
-            // Never let a slow email send hold up RevenueCat's response.
-            signal: AbortSignal.timeout(10_000),
-          });
-
-          const emailResult = await emailRes.json();
-          founderEmailStatus = emailResult.status ?? "unknown";
-          console.log(`founder-email: ${founderEmailStatus} for user ${userId}`);
-        }
-      } else {
-        founderEmailStatus = "no_email";
-        console.log(`founder-email: user ${userId} has no email address`);
-      }
-    } catch (emailErr) {
-      // Log but don't fail — email is non-critical
-      founderEmailStatus = "error";
-      console.error("founder-email trigger failed (non-fatal):", emailErr);
-    }
-  }
+  const founderEmailStatus = isFirstPurchase
+    ? await sendFounderEmail(admin, userId, isSandbox)
+    : null;
 
   return json({
     status: "ok",
@@ -305,3 +303,29 @@ Deno.serve(async (req) => {
     founder_email: founderEmailStatus,
   });
 });
+
+/** Founder email on first real payment. Never fails the webhook. */
+async function sendFounderEmail(admin: any, userId: string, isSandbox: boolean): Promise<string> {
+  try {
+    const { data: authUser } = await admin.auth.admin.getUserById(userId);
+    const userEmail = authUser?.user?.email;
+    const firstName = authUser?.user?.user_metadata?.full_name?.split(" ")[0] ?? null;
+    if (!userEmail) return "no_email";
+    const founderEmailSecret = Deno.env.get("FOUNDER_EMAIL_SECRET");
+    if (!founderEmailSecret) {
+      console.warn("founder-email: FOUNDER_EMAIL_SECRET not set, skipping email");
+      return "no_secret";
+    }
+    const emailRes = await fetch(`${Deno.env.get("SUPABASE_URL")!}/functions/v1/founder-email`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${founderEmailSecret}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId, email_type: "paid", email: userEmail, first_name: firstName, is_sandbox: isSandbox }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    const emailResult = await emailRes.json();
+    return emailResult.status ?? "unknown";
+  } catch (emailErr) {
+    console.error("founder-email trigger failed (non-fatal):", emailErr);
+    return "error";
+  }
+}
