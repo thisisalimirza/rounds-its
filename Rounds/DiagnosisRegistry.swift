@@ -53,9 +53,17 @@ struct DiagnosisDefinition: Identifiable, Hashable, Sendable {
     /// `folding(options: .diacriticInsensitive)` with a fixed locale rather
     /// than `.current`: normalisation must not depend on the device's region,
     /// or two phones disagree about whether a guess was right.
+    ///
+    /// Apostrophes are dropped, so "Crohn's", "Crohn’s" (the curly apostrophe
+    /// the iOS keyboard types by default) and "Crohns" are one answer. Hyphens,
+    /// dashes, slashes and other punctuation separate words. Must stay identical
+    /// to `normalize` in the web app's lib/game/matching.ts; the shared cases are
+    /// in RoundsTests/MatchingTests.swift and scripts/matching.test.ts.
     static func normalize(_ text: String) -> String {
         text.folding(options: .diacriticInsensitive, locale: Locale(identifier: "en_US_POSIX"))
             .lowercased()
+            .replacingOccurrences(of: "['’‘ʼ`´]", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "[-‐-―/\\\\.,;:()\\[\\]{}\"“”!?_]+", with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
     }

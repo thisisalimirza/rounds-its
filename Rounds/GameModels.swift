@@ -62,39 +62,16 @@ final class MedicalCase {
     }
     
     func isCorrectDiagnosis(_ guess: String) -> Bool {
-        // If we have a registry slug, use the registry's comprehensive alternatives
-        if let slug = diagnosisSlug,
-           let definition = DiagnosisRegistry.find(bySlug: slug) {
-            return definition.matches(guess)
-        }
+        let target = DiagnosisDefinition.normalize(guess)
+        guard !target.isEmpty else { return false }
 
-        // Fallback: try to find diagnosis in registry by name (for cases without explicit slug)
-        if let definition = DiagnosisRegistry.find(byName: diagnosis) {
-            return definition.matches(guess)
-        }
-
-        // Legacy fallback for cases not in registry (backwards compatibility)
-        let normalizedGuess = guess.lowercased()
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-
-        guard !normalizedGuess.isEmpty else { return false }
-
-        let normalizedDiagnosis = diagnosis.lowercased()
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-
-        if normalizedGuess == normalizedDiagnosis {
-            return true
-        }
-
-        // Check alternative names with same normalization
-        return alternativeNames.contains { alt in
-            let normalizedAlt = alt.lowercased()
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            return normalizedAlt == normalizedGuess
-        }
+        // Registry entry (by slug, else by this case's name) plus the case's own
+        // names. Both count: a synonym on the case must keep working even when
+        // the case also has a registry entry. Same rule as the web app.
+        let definition = diagnosisSlug.flatMap { DiagnosisRegistry.find(bySlug: $0) }
+            ?? DiagnosisRegistry.find(byName: diagnosis)
+        let names = (definition?.allNames ?? []) + [diagnosis] + alternativeNames
+        return names.contains { DiagnosisDefinition.normalize($0) == target }
     }
 }
 
