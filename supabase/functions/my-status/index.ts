@@ -42,6 +42,8 @@ Deno.serve(async (req) => {
   const { data: profile } = await admin
     .from("profiles").select("referral_code, pro_source").eq("id", user.id).single();
 
+  const { data: hasPro } = await admin.rpc("profile_has_pro", { p_id: user.id });
+
   const { count } = await admin
     .from("redemptions")
     .select("id", { count: "exact", head: true })
@@ -52,7 +54,8 @@ Deno.serve(async (req) => {
   return json({
     referral_code: profile?.referral_code ?? null,
     pro_source: profile?.pro_source ?? "none",
-    is_pro: (profile?.pro_source ?? "none") !== "none",
+    // The one shared rule (comps, codes and RevenueCat-mirrored purchases).
+    is_pro: hasPro === true,
     invites_used: invitesUsed,
     invites_remaining: Math.max(0, MAX_REFERRALS - invitesUsed),
     max_referrals: MAX_REFERRALS,
