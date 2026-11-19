@@ -196,6 +196,24 @@ Deno.serve(async (req) => {
     // onto, and not an error worth retrying.
     return json({ status: "no_mappable_user", app_user_id: event.app_user_id ?? null });
   }
+  // TRANSFER: the purchase moved between accounts (restore on another device,
+  // or the email account created by "link email"). Move the mirror with it and
+  // mark an anonymous account it left as merged into the new one, so the
+  // console shows one person. Works without the v2 key.
+  if ((event.type ?? "").toUpperCase() === "TRANSFER") {
+    const uuids = (xs?: string[] | null) =>
+      (xs ?? []).filter((v) => UUID_RE.test(v)).map((v) => v.toLowerCase());
+    const from = uuids(event.transferred_from);
+    const to = uuids(event.transferred_to);
+    if (from.length && to.length) {
+      const { error: tErr } = await admin.rpc("rc_apply_transfer", { p_from: from, p_to: to });
+      if (tErr) {
+        console.error("rc_apply_transfer failed:", tErr.message);
+        return json({ error: "transfer_failed", detail: tErr.message }, 500);
+      }
+    }
+  }
+
   const rcKey = Deno.env.get("RC_V2_SECRET_KEY");
   if (rcKey && (event.type ?? "").toUpperCase() !== "TEST") {
     const results: Record<string, string> = {};
@@ -231,7 +249,7 @@ Deno.serve(async (req) => {
 
   const mapped = statusFor(event);
   if (!mapped) {
-    return json({ status: "acknowledged", type: event.type });
+    return json({ status: (event.type ?? "").toUpperCase() === "TRANSFER" ? "transferred" : "acknowledged", type: event.type });
   }
 
   const { data: profile } = await admin
@@ -271,7 +289,7 @@ Deno.serve(async (req) => {
       subscription_status: mapped.status,
       subscription_will_renew: mapped.willRenew,
       subscription_product_id: event.product_id ?? null,
-      subscription_store: event.store?.toLowerCase() ?? null,
+      subscription_store: isSandbox ? "sandbox" : event.store?.toLowerCase() ?? null,
       subscription_period_type: event.period_type?.toLowerCase() ?? null,
       subscription_expires_at: expiresAt,
       subscription_updated_at: new Date().toISOString(),
