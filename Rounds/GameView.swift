@@ -66,7 +66,9 @@ struct GameView: View {
     @FocusState private var isTextFieldFocused: Bool
     @AppStorage("hideCategoryLabel") private var hideCategoryLabel = false
     @AppStorage("hasSeenLeaderboardPrompt") private var hasSeenLeaderboardPrompt = false
-    let isDailyCase: Bool
+    // Mutable: only the first case shown can be the Daily. Every case loaded
+    // via swipe/next is a random case and must not be recorded as a daily.
+    @State private var isDailyCase: Bool
 
     // MARK: - Swipe-to-Next-Case State
     @State private var swipeOffset: CGFloat = 0
@@ -96,7 +98,7 @@ struct GameView: View {
     ) {
         _currentCase = State(initialValue: medicalCase)
         _gameSession = State(initialValue: GameSession(caseID: medicalCase.id))
-        self.isDailyCase = isDailyCase
+        _isDailyCase = State(initialValue: isDailyCase)
         self.caseContext = caseContext
         self.onRequestNextCase = onRequestNextCase
 
@@ -739,6 +741,7 @@ struct GameView: View {
         if reduceMotion {
             // Accessibility: Use crossfade instead of slide
             withAnimation(.easeInOut(duration: 0.3)) {
+                isDailyCase = false
                 currentCase = nextCase
                 gameSession = GameSession(caseID: nextCase.id)
                 swipeOffset = 0
@@ -753,6 +756,7 @@ struct GameView: View {
 
             // Step 2: Reset state and prepare new case
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                isDailyCase = false
                 currentCase = nextCase
                 gameSession = GameSession(caseID: nextCase.id)
                 swipeOffset = UIScreen.main.bounds.height * 0.3 // Position slightly below

@@ -434,6 +434,8 @@ final class PlayerStats {
     // MARK: - Daily Case Tracking
     func markDailyCaseCompleted() {
         let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd"
         lastDailyCasePlayed = formatter.string(from: Date())
     }
@@ -441,6 +443,8 @@ final class PlayerStats {
     func hasPlayedDailyCaseToday() -> Bool {
         guard let lastDaily = lastDailyCasePlayed else { return false }
         let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd"
         let todayString = formatter.string(from: Date())
         return lastDaily == todayString

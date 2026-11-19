@@ -638,7 +638,9 @@ final class AccountManager {
         let dayFormatter = DateFormatter()
         dayFormatter.calendar = Calendar(identifier: .gregorian)
         dayFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dayFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        // The player's local day — the web and the server both key streaks
+        // on it. A UTC day here read as a missed day and reset streaks.
+        dayFormatter.timeZone = TimeZone.current
         dayFormatter.dateFormat = "yyyy-MM-dd"
 
         return try await supabase
