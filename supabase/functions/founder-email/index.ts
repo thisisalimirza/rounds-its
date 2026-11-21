@@ -24,8 +24,17 @@
 //   FOUNDER_EMAIL_REPLY_TO  Reply-to address (Ali's real inbox)
 //   FOUNDER_EMAIL_ENABLED   "true" to send, anything else to dry-run (logs only)
 //   FOUNDER_EMAIL_SEND_SANDBOX  "true" to send for sandbox/TestFlight (default: skip)
+//
+// Copy: subject, body, sender name, reply-to and an on/off switch per email
+// live in public.email_templates (keys founder_free, founder_paid,
+// founder_paid_upgrade), edited in the web admin under Announcements & Comms
+// → Automatic emails. The templates below are the fallback when a row is
+// missing or cannot be read. A template switched off is skipped and not
+// recorded, exactly like a dry run. The From address always comes from
+// FOUNDER_EMAIL_FROM; the template only changes the name shown.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { fromWithName, loadTemplate, renderMergeTags, templateKey, usesSchool } from "./template.ts";
 
 // Constant-time string comparison to prevent timing attacks
 function constantTimeEqual(a: string, b: string): boolean {
@@ -423,6 +432,7 @@ Deno.serve(async (req) => {
 
   // -----------------------------------------------------------------------
   // Build email content (using verified email and name)
+  // Built-in copy first; the admin's saved template replaces it below.
   // -----------------------------------------------------------------------
   let subject: string;
   let textBody: string;
@@ -441,6 +451,33 @@ Deno.serve(async (req) => {
     textBody = freeEmailBody(verifiedFirstName ?? null);
   }
 
+  let fromHeader = FOUNDER_EMAIL_FROM;
+  let replyTo = FOUNDER_EMAIL_REPLY_TO;
+  const key = templateKey(email_type, useUpgradeVariant);
+  const template = await loadTemplate(admin, key);
+  if (template) {
+    if (!template.enabled) {
+      // Not recorded, so nothing about idempotency changes.
+      console.log(`founder-email: ${key} is switched off in the admin, not sending to user ${user_id}`);
+      return json({ status: "skipped", reason: "template_disabled", email_type, requested_email_type: requestedType, variant, template: key });
+    }
+    let school: string | null = null;
+    if (usesSchool(template.subject) || usesSchool(template.body)) {
+      try {
+        const { data: p } = await admin.from("profiles").select("school").eq("id", user_id).maybeSingle();
+        school = (p as { school?: string | null } | null)?.school ?? null;
+      } catch {
+        school = null;
+      }
+    }
+    const ctx = { firstName: verifiedFirstName ?? null, school };
+    subject = renderMergeTags(template.subject, ctx);
+    textBody = renderMergeTags(template.body, ctx);
+    fromHeader = fromWithName(FOUNDER_EMAIL_FROM, template.from_name);
+    if (template.reply_to) replyTo = template.reply_to;
+  }
+  const copy = template ? "admin" : "built_in";
+
   // -----------------------------------------------------------------------
   // Send via Resend (or dry-run)
   // -----------------------------------------------------------------------
@@ -458,6 +495,7 @@ Deno.serve(async (req) => {
       email_type,
       requested_email_type: requestedType,
       variant,
+      copy,
       would_send_to: verifiedEmail,
     });
   }
@@ -470,8 +508,8 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: FOUNDER_EMAIL_FROM,
-        reply_to: FOUNDER_EMAIL_REPLY_TO,
+        from: fromHeader,
+        reply_to: replyTo,
         to: [verifiedEmail],
         subject: subject,
         text: textBody,
@@ -516,6 +554,7 @@ Deno.serve(async (req) => {
     email_type,
     requested_email_type: requestedType,
     variant: variant,
+    copy,
     resend_id: resendId,
   });
 });

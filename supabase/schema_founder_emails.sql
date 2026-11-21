@@ -4,6 +4,11 @@
 --
 -- Safe to re-run (idempotent).
 --
+-- The email copy itself (subject, body, sender name, reply-to, on/off) lives
+-- in public.email_templates, created by the web admin's migration
+-- 20261121140000_comms_emails.sql (roundsapp-landing). The edge function
+-- falls back to its built-in text when that table or row is missing.
+--
 -- Requires Vault secrets (insert via SQL Editor or Supabase Dashboard):
 --   - founder_email_url:    https://<project>.supabase.co/functions/v1/founder-email
 --   - founder_email_secret: <same value as FOUNDER_EMAIL_SECRET edge function secret>
