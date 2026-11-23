@@ -1,4 +1,6 @@
 import {
+  FULL_EFFORT,
+  FULL_MAX_TOKENS,
   MODEL,
   REVIEW_TASK,
   SCHEMA_VERSION,
@@ -6,6 +8,7 @@ import {
   SHARED_RULES,
   TYPO_RESOLUTION_PARAGRAPH,
   WRITE_TASK,
+  generationProfile,
   normalizeKey,
   scriptRowUpdate,
   systemBlocks,
@@ -86,6 +89,33 @@ Deno.test("shared prefix is cached and carries the why rules", () => {
   assert(REVIEW_TASK.includes("without its why"));
   assert(REVIEW_TASK.includes("Boards vs wards:"));
   assert(SHARED_RULES.includes("must never mention AI"));
+  assert(SHARED_RULES.includes("fat-pad biopsy with Congo red"));
+  assert(SHARED_RULES.includes("Tc-PYP scan once serum free light chains are negative"));
+  assert(SHARED_RULES.includes('Never write a generic gap such as "boards test the diagnosis, wards stabilize first"'));
+  assert(SHARED_RULES.includes("RPR or VDRL"));
+  assert(SHARED_RULES.includes("Do not drop either one"));
+  assert(SHARED_RULES.includes("TSH, CBC, CMP, UDS, RPR, HIV"));
+  assert(REVIEW_TASK.includes("does not name both answers"));
+  assert(REVIEW_TASK.includes("RPR (or VDRL) and HIV"));
+  const schemaText = JSON.stringify(SCRIPT_SCHEMA);
+  assert(schemaText.includes("both concrete answers"));
+  assert(schemaText.includes("keep RPR (or VDRL) and HIV"));
+});
+
+Deno.test("fast profile stays capped and full profile thinks on both passes", () => {
+  const fast = generationProfile("fast");
+  assertEquals(fast.writer, { type: "disabled" });
+  assertEquals(fast.reviewer, { type: "enabled", budget_tokens: 1024 });
+  assertEquals(fast.maxTokens, 8_000);
+  assertEquals(fast.effort, undefined);
+
+  const full = generationProfile("full");
+  assertEquals(full.writer, { type: "adaptive" });
+  assertEquals(full.reviewer, { type: "adaptive" });
+  assertEquals(full.effort, "high");
+  assertEquals(full.effort, FULL_EFFORT);
+  assertEquals(full.maxTokens, FULL_MAX_TOKENS);
+  assertEquals(full.maxTokens, 10_000);
 });
 
 Deno.test("row update keeps identity columns out of the payload", () => {
