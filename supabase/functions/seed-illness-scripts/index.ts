@@ -23,8 +23,20 @@
 //   supabase functions deploy seed-illness-scripts   (verify_jwt=false via config.toml)
 // Run (loop until remaining=0):
 //   curl -s -X POST "$URL/functions/v1/seed-illness-scripts" -H "x-seed-secret: <SECRET>"
+//
+// Force rebuild ONE stored script at full quality (still requires x-seed-secret):
+//   -d '{"rebuild":true,"condition_key":"<existing condition_key>"}'
+//   → 202 {status:"building", condition_key} — the build runs in
+//     EdgeRuntime.waitUntil and is tracked in illness_script_builds.
+//   → 409 {status:"already_building"} when a live build holds the claim.
+//   The row is updated IN PLACE: condition_key, aliases, miss_count,
+//   review_count and created_at are untouched; nothing is deleted. A failed
+//   build leaves the old content as it was.
+// Poll it:
+//   -d '{"rebuild_status":true,"condition_key":"<key>"}'
+//   → {condition_key, status, error, started_at, finished_at, schema_version, updated_at}
 
-import { createClient } from "jsr:@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk@0.68.0";
 import {
   generateIllnessScript,
@@ -88,8 +100,86 @@ function previewNames(body: Record<string, unknown>): string[] | null {
     .filter((name) => name.length > 0);
 }
 
+type EdgeRuntimeGlobal = { waitUntil(promise: Promise<unknown>): void };
+type Admin = SupabaseClient;
+
+function publicError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  return raw.replace(/sk-ant-[A-Za-z0-9_-]+/g, "[redacted]").slice(0, 500);
+}
+
+function markBuild(admin: Admin, key: string, token: string, patch: Record<string, unknown>) {
+  return admin.from("illness_script_builds").update({
+    ...patch,
+    updated_at: new Date().toISOString(),
+  }).eq("condition_key", key).eq("build_token", token);
+}
+
+async function rebuildOne(admin: Admin, key: string): Promise<Response> {
+  const { data: row, error } = await admin.from("illness_scripts")
+    .select("condition_key, condition").eq("condition_key", key).maybeSingle();
+  if (error) return json({ error: "read_failed", detail: error.message }, 500);
+  if (!row) return json({ error: "not_found", condition_key: key }, 404);
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) return json({ error: "server_misconfigured" }, 500);
+  const runtime = (globalThis as { EdgeRuntime?: EdgeRuntimeGlobal }).EdgeRuntime;
+  if (!runtime?.waitUntil) return json({ error: "background_unsupported" }, 500);
+
+  const conditionText = (row.condition as string) || key;
+  const { data: claimed, error: claimError } = await admin.rpc("claim_illness_script_build", {
+    p_key: key, p_condition: conditionText, p_miss: false,
+  });
+  if (claimError) return json({ error: "build_queue_unavailable", detail: claimError.message }, 500);
+  const token = typeof claimed === "string" && claimed.trim() ? claimed : null;
+  if (!token) return json({ status: "already_building", condition_key: key }, 409);
+
+  runtime.waitUntil((async () => {
+    try {
+      console.log(JSON.stringify({ event: "illness_script_rebuild_start", condition_key: key }));
+      const script = await generateIllnessScript(new Anthropic({ apiKey }), conditionText, {
+        resolveTypos: false, quality: "full",
+      });
+      // condition_key is the WHERE clause; counters and created_at are not written.
+      const { error: upErr } = await admin.from("illness_scripts").update(scriptRowUpdate(script))
+        .eq("condition_key", key);
+      if (upErr) throw new Error(upErr.message);
+      await markBuild(admin, key, token, {
+        status: "done", error: null, script_key: key,
+        condition: script.condition || conditionText,
+        finished_at: new Date().toISOString(),
+      });
+      console.log(JSON.stringify({ event: "illness_script_rebuild_done", condition_key: key }));
+    } catch (err) {
+      const detail = publicError(err);
+      console.error(JSON.stringify({ event: "illness_script_rebuild_failed", condition_key: key, detail }));
+      await markBuild(admin, key, token, {
+        status: "failed", error: detail, finished_at: new Date().toISOString(),
+      });
+    }
+  })());
+  return json({ status: "building", condition_key: key }, 202);
+}
+
+async function rebuildStatus(admin: Admin, key: string): Promise<Response> {
+  const { data: build, error } = await admin.from("illness_script_builds")
+    .select("status, error, started_at, finished_at").eq("condition_key", key).maybeSingle();
+  if (error) return json({ error: "read_failed", detail: error.message }, 500);
+  const { data: row } = await admin.from("illness_scripts")
+    .select("schema_version, updated_at").eq("condition_key", key).maybeSingle();
+  return json({
+    condition_key: key,
+    status: build?.status ?? null,
+    error: build?.error ?? null,
+    started_at: build?.started_at ?? null,
+    finished_at: build?.finished_at ?? null,
+    schema_version: row?.schema_version ?? null,
+    updated_at: row?.updated_at ?? null,
+  });
+}
+
 Deno.serve(async (req) => {
-  if (req.headers.get("x-seed-secret") !== Deno.env.get("SEED_SECRET")) {
+  const seedSecret = Deno.env.get("SEED_SECRET");
+  if (!seedSecret || req.headers.get("x-seed-secret") !== seedSecret) {
     return json({ error: "forbidden" }, 403);
   }
 
@@ -98,6 +188,13 @@ Deno.serve(async (req) => {
     body = await readJsonBody(req);
   } catch {
     return json({ error: "invalid_body" }, 400);
+  }
+
+  if (body.rebuild === true || body.rebuild_status === true) {
+    const key = typeof body.condition_key === "string" ? body.condition_key.trim() : "";
+    if (!key) return json({ error: "missing_condition_key" }, 400);
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    return body.rebuild === true ? await rebuildOne(admin, key) : await rebuildStatus(admin, key);
   }
 
   if (body.preview === true) {
