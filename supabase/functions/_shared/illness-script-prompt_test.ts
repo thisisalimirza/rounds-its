@@ -1,5 +1,4 @@
 import {
-  FULL_EFFORT,
   FULL_MAX_TOKENS,
   MODEL,
   REVIEW_TASK,
@@ -110,10 +109,9 @@ Deno.test("fast profile stays capped and full profile thinks on both passes", ()
   assertEquals(fast.effort, undefined);
 
   const full = generationProfile("full");
-  assertEquals(full.writer, { type: "adaptive" });
-  assertEquals(full.reviewer, { type: "adaptive" });
-  assertEquals(full.effort, "high");
-  assertEquals(full.effort, FULL_EFFORT);
+  assertEquals(full.writer, { type: "enabled", budget_tokens: 6_000 });
+  assertEquals(full.reviewer, { type: "enabled", budget_tokens: 6_000 });
+  assertEquals(full.effort, undefined);
   assertEquals(full.maxTokens, FULL_MAX_TOKENS);
   assertEquals(full.maxTokens, 10_000);
 });

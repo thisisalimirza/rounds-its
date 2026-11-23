@@ -12,8 +12,8 @@
 //   fast — sync callers (the shipped app, the seeder). Writer thinking is off
 //     and the reviewer gets a 1,024-token budget (~60-66s). Must stay inside
 //     client timeouts.
-//   full — background builds only. Adaptive thinking at effort "high" on both
-//     passes, which previously measured 285-305s. See generationProfile.
+//   full — background builds only. A fixed 6,000-token thinking budget on both
+//     passes, so thinking cannot crowd out the script. See generationProfile.
 
 import Anthropic from "npm:@anthropic-ai/sdk@0.68.0";
 
@@ -21,17 +21,18 @@ export const MODEL = "claude-sonnet-4-6";
 export const SCHEMA_VERSION = 2;
 
 // Paid-plan edge workers live 400s, and EdgeRuntime.waitUntil counts against
-// that same clock (https://supabase.com/docs/guides/functions/limits). Full
-// adaptive on both passes measured 285-305s when max_tokens was 8,000.
-// Thinking tokens share that ceiling with the script, so the background
-// profile raises it to 10,000: room for a longer concrete "Boards vs wards"
-// bullet plus reasoning, while a pass that filled the whole ceiling would
-// still land near 305s * (10/8) ≈ 380s, inside 400s. Effort stays "high"
-// (Sonnet 4.6's default, the setting behind that measurement). "max" and
-// "xhigh" drop the thinking cap and can miss the wall clock.
+// that same clock (https://supabase.com/docs/guides/functions/limits).
+// Thinking tokens share max_tokens with the script. Adaptive thinking at
+// effort "high" used the whole 10,000-token ceiling on the writer pass in
+// production (Takayasu arteritis, 2026-11-23: stop_reason max_tokens after
+// ~160s), so the build failed as "truncated". The background profile now uses
+// a fixed thinking budget on both passes: 6,000 thinking tokens leaves about
+// 4,000 for the script JSON, and at the measured ~60 tokens/s two full passes
+// stay near 330s, inside 400s.
 export const FAST_MAX_TOKENS = 8_000;
 export const FULL_MAX_TOKENS = 10_000;
 export const FULL_EFFORT = "high" as const;
+export const FULL_THINKING_BUDGET = 6_000;
 
 export type ScriptQuality = "fast" | "full";
 
@@ -42,7 +43,7 @@ type Thinking =
 
 const FAST_WRITER_THINKING: Thinking = { type: "disabled" };
 const FAST_REVIEWER_THINKING: Thinking = { type: "enabled", budget_tokens: 1024 };
-const FULL_THINKING: Thinking = { type: "adaptive" };
+const FULL_THINKING: Thinking = { type: "enabled", budget_tokens: FULL_THINKING_BUDGET };
 
 export type GenerationProfile = {
   maxTokens: number;
@@ -56,7 +57,6 @@ export function generationProfile(quality: ScriptQuality): GenerationProfile {
   if (quality === "full") {
     return {
       maxTokens: FULL_MAX_TOKENS,
-      effort: FULL_EFFORT,
       writer: FULL_THINKING,
       reviewer: FULL_THINKING,
     };
