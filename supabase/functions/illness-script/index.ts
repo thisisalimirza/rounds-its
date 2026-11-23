@@ -25,7 +25,7 @@ import {
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 function json(body: unknown, status = 200) {
@@ -49,6 +49,43 @@ function rowToShape(row: Record<string, unknown>): IllnessScript {
     management: (row.management as string[]) ?? [],
     pivots: (row.pivots as IllnessScript["pivots"]) ?? [],
   };
+}
+
+// A cached script answers in well under a second, so it is returned as-is.
+// Building one takes about a minute: past HEARTBEAT_AFTER_MS the response
+// switches to a 200 stream that sends a space every HEARTBEAT_EVERY_MS (JSON
+// allows leading whitespace) and ends with the real JSON body. That keeps the
+// gateway's 150s idle timer and client idle timeouts (iOS 60s) from cutting
+// the request. Errors after the switch arrive as {"error": ...} with 200.
+const HEARTBEAT_AFTER_MS = 4_000;
+const HEARTBEAT_EVERY_MS = 5_000;
+
+async function respondWithHeartbeat(pending: Promise<Response>): Promise<Response> {
+  const early = await Promise.race([
+    pending,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), HEARTBEAT_AFTER_MS)),
+  ]);
+  if (early) return early;
+
+  const enc = new TextEncoder();
+  let beat: ReturnType<typeof setInterval> | undefined;
+  const body = new ReadableStream<Uint8Array>({
+    start(ctrl) {
+      ctrl.enqueue(enc.encode(" "));
+      beat = setInterval(() => {
+        try { ctrl.enqueue(enc.encode(" ")); } catch { /* client gone */ }
+      }, HEARTBEAT_EVERY_MS);
+      pending
+        .then((res) => res.text())
+        .catch((err) => JSON.stringify({ error: "claude_failed", detail: String(err) }))
+        .then((text) => {
+          clearInterval(beat);
+          try { ctrl.enqueue(enc.encode(text)); ctrl.close(); } catch { /* client gone */ }
+        });
+    },
+    cancel() { clearInterval(beat); },
+  });
+  return new Response(body, { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
 }
 
 Deno.serve(async (req) => {
@@ -116,6 +153,7 @@ Deno.serve(async (req) => {
     return await upgrade(key, (row.condition as string) ?? key);
   };
 
+  const work = async (): Promise<Response> => {
   try {
     // 1. exact
     const exact = await getRow(inputKey);
@@ -158,4 +196,7 @@ Deno.serve(async (req) => {
     const detail = err instanceof Error ? err.message : String(err);
     return json({ error: "claude_failed", detail }, 502);
   }
+  };
+
+  return await respondWithHeartbeat(work());
 });

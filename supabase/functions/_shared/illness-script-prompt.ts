@@ -12,7 +12,15 @@ import Anthropic from "npm:@anthropic-ai/sdk@0.68.0";
 
 export const MODEL = "claude-sonnet-4-6";
 export const SCHEMA_VERSION = 2;
-const MAX_TOKENS = 16_000;
+const MAX_TOKENS = 8_000;
+
+// Latency budget: the on-demand path must finish well inside client timeouts
+// (web aborts at 90s). Adaptive thinking on both calls measured 285-305s, so
+// the writer runs without thinking and the reviewer gets a small fixed budget
+// (measured ~60-66s total for both calls).
+type Thinking = { type: "disabled" } | { type: "enabled"; budget_tokens: number };
+const WRITER_THINKING: Thinking = { type: "disabled" };
+const REVIEWER_THINKING: Thinking = { type: "enabled", budget_tokens: 1024 };
 
 export const TYPO_RESOLUTION_PARAGRAPH =
   `The user's input may be misspelled, abbreviated, or a synonym (e.g. "heart attack", "MI", "ovarian torsion"). Always resolve it to the correct CANONICAL condition and put the standard name in \`condition\`.`;
@@ -33,7 +41,7 @@ Form: tight, scannable bullets, never paragraphs. Diagnostics bullets, and any b
 - management: first-line treatment, definitive treatment, key contraindications, and disposition. 3-5 bullets. Where the reason is not obvious, add one short reason for the first-line drug or step: why this choice, and what it changes.
 - pivots: the 2-4 closest lookalikes. Each distinguisher is the single sharpest separating feature and why that feature works. Highest-yield section — write it as a vignette fork.
 
-Boards vs wards: whenever the board or NBME answer differs from real clerkship or hospital practice — which test comes first, the classic triad versus how it actually presents, a test boards drill that wards rarely order — add one bullet in the section it belongs to (presentation, diagnostics, or management). Begin that bullet with exactly "Boards vs wards:" and state both answers plus why each choice is made. Example: "Boards vs wards: boards want head CT first to rule out bleed fast; wards often go straight to MRI because it shows posterior fossa and white matter lesions CT misses." Only when the difference is real and well-known. Never invent one. At most one such bullet per section.`;
+Boards vs wards: whenever the board or NBME answer differs from real clerkship or hospital practice — which test comes first, the classic triad versus how it actually presents, a test boards drill that wards rarely order — add one bullet in the section it belongs to (presentation, diagnostics, or management). Begin that bullet with exactly "Boards vs wards:" and state both answers plus why each choice is made. Example: "Boards vs wards: boards want head CT first to rule out bleed fast; wards often go straight to MRI because it shows posterior fossa and white matter lesions CT misses." Only when the difference is real, well-known, and you are confident of it; if unsure, leave it out. Never invent one. At most one such bullet per section, and never state the same gap in two sections.`;
 
 export const WRITE_TASK = `Write the illness script for the single condition in the user message. Put the canonical condition name in \`condition\`. Put the primary specialty in \`system\`, Title Case (for example "Cardiology" or "Obstetrics & Gynecology"). Fill every required field. Do not add fields.`;
 
@@ -246,11 +254,12 @@ async function complete(
   client: Anthropic,
   blocks: SystemBlock[],
   userText: string,
+  thinking: Thinking,
 ): Promise<IllnessScript> {
   const stream = client.messages.stream({
     model: MODEL,
     max_tokens: MAX_TOKENS,
-    thinking: { type: "adaptive" },
+    thinking,
     system: blocks,
     output_config: { format: { type: "json_schema", schema: SCRIPT_SCHEMA } },
     messages: [{ role: "user", content: userText }],
@@ -276,11 +285,13 @@ export async function generateIllnessScript(
     client,
     systemBlocks("write", options.resolveTypos),
     `Write the illness script for: ${conditionText}`,
+    WRITER_THINKING,
   );
   const corrected = await complete(
     client,
     systemBlocks("review", false),
     `Requested condition: ${conditionText}\n\nDraft JSON:\n${JSON.stringify(draft)}`,
+    REVIEWER_THINKING,
   );
   assertComplete(corrected);
   return corrected;
