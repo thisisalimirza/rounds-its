@@ -6,17 +6,26 @@
 //   1. Exact normalized key hit                → serve stored script.
 //   2. Known alias hit                         → resolve → serve stored script.
 //   3. Fuzzy (pg_trgm) match above threshold   → learn alias → serve stored.
-//   4. Miss → ONE Claude call returning the CANONICAL name + script.
-// Stored scripts below the current schema version auto-regenerate on open.
+//   4. Miss → draft + one review pass, then store the corrected script only.
+// Stored scripts below the current schema version regenerate in place on open.
+// That update keeps condition_key (so aliases still resolve) and does not
+// reset miss_count / review_count; the request then bumps the counters.
 //
-// Deploy:  supabase functions deploy illness-script
+// Deploy (manual):  supabase functions deploy illness-script
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk@0.68.0";
+import {
+  generateIllnessScript,
+  normalizeKey,
+  SCHEMA_VERSION,
+  scriptRowUpdate,
+  type IllnessScript,
+} from "../_shared/illness-script-prompt.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 function json(body: unknown, status = 200) {
@@ -26,88 +35,9 @@ function json(body: unknown, status = 200) {
   });
 }
 
-const SCHEMA_VERSION = 1;               // bump to force auto-regeneration
 const FUZZY_MIN_SIMILARITY = 0.6;
 
-function normalizeKey(s: string): string {
-  return s
-    .normalize("NFKD").replace(/\p{Diacritic}/gu, "")
-    .toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
-}
-
-const SCRIPT_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    condition: { type: "string", description: "The CANONICAL condition name. Resolve typos/abbreviations/synonyms to the standard name (e.g. 'Ovarian torsion')." },
-    system: { type: "string", description: "Primary specialty/system, Title Case (e.g. 'Obstetrics & Gynecology', 'Cardiology', 'Neurology', 'Gastroenterology', 'Infectious Disease')." },
-    definition: { type: "string", description: "One-line definition / classic snapshot of the condition (max ~28 words)." },
-    predisposing: {
-      type: "array",
-      description: "Epidemiology & predisposing factors — who gets it (age, sex, risk factors, exposures). 3-6 short bullets.",
-      items: { type: "string" },
-    },
-    pathophysiology: {
-      type: "array",
-      description: "The core mechanism — why it happens. 2-4 short bullets.",
-      items: { type: "string" },
-    },
-    presentation: {
-      type: "array",
-      description: "Clinical presentation — classic triad, timeline/onset, pathognomonic signs, key exam findings. 3-6 short bullets.",
-      items: { type: "string" },
-    },
-    diagnostics: {
-      type: "array",
-      description: "Work-up — first-line test, gold standard, and key pearls/pitfalls. 3-5 short bullets.",
-      items: { type: "string" },
-    },
-    management: {
-      type: "array",
-      description: "Management — first-line treatment, definitive treatment, and key contraindications/disposition. 3-5 short bullets.",
-      items: { type: "string" },
-    },
-    pivots: {
-      type: "array",
-      description: "Differential PIVOT POINTS — the closest lookalikes and the single sharpest feature that distinguishes THIS condition from each. 2-4 items.",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          condition: { type: "string", description: "The competing/lookalike diagnosis." },
-          distinguisher: { type: "string", description: "The sharp discriminating feature (one short sentence)." },
-        },
-        required: ["condition", "distinguisher"],
-      },
-    },
-  },
-  required: ["condition", "system", "definition", "predisposing", "pathophysiology", "presentation", "diagnostics", "management", "pivots"],
-};
-
-const SYSTEM_PROMPT = `You are writing a concise, high-yield, shelf-exam-ready ILLNESS SCRIPT for a medical student, for a single condition.
-
-The user's input may be misspelled, abbreviated, or a synonym (e.g. "heart attack", "MI", "ovarian torsion"). Always resolve it to the correct CANONICAL condition and put the standard name in \`condition\`.
-
-Output tight, scannable bullets — never paragraphs. Each bullet is a short phrase or single clause (aim under ~18 words) teaching the actual content a strong clerkship student holds. Lock down these dimensions:
-- definition: one-line snapshot of what the condition is.
-- predisposing: epidemiology + predisposing/risk factors (who gets it).
-- pathophysiology: the core mechanism (why it happens).
-- presentation: classic triad, timeline/onset, pathognomonic signs, key exam findings.
-- diagnostics: first-line test, gold standard, and a clinical pearl/pitfall.
-- management: first-line and definitive treatment, plus key contraindications/disposition.
-- pivots: the closest lookalike diagnoses and the SINGLE sharpest feature that distinguishes this condition from each (this is the highest-yield part — think like a vignette).
-
-Be accurate and board-relevant. This is an educational reference, not individualized medical advice.`;
-
-// A response payload from either a stored row or a freshly generated script.
-type ScriptShape = {
-  condition: string; system: string; definition: string;
-  predisposing: string[]; pathophysiology: string[]; presentation: string[];
-  diagnostics: string[]; management: string[];
-  pivots: { condition: string; distinguisher: string }[];
-};
-
-function rowToShape(row: Record<string, unknown>): ScriptShape {
+function rowToShape(row: Record<string, unknown>): IllnessScript {
   return {
     condition: (row.condition as string) ?? "",
     system: (row.system as string) ?? "",
@@ -117,8 +47,45 @@ function rowToShape(row: Record<string, unknown>): ScriptShape {
     presentation: (row.presentation as string[]) ?? [],
     diagnostics: (row.diagnostics as string[]) ?? [],
     management: (row.management as string[]) ?? [],
-    pivots: (row.pivots as { condition: string; distinguisher: string }[]) ?? [],
+    pivots: (row.pivots as IllnessScript["pivots"]) ?? [],
   };
+}
+
+// A cached script answers in well under a second, so it is returned as-is.
+// Building one takes about a minute: past HEARTBEAT_AFTER_MS the response
+// switches to a 200 stream that sends a space every HEARTBEAT_EVERY_MS (JSON
+// allows leading whitespace) and ends with the real JSON body. That keeps the
+// gateway's 150s idle timer and client idle timeouts (iOS 60s) from cutting
+// the request. Errors after the switch arrive as {"error": ...} with 200.
+const HEARTBEAT_AFTER_MS = 4_000;
+const HEARTBEAT_EVERY_MS = 5_000;
+
+async function respondWithHeartbeat(pending: Promise<Response>): Promise<Response> {
+  const early = await Promise.race([
+    pending,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), HEARTBEAT_AFTER_MS)),
+  ]);
+  if (early) return early;
+
+  const enc = new TextEncoder();
+  let beat: ReturnType<typeof setInterval> | undefined;
+  const body = new ReadableStream<Uint8Array>({
+    start(ctrl) {
+      ctrl.enqueue(enc.encode(" "));
+      beat = setInterval(() => {
+        try { ctrl.enqueue(enc.encode(" ")); } catch { /* client gone */ }
+      }, HEARTBEAT_EVERY_MS);
+      pending
+        .then((res) => res.text())
+        .catch((err) => JSON.stringify({ error: "claude_failed", detail: String(err) }))
+        .then((text) => {
+          clearInterval(beat);
+          try { ctrl.enqueue(enc.encode(text)); ctrl.close(); } catch { /* client gone */ }
+        });
+    },
+    cancel() { clearInterval(beat); },
+  });
+  return new Response(body, { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
 }
 
 Deno.serve(async (req) => {
@@ -160,31 +127,19 @@ Deno.serve(async (req) => {
 
   const client = () => new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY")! });
 
-  const generate = async (text: string): Promise<ScriptShape & { key: string }> => {
-    const stream = client().messages.stream({
-      model: "claude-sonnet-4-6",
-      max_tokens: 6000,
-      thinking: { type: "adaptive" },
-      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
-      output_config: { format: { type: "json_schema", schema: SCRIPT_SCHEMA } },
-      messages: [{ role: "user", content: `Write the illness script for: ${text}` }],
-    } as Anthropic.MessageStreamParams);
-    const message = await stream.finalMessage();
-    const block = message.content.find((b) => b.type === "text");
-    if (!block || block.type !== "text") throw new Error("no_output");
-    const s = JSON.parse(block.text) as ScriptShape;
+  const generate = async (text: string): Promise<IllnessScript & { key: string }> => {
+    const s = await generateIllnessScript(client(), text, { resolveTypos: true });
     return { ...s, key: normalizeKey(s.condition || text) || inputKey };
   };
 
-  // Regenerate an existing (stale) row IN PLACE, preserving its counters.
+  // Regenerate an existing (stale) row IN PLACE. condition_key is the WHERE
+  // clause, not a column we write, so aliases keep pointing at this row.
+  // Counters are not in the payload; bump() adds this request on top.
   const upgrade = async (existingKey: string, conditionText: string) => {
     const s = await generate(conditionText);
-    await admin.from("illness_scripts").update({
-      condition: s.condition, system: s.system, one_liner: s.definition,
-      predisposing: s.predisposing, pathophysiology: s.pathophysiology, presentation: s.presentation,
-      diagnostics: s.diagnostics, management: s.management, pivots: s.pivots,
-      schema_version: SCHEMA_VERSION, model: "claude-sonnet-4-6", updated_at: new Date().toISOString(),
-    }).eq("condition_key", existingKey);
+    const { error } = await admin.from("illness_scripts").update(scriptRowUpdate(s))
+      .eq("condition_key", existingKey);
+    if (error) throw new Error(error.message);
     await bump(existingKey);
     return json({ ...s, cached: false });
   };
@@ -198,6 +153,7 @@ Deno.serve(async (req) => {
     return await upgrade(key, (row.condition as string) ?? key);
   };
 
+  const work = async (): Promise<Response> => {
   try {
     // 1. exact
     const exact = await getRow(inputKey);
@@ -226,13 +182,13 @@ Deno.serve(async (req) => {
       if (canon) { await learnAlias(inputKey, s.key); return await serveRow(s.key, canon); }
     }
 
-    await admin.from("illness_scripts").upsert({
-      condition_key: s.key, condition: s.condition, system: s.system, one_liner: s.definition,
-      predisposing: s.predisposing, pathophysiology: s.pathophysiology, presentation: s.presentation,
-      diagnostics: s.diagnostics, management: s.management, pivots: s.pivots,
-      miss_count: isMiss ? 1 : 0, review_count: 1, schema_version: SCHEMA_VERSION,
-      model: "claude-sonnet-4-6", updated_at: new Date().toISOString(),
+    const { error } = await admin.from("illness_scripts").upsert({
+      condition_key: s.key,
+      ...scriptRowUpdate(s),
+      miss_count: isMiss ? 1 : 0,
+      review_count: 1,
     }, { onConflict: "condition_key" });
+    if (error) throw new Error(error.message);
     await learnAlias(inputKey, s.key);
 
     return json({ ...s, cached: false });
@@ -240,4 +196,7 @@ Deno.serve(async (req) => {
     const detail = err instanceof Error ? err.message : String(err);
     return json({ error: "claude_failed", detail }, 502);
   }
+  };
+
+  return await respondWithHeartbeat(work());
 });

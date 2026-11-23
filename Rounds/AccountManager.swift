@@ -398,15 +398,16 @@ final class AccountManager {
             .value
     }
 
-    /// Bulk-download FULL scripts (current schema only) updated after `since`,
-    /// for incrementally mirroring the global library onto the device so any
-    /// script opens instantly.
+    /// Bulk-download FULL scripts on the current schema (v2 or newer) updated
+    /// after `since`, for incrementally mirroring the global library onto the
+    /// device. Older rows are skipped so a regenerated script replaces the
+    /// device copy instead of leaving the previous text cached.
     func fetchFullIllnessScripts(since: String?, limit: Int = 200) async throws -> [IllnessScriptFull] {
         let sinceStr = since ?? "1970-01-01T00:00:00Z"
         return try await supabase
             .from("illness_scripts")
             .select("condition_key, condition, system, one_liner, predisposing, pathophysiology, presentation, diagnostics, management, pivots, updated_at")
-            .eq("schema_version", value: 1)
+            .gte("schema_version", value: 2)
             .gt("updated_at", value: sinceStr)
             .order("updated_at", ascending: true)
             .limit(limit)

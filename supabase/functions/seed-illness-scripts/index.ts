@@ -5,9 +5,18 @@
 // prompt as the on-demand illness-script function. Gated by a shared secret
 // (x-seed-secret) instead of a user JWT.
 //
-// Because generation is slow, each call processes a small BATCH of the
-// still-missing conditions and reports how many remain — call it repeatedly
-// until remaining = 0.
+// Because generation is slow (draft + one review pass), each call processes a
+// small BATCH of the still-missing conditions and reports how many remain —
+// call it repeatedly until remaining = 0. Rows below the current schema
+// version count as missing and are updated in place: the existing
+// condition_key is kept (aliases still resolve) and counters are not reset.
+//
+// Preview (no database write) — still requires x-seed-secret:
+//   curl -s -X POST "$URL/functions/v1/seed-illness-scripts" \
+//     -H "x-seed-secret: <SECRET>" -H "content-type: application/json" \
+//     -d '{"preview":true,"conditions":["Schizoaffective disorder","Cardiac amyloidosis","Diabetic ketoacidosis","Pulmonary embolism"]}'
+// Each name is two model calls. Keep a preview to a few names or the worker
+// limit may kill the invocation. At most PREVIEW_LIMIT names per call.
 //
 // Setup:
 //   supabase secrets set SEED_SECRET=<pick-a-long-secret>
@@ -17,18 +26,19 @@
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk@0.68.0";
+import {
+  generateIllnessScript,
+  normalizeKey,
+  SCHEMA_VERSION,
+  scriptRowUpdate,
+  type IllnessScript,
+} from "../_shared/illness-script-prompt.ts";
 
-const MODEL = "claude-sonnet-4-6";
-const SCHEMA_VERSION = 1;
-const BATCH = 1;   // ONE generation per invocation — edge functions can't do more
-                   // without hitting WORKER_RESOURCE_LIMIT. The loop calls it repeatedly.
+const BATCH = 1; // ONE condition per invocation — edge functions can't do more
+                 // without hitting WORKER_RESOURCE_LIMIT. The loop calls it repeatedly.
+const PREVIEW_LIMIT = 8;
 
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
-
-function normalizeKey(s: string): string {
-  return s.normalize("NFKD").replace(/\p{Diacritic}/gu, "")
-    .toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
-}
 
 // A few high-yield, board-relevant conditions per specialty.
 const SEED_CONDITIONS: string[] = [
@@ -60,77 +70,114 @@ const SEED_CONDITIONS: string[] = [
   "Anaphylaxis", "Acute compartment syndrome", "Stevens-Johnson syndrome",
 ];
 
-const SCRIPT_SCHEMA = {
-  type: "object", additionalProperties: false,
-  properties: {
-    condition: { type: "string", description: "The CANONICAL condition name." },
-    system: { type: "string", description: "Primary specialty/system, Title Case (e.g. 'Obstetrics & Gynecology', 'Cardiology')." },
-    definition: { type: "string", description: "One-line snapshot (max ~28 words)." },
-    predisposing: { type: "array", description: "Epidemiology & predisposing factors. 3-6 short bullets.", items: { type: "string" } },
-    pathophysiology: { type: "array", description: "Core mechanism. 2-4 short bullets.", items: { type: "string" } },
-    presentation: { type: "array", description: "Classic triad, timeline, pathognomonic signs, key exam. 3-6 short bullets.", items: { type: "string" } },
-    diagnostics: { type: "array", description: "First-line test, gold standard, pearl/pitfall. 3-5 short bullets.", items: { type: "string" } },
-    management: { type: "array", description: "First-line + definitive treatment, key contraindications/disposition. 3-5 short bullets.", items: { type: "string" } },
-    pivots: {
-      type: "array", description: "Differential pivot points — closest lookalikes + the sharpest distinguisher. 2-4 items.",
-      items: {
-        type: "object", additionalProperties: false,
-        properties: { condition: { type: "string" }, distinguisher: { type: "string" } },
-        required: ["condition", "distinguisher"],
-      },
-    },
-  },
-  required: ["condition", "system", "definition", "predisposing", "pathophysiology", "presentation", "diagnostics", "management", "pivots"],
-};
+async function readJsonBody(req: Request): Promise<Record<string, unknown>> {
+  const text = await req.text();
+  if (!text.trim()) return {};
+  const parsed = JSON.parse(text) as unknown;
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("invalid_body");
+  }
+  return parsed as Record<string, unknown>;
+}
 
-const SYSTEM_PROMPT = `You are writing a concise, high-yield, shelf-exam-ready ILLNESS SCRIPT for a medical student, for a single condition.
-
-Output tight, scannable bullets — never paragraphs. Each bullet is a short phrase or single clause (aim under ~18 words) teaching the actual content a strong clerkship student holds. Lock down: definition (one-line snapshot), predisposing (epidemiology + risk factors), pathophysiology (core mechanism), presentation (classic triad, timeline, pathognomonic signs, exam), diagnostics (first-line, gold standard, a pearl), management (first-line + definitive treatment, key contraindications), and pivots (the closest lookalike diagnoses and the SINGLE sharpest distinguishing feature for each — the highest-yield part).
-
-Be accurate and board-relevant. Put the canonical condition name in \`condition\`. This is an educational reference, not individualized medical advice.`;
+function previewNames(body: Record<string, unknown>): string[] | null {
+  if (!Array.isArray(body.conditions)) return null;
+  return body.conditions
+    .filter((name): name is string => typeof name === "string")
+    .map((name) => name.trim())
+    .filter((name) => name.length > 0);
+}
 
 Deno.serve(async (req) => {
   if (req.headers.get("x-seed-secret") !== Deno.env.get("SEED_SECRET")) {
     return json({ error: "forbidden" }, 403);
   }
 
+  let body: Record<string, unknown>;
+  try {
+    body = await readJsonBody(req);
+  } catch {
+    return json({ error: "invalid_body" }, 400);
+  }
+
+  if (body.preview === true) {
+    const names = previewNames(body);
+    if (!names || names.length === 0) return json({ error: "missing_conditions" }, 400);
+    if (names.length > PREVIEW_LIMIT) {
+      return json({ error: "too_many_conditions", limit: PREVIEW_LIMIT }, 400);
+    }
+    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!apiKey) return json({ error: "server_misconfigured" }, 500);
+    const client = new Anthropic({ apiKey });
+
+    const scripts: { requested: string; script: IllnessScript }[] = [];
+    const failed: { condition: string; error: string }[] = [];
+    for (const condition of names) {
+      try {
+        const script = await generateIllnessScript(client, condition, { resolveTypos: false });
+        scripts.push({ requested: condition, script });
+      } catch (err) {
+        failed.push({ condition, error: err instanceof Error ? err.message : String(err) });
+      }
+    }
+    return json({ preview: true, schema_version: SCHEMA_VERSION, scripts, failed });
+  }
+
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY")! });
 
   // Which conditions are already stored (at the current schema version)?
-  const { data: rows } = await admin.from("illness_scripts").select("condition_key, schema_version");
-  const done = new Set((rows ?? []).filter((r) => (r.schema_version ?? 0) >= SCHEMA_VERSION).map((r) => r.condition_key as string));
-  const missing = SEED_CONDITIONS.filter((c) => !done.has(normalizeKey(c)));
+  // An alias counts too, so a seed name whose canonical key differs does not
+  // regenerate on every call once that alias points at a current row.
+  const { data: rows, error: readError } = await admin.from("illness_scripts").select("condition_key, schema_version");
+  if (readError) return json({ error: "read_failed", detail: readError.message }, 500);
+  const { data: aliasRows, error: aliasError } = await admin.from("illness_aliases").select("alias_key, condition_key");
+  if (aliasError) return json({ error: "read_failed", detail: aliasError.message }, 500);
+  const existing = new Map((rows ?? []).map((r) => [r.condition_key as string, r.schema_version as number | null]));
+  const aliasTo = new Map((aliasRows ?? []).map((r) => [r.alias_key as string, r.condition_key as string]));
+  const done = new Set(
+    [...existing.entries()].filter(([, version]) => (version ?? 0) >= SCHEMA_VERSION).map(([key]) => key),
+  );
+  const missing = SEED_CONDITIONS.filter((c) => {
+    const key = normalizeKey(c);
+    if (done.has(key)) return false;
+    const target = aliasTo.get(key);
+    return !(target && done.has(target));
+  });
 
   const batch = missing.slice(0, BATCH);
   const generated: string[] = [];
   const failed: { condition: string; error: string }[] = [];
 
-  for (const condition of batch) {
-    try {
-      const stream = client.messages.stream({
-        model: MODEL,
-        max_tokens: 6000,
-        thinking: { type: "adaptive" },
-        system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
-        output_config: { format: { type: "json_schema", schema: SCRIPT_SCHEMA } },
-        messages: [{ role: "user", content: `Write the illness script for: ${condition}` }],
-      } as Anthropic.MessageStreamParams);
-      const message = await stream.finalMessage();
-      const block = message.content.find((b) => b.type === "text");
-      if (!block || block.type !== "text") throw new Error("no_output");
-      const s = JSON.parse(block.text);
-      const key = normalizeKey(s.condition || condition);
+  if (batch.length > 0) {
+    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!apiKey) return json({ error: "server_misconfigured" }, 500);
+    const client = new Anthropic({ apiKey });
 
-      await admin.from("illness_scripts").upsert({
-        condition_key: key, condition: s.condition, system: s.system, one_liner: s.definition,
-        predisposing: s.predisposing, pathophysiology: s.pathophysiology, presentation: s.presentation,
-        diagnostics: s.diagnostics, management: s.management, pivots: s.pivots,
-        schema_version: SCHEMA_VERSION, model: MODEL, updated_at: new Date().toISOString(),
-      }, { onConflict: "condition_key" });
-      generated.push(s.condition);
-    } catch (err) {
-      failed.push({ condition, error: err instanceof Error ? err.message : String(err) });
+    for (const condition of batch) {
+      try {
+        const script = await generateIllnessScript(client, condition, { resolveTypos: false });
+        const seedKey = normalizeKey(condition);
+        const canonKey = normalizeKey(script.condition) || seedKey;
+        // Keep an existing condition_key so aliases and counters stay put.
+        // Otherwise store under the canonical key and remember the seed name.
+        const key = existing.has(seedKey) ? seedKey : canonKey;
+
+        const { error } = await admin.from("illness_scripts").upsert({
+          condition_key: key,
+          ...scriptRowUpdate(script),
+        }, { onConflict: "condition_key" });
+        if (error) throw new Error(error.message);
+        if (seedKey !== key) {
+          const { error: linkError } = await admin.from("illness_aliases").upsert(
+            { alias_key: seedKey, condition_key: key },
+            { onConflict: "alias_key" },
+          );
+          if (linkError) throw new Error(linkError.message);
+        }
+        generated.push(script.condition);
+      } catch (err) {
+        failed.push({ condition, error: err instanceof Error ? err.message : String(err) });
+      }
     }
   }
 
