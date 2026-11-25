@@ -14,6 +14,7 @@
 import Foundation
 import SwiftUI
 import Supabase
+import Auth
 import RevenueCat
 import AuthenticationServices
 import CryptoKit
@@ -96,9 +97,18 @@ final class AccountManager {
     // Internal (not private) so other backend-facing services — e.g. the
     // feedback / feature-request board — can reuse the same authenticated
     // anonymous session instead of spinning up a second client.
+    /// Session lives in the Keychain under the library's default service, with
+    /// `kSecAttrAccessibleAfterFirstUnlock` (the library default). That item is
+    /// included in an encrypted backup, so a phone restored from backup keeps
+    /// the same anonymous id instead of minting a new one and transferring Pro.
+    /// iOS deletes an app's keychain items when the app itself is deleted, so a
+    /// wipe-and-reinstall still needs the receipt sync in `handleSignedIn`.
     let supabase = SupabaseClient(
         supabaseURL: URL(string: "https://gvbycponexvxsbrlaejw.supabase.co")!,
-        supabaseKey: "sb_publishable_uzzk3B8lDJfrx51_Ab9iLA_7qjkJZr-"
+        supabaseKey: "sb_publishable_uzzk3B8lDJfrx51_Ab9iLA_7qjkJZr-",
+        options: SupabaseClientOptions(
+            auth: .init(storage: KeychainLocalStorage(service: "supabase.gotrue.swift"))
+        )
     )
 
     // MARK: - Observable state (for the UI)
@@ -255,9 +265,23 @@ final class AccountManager {
         self.userID = id
         self.accountEmail = Self.normalizedEmail(user.email)
 
-        // Tie RevenueCat identity to this account so Pro syncs everywhere.
+        // Tie RevenueCat identity to this account. The first logIn has to
+        // happen while the SDK is still on $RCAnonymousID — that call aliases.
+        // A later logIn from one Supabase id to another only switches.
+        // syncPurchases runs only when the new id has no entitlement, so we
+        // don't bounce a purchase that is already on this id.
         do {
-            _ = try await Purchases.shared.logIn(id)
+            let current = Purchases.shared.appUserID
+            if ProIdentityPlanner.willAlias(currentAppUserID: current) {
+                print("ℹ️ RevenueCat logIn will alias \(current)")
+            }
+            let (info, _) = try await Purchases.shared.logIn(id)
+            let active = info.entitlements[SubscriptionManager.proEntitlementID]?.isActive == true
+            SubscriptionManager.shared.updateCustomerInfo(info)
+            if ProIdentityPlanner.afterLogIn(newIdentityHasActiveEntitlement: active).syncPurchases {
+                let synced = try await Purchases.shared.syncPurchases()
+                SubscriptionManager.shared.updateCustomerInfo(synced)
+            }
         } catch {
             print("⚠️ RevenueCat logIn error: \(error.localizedDescription)")
         }
@@ -282,15 +306,39 @@ final class AccountManager {
     func reportAnalyticsIdentity(isAnonymous: Bool? = nil) {
         guard let userID else { return }
         let anonymous = isAnonymous ?? isAnonymousAccount
-        let serverPro = proSource != "none"
+        let serverPro = proSource != "none" || SubscriptionManager.shared.entitlementOrServerGrant
         AnalyticsManager.shared.identifyAccount(
             userId: userID,
             isAnonymous: anonymous,
-            hasPro: SubscriptionManager.shared.isProSubscriber || serverPro
+            hasPro: serverPro
         )
     }
 
     // MARK: - Referral / Pro status
+
+    /// Asks refresh-pro to re-read RevenueCat for this account and, when
+    /// `previousAppUserID` is the anonymous id we just left, to move a
+    /// promotional entitlement onto this id. A failure leaves the cached
+    /// server grant alone.
+    func refreshProMirror(previousAppUserID: String? = nil) async {
+        struct Body: Encodable {
+            let previous_app_user_id: String?
+        }
+        struct Response: Decodable {
+            let has_pro: Bool?
+        }
+        do {
+            let response: Response = try await supabase.functions.invoke(
+                "refresh-pro",
+                options: FunctionInvokeOptions(body: Body(previous_app_user_id: previousAppUserID))
+            )
+            if let hasPro = response.has_pro {
+                SubscriptionManager.shared.noteServerGrant(hasPro)
+            }
+        } catch {
+            print("⚠️ refresh-pro failed: \(error.localizedDescription)")
+        }
+    }
 
     /// Refreshes the user's referral code and remaining invites from the backend.
     func refreshStatus() async {
@@ -301,6 +349,9 @@ final class AccountManager {
             self.invitesRemaining = status.invites_remaining
             self.maxReferrals = status.max_referrals
             self.statusLoadFailed = false
+            if let hasPro = status.has_pro {
+                SubscriptionManager.shared.noteServerGrant(hasPro)
+            }
             reportAnalyticsIdentity()
         } catch {
             self.statusLoadFailed = true
@@ -732,8 +783,15 @@ final class AccountManager {
             }
         }
 
-        // Step 5.
+        // Step 5. logIn switches from the anonymous id. Store receipts follow
+        // via syncPurchases inside handleSignedIn. Promotional grants do not,
+        // so refresh-pro re-grants those onto the email id and revokes the old one.
         await handleSignedIn(user: user)
+        if let anonymousID, anonymousID != user.id {
+            await refreshProMirror(previousAppUserID: anonymousID.uuidString.lowercased())
+        } else {
+            await refreshProMirror()
+        }
         Purchases.shared.attribution.setEmail(trimmedEmail)
 
         // Pull the merged server state, then push once under the new id.
@@ -984,6 +1042,9 @@ nonisolated private struct AccountStatusResponse: Decodable {
     let referral_code: String?
     let pro_source: String
     let is_pro: Bool
+    /// Full Pro definition. Absent on an older my-status deploy; a missing
+    /// value must not clear the cached grant.
+    let has_pro: Bool?
     let invites_used: Int
     let invites_remaining: Int
     let max_referrals: Int

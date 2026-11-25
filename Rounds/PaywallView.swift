@@ -26,12 +26,15 @@ import RevenueCatUI
 /// with `AppLinks.termsOfUse` / `AppLinks.privacyPolicy`.
 struct RoundsPaywallView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
 
     // Tracks whether this session ended in a purchase/restore — gates retention offer
     @State private var completedPurchase = false
     // Persists across app launches — retention offer is shown at most once ever
     @AppStorage("hasSeenRetentionOffer") private var hasSeenRetentionOffer: Bool = false
     @State private var showingRetentionOffer = false
+    @State private var isRestoring = false
+    @State private var restoreMessage: String?
 
     var onPurchaseCompleted: ((CustomerInfo) -> Void)?
     var onRestoreCompleted: ((CustomerInfo) -> Void)?
@@ -81,6 +84,12 @@ struct RoundsPaywallView: View {
                     print("❌ Restore failed: \(error.localizedDescription)")
                 }
                 .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(isRestoring ? "Restoring…" : "Restore") {
+                            Task { await restoreFromToolbar() }
+                        }
+                        .disabled(isRestoring)
+                    }
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button {
                             handleDismiss()
@@ -90,6 +99,17 @@ struct RoundsPaywallView: View {
                                 .symbolRenderingMode(.hierarchical)
                         }
                     }
+                }
+                .alert("Restore purchases", isPresented: Binding(
+                    get: { restoreMessage != nil },
+                    set: { if !$0 { restoreMessage = nil } }
+                )) {
+                    Button("Email support") {
+                        openURL(AppLinks.support)
+                    }
+                    Button("OK", role: .cancel) { restoreMessage = nil }
+                } message: {
+                    Text(restoreMessage ?? "")
                 }
         }
         .sheet(isPresented: $showingRetentionOffer) {
@@ -101,6 +121,22 @@ struct RoundsPaywallView: View {
 
     /// Intercepts the X button. If the user never purchased and hasn't seen
     /// the retention offer yet, show it instead of dismissing immediately.
+    private func restoreFromToolbar() async {
+        isRestoring = true
+        defer { isRestoring = false }
+        do {
+            _ = try await SubscriptionManager.shared.restorePurchases()
+            if SubscriptionManager.shared.hasProAccess() {
+                completedPurchase = true
+                dismiss()
+            } else {
+                restoreMessage = "No purchases found. Make sure you're signed into the same Apple ID you bought with. If you still don't see Pro, email \(AppLinks.supportEmail) and include your Account ID from Settings."
+            }
+        } catch {
+            restoreMessage = "Restore didn't finish. Make sure you're signed into the same Apple ID you bought with, then try again. You can also email \(AppLinks.supportEmail)."
+        }
+    }
+
     private func handleDismiss() {
         let shouldShowRetention = !completedPurchase
             && !hasSeenRetentionOffer
