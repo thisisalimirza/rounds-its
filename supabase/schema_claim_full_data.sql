@@ -1,6 +1,13 @@
 -- Rounds — carry the full data model across an anonymous-account claim
 --
--- NOT YET APPLIED. Run this in the Supabase SQL editor.
+-- SUPERSEDED by supabase/schema_sync_v2.sql. Do not apply this file after
+-- schema_sync_v2.sql — it would put back an older claim_anonymous_account
+-- (it drops last_daily_case_played on conflict and deletes a leaderboard row
+-- without merging scores). schema_sync_v2.sql is the one to run.
+--
+-- Live production's claim_anonymous_account matches this file, not
+-- supabase/schema_sync.sql. The replacement in schema_sync_v2.sql starts
+-- from the body below so none of these moves are dropped.
 --
 -- `claim_anonymous_account()` was written when the only server-side state was
 -- `player_progress` plus the referral/campaign columns on `profiles`. The rest

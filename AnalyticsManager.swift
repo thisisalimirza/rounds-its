@@ -61,6 +61,59 @@ class AnalyticsManager {
     func identifyUser(userId: String, properties: [String: Any]? = nil) {
         PostHogSDK.shared.identify(userId, userProperties: properties)
     }
+
+    /// Ties this device to the Supabase user. PostHog aliases the previous
+    /// anonymous distinct id on the first identify, and again when an email
+    /// claim replaces that id. `reset()` is reserved for an explicit sign-out.
+    func identifyAccount(userId: String, isAnonymous: Bool, hasPro: Bool) {
+        let id = userId.lowercased()
+        guard !id.isEmpty else { return }
+        identifiedUserID = id
+        identifiedIsAnonymous = isAnonymous
+        PostHogSDK.shared.identify(id, userProperties: accountProperties(isAnonymous: isAnonymous, hasPro: hasPro))
+    }
+
+    /// Refreshes `has_pro` on the person already identified. A purchase can
+    /// land after the auth identify, and this does not mint a new distinct id.
+    func updateAccountHasPro(_ hasPro: Bool) {
+        guard let identifiedUserID else { return }
+        PostHogSDK.shared.identify(
+            identifiedUserID,
+            userProperties: accountProperties(isAnonymous: identifiedIsAnonymous, hasPro: hasPro)
+        )
+    }
+
+    /// Drops the identified person. Call this only from an explicit sign-out
+    /// or account deletion, before the next anonymous session is created.
+    func resetUser() {
+        identifiedUserID = nil
+        PostHogSDK.shared.reset()
+    }
+
+    func trackSyncFailure(stage: String, error: Error) {
+        let described = SyncFailureReport.describe(error)
+        track("sync_failed", properties: [
+            "stage": stage,
+            "error_code": described.code,
+            "error_message": described.message,
+        ])
+    }
+
+    private var identifiedUserID: String?
+    private var identifiedIsAnonymous = true
+
+    private func accountProperties(isAnonymous: Bool, hasPro: Bool) -> [String: Any] {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+        return [
+            "is_anonymous": isAnonymous,
+            "has_pro": hasPro,
+            "app_version": version,
+            "app_build": build,
+            "is_testflight": InstallChannel.isTestFlight,
+            "build_channel": InstallChannel.channel,
+        ]
+    }
     
     /// Update user properties without changing user ID
     func setUserProperties(_ properties: [String: Any]) {
